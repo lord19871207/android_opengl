@@ -1,0 +1,10 @@
+.DS_Store
+.gradle
+*.iml
+
+/.idea
+/.navigation
+/build
+*/build
+
+/local.properties
