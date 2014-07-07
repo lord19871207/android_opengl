@@ -103,8 +103,8 @@ public class EglCore {
         return EGL14.eglSwapBuffers(mEGLDisplay, eglSurface);
     }
 
-    public void setPresentationTime(EGLSurface eglSurface, long nsecs) {
-        EGLExt.eglPresentationTimeANDROID(mEGLDisplay, eglSurface, nsecs);
+    public void setPresentationTime(EGLSurface eglSurface, long frameTimeNanos) {
+        EGLExt.eglPresentationTimeANDROID(mEGLDisplay, eglSurface, frameTimeNanos);
     }
 
     public int querySurface(EGLSurface eglSurface, int key) {

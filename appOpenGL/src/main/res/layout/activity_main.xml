@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#282828">
+
+    <fi.harism.opengl.lib.view.GlTextureView
+        android:id="@+id/gltextureview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="false"
+        android:background="#01579b" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <ImageButton
+            android:id="@+id/button_action"
+            style="?android:buttonStyleSmall"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="right|bottom"
+            android:layout_margin="30dp"
+            android:background="@drawable/bg_action_button"
+            android:padding="10dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_action_select"
+            android:stateListAnimator="@animator/action_button" />
+
+    </FrameLayout>
+
+</FrameLayout>

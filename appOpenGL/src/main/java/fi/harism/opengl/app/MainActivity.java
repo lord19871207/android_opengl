@@ -2,92 +2,93 @@ package fi.harism.opengl.app;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.graphics.Outline;
 import android.opengl.GLES30;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.TextureView;
+import android.view.Choreographer;
 import android.view.View;
-import android.view.ViewGroup;
 
 import fi.harism.opengl.lib.egl.EglCore;
-import fi.harism.opengl.lib.egl.EglSurface;
 import fi.harism.opengl.lib.util.GlRenderer;
-import fi.harism.opengl.lib.util.GlRunnable;
 import fi.harism.opengl.lib.view.GlTextureView;
 
 public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
 
+    private final Choreographer.FrameCallback mFrameCallback = new Choreographer.FrameCallback() {
+        @Override
+        public void doFrame(long frameTimeNanos) {
+            GlTextureView glTextureView = (GlTextureView) findViewById(R.id.gltextureview);
+            glTextureView.renderFrame(frameTimeNanos);
+            mChoreographer.postFrameCallback(this);
+        }
+    };
+
     private GlTextureView mGlTextureView;
+    private Choreographer mChoreographer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        RecyclerView recyclerView = new RecyclerView(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        recyclerView.setAdapter(new TestAdapter());
-        setContentView(recyclerView);
+        View actionButton = findViewById(R.id.button_action);
+        int actionButtonWidth = actionButton.getLayoutParams().width;
+        int actionButtonHeight = actionButton.getLayoutParams().height;
+
+        Outline actionButtonOutline = new Outline();
+        actionButtonOutline.setOval(0, 0, actionButtonWidth, actionButtonHeight);
+
+        actionButton.setOutline(actionButtonOutline);
+        actionButton.setClipToOutline(true);
+
+        mGlTextureView = (GlTextureView) findViewById(R.id.gltextureview);
+        mGlTextureView.setEglContext(EglCore.VERSION_GLES3, 0);
+        mGlTextureView.setGlRenderer(new TestRenderer(0xFF808080));
+
+        actionButton.setAlpha(0f);
+        actionButton.animate().alpha(1.0f).setDuration(500).start();
+        actionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                view.animate().alpha(0f).setDuration(500).start();
+            }
+        });
+
+        mChoreographer = Choreographer.getInstance();
     }
 
-    private class TestAdapter extends RecyclerView.Adapter<TestHolder> {
-
-        private final int mColors[] = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFFFF00, 0xFFFF00FF, 0xFF00FFFF, 0xFFFFFFFF};
-
-        @Override
-        public TestHolder onCreateViewHolder(ViewGroup viewGroup, int position) {
-            GlTextureView glTextureView = new GlTextureView(MainActivity.this);
-            glTextureView.setEglVersion(EglCore.VERSION_GLES3);
-            CardView cardView = new CardView(MainActivity.this);
-            cardView.setRadius(50);
-            cardView.setAlpha(0.6f);
-            ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(700, 400);
-            cardView.setLayoutParams(layoutParams);
-            cardView.addView(glTextureView);
-            return new TestHolder(cardView, glTextureView);
-        }
-
-        @Override
-        public void onBindViewHolder(TestHolder testHolder, int position) {
-            testHolder.getGlTextureView().setGlRenderer(new TestGlRenderer(mColors[position]));
-        }
-
-        @Override
-        public int getItemCount() {
-            return mColors.length;
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mChoreographer.postFrameCallback(mFrameCallback);
     }
 
-    private class TestHolder extends RecyclerView.ViewHolder {
-
-        private final GlTextureView mGlTextureView;
-
-        private TestHolder(View parent, GlTextureView glTextureView) {
-            super(parent);
-            mGlTextureView = glTextureView;
-        }
-
-        public GlTextureView getGlTextureView() {
-            return mGlTextureView;
-        }
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mChoreographer.removeFrameCallback(mFrameCallback);
     }
 
-    private class TestGlRenderer implements GlRenderer {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mGlTextureView.onDestroy();
+    }
+
+    private class TestRenderer implements GlRenderer {
 
         private final int mColor;
 
-        public TestGlRenderer(int color) {
+        public TestRenderer(int color) {
             mColor = color;
         }
 
         @Override
-        public void onCreate() {
-            Log.d(TAG, "onCreate");
+        public void onContextCreated() {
+            Log.d(TAG, "onContextCreated");
         }
 
         @Override
@@ -96,13 +97,13 @@ public class MainActivity extends Activity {
         }
 
         @Override
-        public void onSizeChanged(int width, int height) {
-            Log.d(TAG, "onSizeChanged " + width + "x" + height);
+        public void onSurfaceChanged(int width, int height) {
+            Log.d(TAG, "onSurfaceChanged " + width + "x" + height);
         }
 
         @Override
-        public void onRender() {
-            Log.d(TAG, "onRender");
+        public void onRenderFrame() {
+            //Log.d(TAG, "onRender");
             float val = (float) Math.random();
             float inv = 1.0f / 255.0f;
             GLES30.glClearColor(Color.red(mColor) * val * inv, Color.green(mColor) * val * inv, Color.blue(mColor) * val * inv, 1.0f);

@@ -42,8 +42,8 @@ public class EglSurface {
         return result;
     }
 
-    public void setPresentationTime(long nsecs) {
-        mEglCore.setPresentationTime(mEGLSurface, nsecs);
+    public void setPresentationTime(long frameTimeNanos) {
+        mEglCore.setPresentationTime(mEGLSurface, frameTimeNanos);
     }
 
     public int getWidth() {
