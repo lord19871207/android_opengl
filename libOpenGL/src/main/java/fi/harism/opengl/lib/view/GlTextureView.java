@@ -3,7 +3,6 @@ package fi.harism.opengl.lib.view;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.TextureView;
 
 import fi.harism.opengl.lib.util.GlRenderThread;
@@ -11,43 +10,15 @@ import fi.harism.opengl.lib.util.GlRenderer;
 
 public class GlTextureView extends TextureView {
 
-    private static final String TAG = "GlTextureView";
-
-    private final SurfaceTextureListener mSurfaceTextureListener = new SurfaceTextureListener() {
-
-        @Override
-        public void onSurfaceTextureAvailable(final SurfaceTexture surfaceTexture, int width, int height) {
-            Log.d(TAG, "surfaceAvailable");
-            mGlRenderThread.getGlRenderHandler().postCreateEglSurface(surfaceTexture);
-            mGlRenderThread.getGlRenderHandler().postRenderFrame();
-        }
-
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
-            // Do nothing
-        }
-
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
-            Log.d(TAG, "surfaceDestroyed");
-            mGlRenderThread.getGlRenderHandler().postReleaseEglSurfaceAndWait();
-            return true;
-        }
-
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-            // Do nothing
-        }
-
-    };
-    private GlRenderThread mGlRenderThread;
+    private static final String TAG = GlTextureView.class.getSimpleName();
+    private final GlRenderThread mGlRenderThread;
 
     public GlTextureView(Context context) {
-        this(context, null);
+        this(context, null, 0, 0);
     }
 
     public GlTextureView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        this(context, attrs, 0, 0);
     }
 
     public GlTextureView(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -58,7 +29,7 @@ public class GlTextureView extends TextureView {
         super(context, attrs, defStyleAttr, defStyleRes);
         mGlRenderThread = new GlRenderThread();
         mGlRenderThread.startAndWaitUntilReady();
-        setSurfaceTextureListener(mSurfaceTextureListener);
+        setSurfaceTextureListener(new GlSurfaceTextureListener());
     }
 
     public void setEglContext(int eglVersion, int eglFlags) {
@@ -79,7 +50,31 @@ public class GlTextureView extends TextureView {
 
     public void onDestroy() {
         mGlRenderThread.stopAndWaitUntilReady();
-        mGlRenderThread = null;
+    }
+
+    private class GlSurfaceTextureListener implements SurfaceTextureListener {
+
+        @Override
+        public void onSurfaceTextureAvailable(final SurfaceTexture surfaceTexture, int width, int height) {
+            mGlRenderThread.getGlRenderHandler().postCreateEglSurface(surfaceTexture);
+            mGlRenderThread.getGlRenderHandler().postResizeEglSurface(width, height);
+        }
+
+        @Override
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
+            mGlRenderThread.getGlRenderHandler().postResizeEglSurface(width, height);
+        }
+
+        @Override
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+            mGlRenderThread.getGlRenderHandler().postReleaseEglSurfaceAndWait();
+            return true;
+        }
+
+        @Override
+        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+            // Do nothing
+        }
     }
 
 }

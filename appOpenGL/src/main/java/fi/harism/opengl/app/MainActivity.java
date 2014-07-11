@@ -1,113 +1,82 @@
 package fi.harism.opengl.app;
 
 import android.app.Activity;
-import android.graphics.Color;
-import android.graphics.Outline;
-import android.opengl.GLES30;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Choreographer;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
-import fi.harism.opengl.lib.egl.EglCore;
-import fi.harism.opengl.lib.util.GlRenderer;
-import fi.harism.opengl.lib.view.GlTextureView;
+import java.util.ArrayList;
+
+import fi.harism.opengl.app.camera2.BasicCameraRenderActivity;
+import fi.harism.opengl.app.test.TestRenderActivity;
 
 public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
 
-    private final Choreographer.FrameCallback mFrameCallback = new Choreographer.FrameCallback() {
-        @Override
-        public void doFrame(long frameTimeNanos) {
-            GlTextureView glTextureView = (GlTextureView) findViewById(R.id.gltextureview);
-            glTextureView.renderFrame(frameTimeNanos);
-            mChoreographer.postFrameCallback(this);
-        }
-    };
-
-    private GlTextureView mGlTextureView;
-    private Choreographer mChoreographer;
+    private ArrayList<RenderActivity> mRenderActivities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        View actionButton = findViewById(R.id.button_action);
-        int actionButtonWidth = actionButton.getLayoutParams().width;
-        int actionButtonHeight = actionButton.getLayoutParams().height;
+        mRenderActivities = new ArrayList<>();
+        mRenderActivities.add(new TestRenderActivity());
+        mRenderActivities.add(new BasicCameraRenderActivity());
 
-        Outline actionButtonOutline = new Outline();
-        actionButtonOutline.setOval(0, 0, actionButtonWidth, actionButtonHeight);
-
-        actionButton.setOutline(actionButtonOutline);
-        actionButton.setClipToOutline(true);
-
-        mGlTextureView = (GlTextureView) findViewById(R.id.gltextureview);
-        mGlTextureView.setEglContext(EglCore.VERSION_GLES3, 0);
-        mGlTextureView.setGlRenderer(new TestRenderer(0xFF808080));
-
-        actionButton.setAlpha(0f);
-        actionButton.animate().alpha(1.0f).setDuration(500).start();
-        actionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.animate().alpha(0f).setDuration(500).start();
-            }
-        });
-
-        mChoreographer = Choreographer.getInstance();
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new RenderActivityAdapter());
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mChoreographer.postFrameCallback(mFrameCallback);
+    private class RenderActivityViewHolder extends RecyclerView.ViewHolder {
+
+        private TextView mTitle;
+        private TextView mCaption;
+        private RenderActivity mRenderActivity;
+
+        public RenderActivityViewHolder(View itemView) {
+            super(itemView);
+            mTitle = (TextView) itemView.findViewById(R.id.textview_title);
+            mCaption = (TextView) itemView.findViewById(R.id.textview_caption);
+            itemView.findViewById(R.id.view_clickable).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(MainActivity.this, mRenderActivity.getClass());
+                    startActivity(intent);
+                }
+            });
+        }
+
+        public void setRenderActivity(RenderActivity renderActivity) {
+            mRenderActivity = renderActivity;
+            mTitle.setText(mRenderActivity.getRendererTitleId());
+            mCaption.setText(mRenderActivity.getRendererCaptionId());
+        }
+
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mChoreographer.removeFrameCallback(mFrameCallback);
-    }
+    private class RenderActivityAdapter extends RecyclerView.Adapter<RenderActivityViewHolder> {
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mGlTextureView.onDestroy();
-    }
-
-    private class TestRenderer implements GlRenderer {
-
-        private final int mColor;
-
-        public TestRenderer(int color) {
-            mColor = color;
+        @Override
+        public RenderActivityViewHolder onCreateViewHolder(ViewGroup viewGroup, int position) {
+            View view = getLayoutInflater().inflate(R.layout.view_renderactivity, viewGroup, false);
+            return new RenderActivityViewHolder(view);
         }
 
         @Override
-        public void onContextCreated() {
-            Log.d(TAG, "onContextCreated");
+        public void onBindViewHolder(RenderActivityViewHolder renderFragmentViewHolder, int position) {
+            renderFragmentViewHolder.setRenderActivity(mRenderActivities.get(position));
         }
 
         @Override
-        public void onRelease() {
-            Log.d(TAG, "onRelease");
-        }
-
-        @Override
-        public void onSurfaceChanged(int width, int height) {
-            Log.d(TAG, "onSurfaceChanged " + width + "x" + height);
-        }
-
-        @Override
-        public void onRenderFrame() {
-            //Log.d(TAG, "onRender");
-            float val = (float) Math.random();
-            float inv = 1.0f / 255.0f;
-            GLES30.glClearColor(Color.red(mColor) * val * inv, Color.green(mColor) * val * inv, Color.blue(mColor) * val * inv, 1.0f);
-            GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
+        public int getItemCount() {
+            return mRenderActivities.size();
         }
     }
 

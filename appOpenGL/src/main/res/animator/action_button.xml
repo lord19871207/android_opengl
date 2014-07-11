@@ -6,17 +6,17 @@
             <objectAnimator
                 android:duration="@android:integer/config_shortAnimTime"
                 android:propertyName="elevation"
-                android:valueTo="1dp"
+                android:valueTo="2dp"
                 android:valueType="floatType" />
             <objectAnimator
                 android:duration="@android:integer/config_shortAnimTime"
                 android:propertyName="scaleX"
-                android:valueTo="0.9"
+                android:valueTo="1.1"
                 android:valueType="floatType" />
             <objectAnimator
                 android:duration="@android:integer/config_shortAnimTime"
                 android:propertyName="scaleY"
-                android:valueTo="0.9"
+                android:valueTo="1.1"
                 android:valueType="floatType" />
         </set>
     </item>
@@ -25,18 +25,18 @@
             <objectAnimator
                 android:duration="@android:integer/config_shortAnimTime"
                 android:propertyName="elevation"
-                android:valueTo="6dp"
+                android:valueTo="4dp"
                 android:valueType="floatType" />
             <objectAnimator
                 android:duration="@android:integer/config_shortAnimTime"
                 android:propertyName="scaleX"
-                android:valueFrom="0.9"
+                android:valueFrom="1.1"
                 android:valueTo="1.0"
                 android:valueType="floatType" />
             <objectAnimator
                 android:duration="@android:integer/config_shortAnimTime"
                 android:propertyName="scaleY"
-                android:valueFrom="0.9"
+                android:valueFrom="1.1"
                 android:valueTo="1.0"
                 android:valueType="floatType" />
         </set>

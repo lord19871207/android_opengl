@@ -16,7 +16,7 @@ public class GlProgram {
         if (mProgram != 0 &&
                 (vertSource == null || vertShader != 0) &&
                 (fragSource == null || fragShader != 0) &&
-                (compSource == null || compShader != 0) ) {
+                (compSource == null || compShader != 0)) {
             final int[] linkStatus = {GLES31.GL_FALSE};
             if (vertShader != 0) GLES31.glAttachShader(mProgram, vertShader);
             if (fragShader != 0) GLES31.glAttachShader(mProgram, fragShader);
@@ -35,6 +35,23 @@ public class GlProgram {
         GLES31.glDeleteShader(fragShader);
         GLES31.glDeleteShader(compShader);
         GlUtils.checkGLErrors();
+    }
+
+    public void useProgram() {
+        GLES31.glUseProgram(mProgram);
+        GlUtils.checkGLErrors();
+    }
+
+    public int getAttribLocation(String name) {
+        int location = GLES31.glGetAttribLocation(mProgram, name);
+        GlUtils.checkGLErrors();
+        return location;
+    }
+
+    public int getUniformLocation(String name) {
+        int location = GLES31.glGetUniformLocation(mProgram, name);
+        GlUtils.checkGLErrors();
+        return location;
     }
 
     private int compileShader(String shaderSource, int shaderType) {

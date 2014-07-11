@@ -15,10 +15,11 @@ public class GlRenderHandler extends Handler {
     public static final int MSG_RELEASE = 1;
     public static final int MSG_CREATE_EGLCONTEXT = 2;
     public static final int MSG_CREATE_EGLSURFACE = 3;
-    public static final int MSG_RELEASE_EGLCONTEXT = 4;
-    public static final int MSG_RELEASE_EGLSURFACE = 5;
-    public static final int MSG_SET_RENDERER = 6;
-    public static final int MSG_RENDER_FRAME = 7;
+    public static final int MSG_RESIZE_EGLSURFACE = 4;
+    public static final int MSG_RELEASE_EGLCONTEXT = 5;
+    public static final int MSG_RELEASE_EGLSURFACE = 6;
+    public static final int MSG_SET_RENDERER = 7;
+    public static final int MSG_RENDER_FRAME = 8;
 
     private EglCore mEglCore = null;
     private EglSurface mEglSurface = null;
@@ -42,6 +43,11 @@ public class GlRenderHandler extends Handler {
     public void postCreateEglSurface(Object surface) {
         removeMessages(MSG_CREATE_EGLSURFACE);
         sendMessage(obtainMessage(MSG_CREATE_EGLSURFACE, surface));
+    }
+
+    public void postResizeEglSurface(int width, int height) {
+        removeMessages(MSG_RESIZE_EGLSURFACE);
+        sendMessage(obtainMessage(MSG_RESIZE_EGLSURFACE, width, height));
     }
 
     public void postReleaseEglContext() {
@@ -78,7 +84,7 @@ public class GlRenderHandler extends Handler {
 
     public void postRenderFrame(long time) {
         removeMessages(MSG_RENDER_FRAME);
-        sendMessage(obtainMessage(MSG_RENDER_FRAME, (int)(time >> 32), (int)time));
+        sendMessage(obtainMessage(MSG_RENDER_FRAME, (int) (time >> 32), (int) time));
     }
 
     private void onRelease() {
@@ -91,9 +97,7 @@ public class GlRenderHandler extends Handler {
         onReleaseEglSurface();
         onReleaseEglContext();
         mEglCore = new EglCore(eglVersion, eglFlags);
-
         if (mGlRenderer != null) {
-            mGlRenderer.onContextCreated();
         }
     }
 
@@ -101,9 +105,14 @@ public class GlRenderHandler extends Handler {
         onReleaseEglSurface();
         mEglSurface = new EglSurface(mEglCore, surface);
         mEglSurface.makeCurrent();
-
         if (mGlRenderer != null) {
-            mGlRenderer.onSurfaceChanged(mEglSurface.getWidth(), mEglSurface.getHeight());
+            mGlRenderer.onSurfaceCreated();
+        }
+    }
+
+    private void onResizeEglSurface(int width, int height) {
+        if (mGlRenderer != null) {
+            mGlRenderer.onSurfaceChanged(width, height);
         }
     }
 
@@ -117,6 +126,9 @@ public class GlRenderHandler extends Handler {
     private void onReleaseEglSurface() {
         if (mEglSurface != null) {
             synchronized (mLock) {
+                if (mGlRenderer != null) {
+                    mGlRenderer.onSurfaceReleased();
+                }
                 mEglSurface.release();
                 mEglSurface = null;
                 mLock.notifyAll();
@@ -126,14 +138,11 @@ public class GlRenderHandler extends Handler {
 
     private void onSetRenderer(GlRenderer glRenderer) {
         if (mGlRenderer != null) {
-            mGlRenderer.onRelease();
+            mGlRenderer.onSurfaceReleased();
         }
         mGlRenderer = glRenderer;
-
-        if (mEglCore != null) {
-            mGlRenderer.onContextCreated();
-        }
         if (mEglSurface != null) {
+            mGlRenderer.onSurfaceCreated();
             mGlRenderer.onSurfaceChanged(mEglSurface.getWidth(), mEglSurface.getHeight());
         }
     }
@@ -160,6 +169,9 @@ public class GlRenderHandler extends Handler {
             case MSG_CREATE_EGLSURFACE:
                 onCreateEglSurface(msg.obj);
                 break;
+            case MSG_RESIZE_EGLSURFACE:
+                onResizeEglSurface(msg.arg1, msg.arg2);
+                break;
             case MSG_RELEASE_EGLCONTEXT:
                 onReleaseEglContext();
                 break;
@@ -170,7 +182,7 @@ public class GlRenderHandler extends Handler {
                 onSetRenderer((GlRenderer) msg.obj);
                 break;
             case MSG_RENDER_FRAME:
-                onRenderFrame((long)msg.arg1 << 32 | msg.arg2 & 0xFFFFFFFFL);
+                onRenderFrame((long) msg.arg1 << 32 | msg.arg2 & 0xFFFFFFFFL);
                 break;
             default:
                 Log.d(TAG, "Unknown msg type = " + msg.what);
