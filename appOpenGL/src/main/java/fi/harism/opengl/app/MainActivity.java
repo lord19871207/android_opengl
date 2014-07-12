@@ -12,6 +12,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import fi.harism.opengl.app.camera2.BasicCameraRenderActivity;
+import fi.harism.opengl.app.camera2.RawCameraRenderActivity;
 import fi.harism.opengl.app.test.TestRenderActivity;
 
 public class MainActivity extends Activity {
@@ -28,6 +29,7 @@ public class MainActivity extends Activity {
         mRenderActivities = new ArrayList<>();
         mRenderActivities.add(new TestRenderActivity());
         mRenderActivities.add(new BasicCameraRenderActivity());
+        mRenderActivities.add(new RawCameraRenderActivity());
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));

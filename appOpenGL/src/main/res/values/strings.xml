@@ -5,6 +5,9 @@
     <string name="test_renderer_caption">Nothing more than a test renderer</string>
 
     <string name="camera2_basic_renderer_title">Camera2 Basic</string>
-    <string name="camera2_basic_renderer_caption">Example which captures preview frames using Camera2 API and renders them on to the screen</string>
+    <string name="camera2_basic_renderer_caption">Renderer which captures preview frames using Camera2 API and renders them on to the screen</string>
+
+    <string name="camera2_raw_renderer_title">Camera2 Raw</string>
+    <string name="camera2_raw_renderer_caption">Renderer which captures raw preview frames using Camera2 API and renders them on to the screen</string>
 
 </resources>

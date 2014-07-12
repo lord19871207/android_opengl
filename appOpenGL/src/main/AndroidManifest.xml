@@ -23,10 +23,17 @@
 
         <activity
             android:name=".test.TestRenderActivity"
+            android:label="@string/test_renderer_title"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".camera2.BasicCameraRenderActivity"
+            android:label="@string/camera2_basic_renderer_title"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".camera2.RawCameraRenderActivity"
+            android:label="@string/camera2_raw_renderer_title"
             android:screenOrientation="portrait" />
 
     </application>
