@@ -32,4 +32,14 @@ public class GlTexture {
         GlUtils.checkGLErrors();
     }
 
+    public void parameter(int target, int pname, float pvalue) {
+        GLES31.glTexParameterf(target, pname, pvalue);
+        GlUtils.checkGLErrors();
+    }
+
+    public void parameter(int target, int pname, int pvalue) {
+        GLES31.glTexParameteri(target, pname, pvalue);
+        GlUtils.checkGLErrors();
+    }
+
 }
