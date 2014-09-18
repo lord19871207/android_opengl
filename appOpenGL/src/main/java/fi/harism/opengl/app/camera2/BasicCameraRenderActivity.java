@@ -21,6 +21,7 @@ import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
+import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -31,6 +32,7 @@ import fi.harism.opengl.app.RenderActivity;
 import fi.harism.opengl.lib.egl.EglCore;
 import fi.harism.opengl.lib.gl.GlProgram;
 import fi.harism.opengl.lib.gl.GlTexture;
+import fi.harism.opengl.lib.gl.GlUtils;
 import fi.harism.opengl.lib.util.GlRenderer;
 import fi.harism.opengl.lib.view.GlTextureView;
 
@@ -155,28 +157,7 @@ public class BasicCameraRenderActivity extends RenderActivity {
 
     private class BasicCameraRenderer implements GlRenderer, SurfaceTexture.OnFrameAvailableListener {
 
-        private static final String VS_SOURCE = "" +
-                "uniform vec2 uAspectRatio;\n" +
-                "uniform mat4 uFrameMatrix;\n" +
-                "uniform mat4 uOrientationMatrix;\n" +
-                "attribute vec4 position;\n" +
-                "varying vec2 vTexPosition;\n" +
-                "void main() {\n" +
-                "  gl_Position = uOrientationMatrix * position;\n" +
-                "  gl_Position /= gl_Position.w;\n" +
-                "  vec4 texPosition = uFrameMatrix * vec4(gl_Position.xy * 0.5 + 0.5, 0.0, 1.0);\n" +
-                "  gl_Position.xy *= uAspectRatio;\n" +
-                "  vTexPosition = texPosition.xy / texPosition.w;\n" +
-                "}";
-
-        private static final String FS_SOURCE = "" +
-                "#extension GL_OES_EGL_image_external : require\n" +
-                "precision mediump float;\n" +
-                "uniform samplerExternalOES sTexture;\n" +
-                "varying vec2 vTexPosition;\n" +
-                "void main() {\n" +
-                "  gl_FragColor = texture2D(sTexture, vTexPosition);\n" +
-                "}";
+        private static final int IN_POSITION = 0;
 
         private final float mFrameMatrix[] = new float[16];
         private final float mOrientationMatrix[] = new float[16];
@@ -201,14 +182,25 @@ public class BasicCameraRenderActivity extends RenderActivity {
             mVertices = ByteBuffer.allocateDirect(VERTICES.length).order(ByteOrder.nativeOrder());
             mVertices.put(VERTICES).position(0);
 
-            mProgram = new GlProgram(VS_SOURCE, FS_SOURCE, null);
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    startPreview();
-                }
-            });
+            try {
+                final String SOURCE_VS = GlUtils.loadString(BasicCameraRenderActivity.this, "shaders/camera2basic/shader_vs.txt");
+                final String SOURCE_FS = GlUtils.loadString(BasicCameraRenderActivity.this, "shaders/camera2basic/shader_fs.txt");
+                mProgram = new GlProgram(SOURCE_VS, SOURCE_FS, null);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        startPreview();
+                    }
+                });
+            } catch (final Exception ex) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(BasicCameraRenderActivity.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                });
+            }
         }
 
         @Override
@@ -235,15 +227,15 @@ public class BasicCameraRenderActivity extends RenderActivity {
                 GLES30.glUniformMatrix4fv(mProgram.getUniformLocation("uFrameMatrix"), 1, false, mFrameMatrix, 0);
                 GLES30.glUniformMatrix4fv(mProgram.getUniformLocation("uOrientationMatrix"), 1, false, mOrientationMatrix, 0);
 
-                GLES30.glVertexAttribPointer(mProgram.getAttribLocation("position"), 2, GLES30.GL_BYTE, false, 0, mVertices);
-                GLES30.glEnableVertexAttribArray(mProgram.getAttribLocation("position"));
+                GLES30.glVertexAttribPointer(IN_POSITION, 2, GLES30.GL_BYTE, false, 0, mVertices);
+                GLES30.glEnableVertexAttribArray(IN_POSITION);
 
                 GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
                 mTexture.bind(GLES11Ext.GL_TEXTURE_EXTERNAL_OES);
 
                 GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
 
-                GLES30.glDisableVertexAttribArray(mProgram.getAttribLocation("position"));
+                GLES30.glDisableVertexAttribArray(IN_POSITION);
 
                 mTexture.unbind(GLES11Ext.GL_TEXTURE_EXTERNAL_OES);
             }

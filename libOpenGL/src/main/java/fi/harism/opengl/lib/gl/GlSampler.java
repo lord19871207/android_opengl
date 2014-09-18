@@ -4,10 +4,9 @@ import android.opengl.GLES31;
 
 public class GlSampler {
 
-    private final int mSampler[];
+    private final int mSampler[] = new int[1];
 
     public GlSampler() {
-        mSampler = new int[1];
         GLES31.glGenSamplers(1, mSampler, 0);
         GlUtils.checkGLErrors();
     }

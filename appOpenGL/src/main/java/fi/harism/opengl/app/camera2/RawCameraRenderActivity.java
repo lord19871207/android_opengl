@@ -20,6 +20,7 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
+import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -29,8 +30,11 @@ import java.util.Arrays;
 import fi.harism.opengl.app.R;
 import fi.harism.opengl.app.RenderActivity;
 import fi.harism.opengl.lib.egl.EglCore;
+import fi.harism.opengl.lib.gl.GlFramebuffer;
 import fi.harism.opengl.lib.gl.GlProgram;
+import fi.harism.opengl.lib.gl.GlSampler;
 import fi.harism.opengl.lib.gl.GlTexture;
+import fi.harism.opengl.lib.gl.GlUtils;
 import fi.harism.opengl.lib.util.GlRenderer;
 import fi.harism.opengl.lib.view.GlSurfaceView;
 
@@ -101,7 +105,6 @@ public class RawCameraRenderActivity extends RenderActivity {
                         @Override
                         public void onOpened(CameraDevice cameraDevice) {
                             mCameraDevice = cameraDevice;
-                            startPreview();
                         }
 
                         @Override
@@ -163,60 +166,17 @@ public class RawCameraRenderActivity extends RenderActivity {
 
     private class BasicCameraRenderer implements GlRenderer {
 
-        private static final String VS_SOURCE = "" +
-                "#version 300 es\n" +
-                "uniform vec2 uAspectRatio;\n" +
-                "uniform mat4 uOrientationMatrix;\n" +
-                "uniform vec2 uTextureRawSize;\n" +
-                "layout (location = 0) in vec4 position;\n" +
-                "out vec4 vTexPosition;\n" +
-                "void main() {\n" +
-                "  gl_Position = position;\n" +
-                "  //gl_Position = uOrientationMatrix * position;\n" +
-                "  //gl_Position.xy *= uAspectRatio;\n" +
-                "  vTexPosition.xy = position.xy * 0.5 + 0.5;\n" +
-                "  vTexPosition.zw = vTexPosition.xy * uTextureRawSize;\n" +
-                "  //vTexPosition.y = 1.0 - vTexPosition.y;\n" +
-                "}\n";
-
-        private static final String FS_SOURCE = "" +
-                "#version 300 es\n" +
-                "uniform usampler2D sTextureRaw;\n" +
-                "uniform sampler2D sTextureLensMap;\n" +
-                "in vec4 vTexPosition;\n" +
-                "out vec4 outColor;\n" +
-                "void main() {\n" +
-                "  ivec2 samplePos = ivec2(vTexPosition.zw) | 0x01;\n" +
-                "  vec2 sampleFract = fract(vTexPosition.zw);\n" +
-                "  #define RAW(x, y) texelFetchOffset(sTextureRaw, samplePos, 0, ivec2(x, y)).r\n" +
-                "  vec4 raw = vec4(RAW(1, 1), RAW(3, 1), RAW(1, 3), RAW(3, 3));\n" +
-                "  raw.x = mix(raw.x, raw.y, sampleFract.x);\n" +
-                "  raw.z = mix(raw.z, raw.a, sampleFract.x);\n" +
-                "  outColor.r = mix(raw.x, raw.z, sampleFract.y);\n" +
-                "  raw = vec4(RAW(1, 0), RAW(3, 0), RAW(1, 2), RAW(3, 2));\n" +
-                "  raw.x = mix(raw.x, raw.y, sampleFract.x);\n" +
-                "  raw.z = mix(raw.z, raw.a, sampleFract.x);\n" +
-                "  outColor.g = mix(raw.x, raw.z, sampleFract.y);\n" +
-                "  raw = vec4(RAW(0, 1), RAW(2, 1), RAW(0, 3), RAW(2, 3));\n" +
-                "  raw.x = mix(raw.x, raw.y, sampleFract.x);\n" +
-                "  raw.z = mix(raw.z, raw.a, sampleFract.x);\n" +
-                "  outColor.b = mix(raw.x, raw.z, sampleFract.y);\n" +
-                "  raw = vec4(RAW(0, 0), RAW(2, 0), RAW(0, 2), RAW(2, 2));\n" +
-                "  raw.x = mix(raw.x, raw.y, sampleFract.x);\n" +
-                "  raw.z = mix(raw.z, raw.a, sampleFract.x);\n" +
-                "  outColor.a = mix(raw.x, raw.z, sampleFract.y);\n" +
-                "  outColor *= texture(sTextureLensMap, vTexPosition.xy);\n" +
-                "  outColor /= 1023.0;\n" +
-                "  outColor = vec4(outColor.r, (outColor.g + outColor.b) * 0.5, outColor.a, 1.0);\n" +
-                "}\n";
-
         private final float mFrameMatrix[] = new float[16];
         private final float mOrientationMatrix[] = new float[16];
         private final Point mSurfaceSize = new Point();
         private GlTexture mTextureRaw;
+        private GlTexture mTextureRgb;
         private GlTexture mTextureLensMap;
-        private GlProgram mProgram;
-        private ByteBuffer mVertices;
+        private GlSampler mSamplerNearest;
+        private GlFramebuffer mFramebufferRgb;
+        private GlProgram mProgramConvert;
+        private GlProgram mProgramCopy;
+        private ByteBuffer mQuadVertices;
         private Size mPreviewSize;
         private int mCameraOrientation;
         private final FloatBuffer mBufferLensMap;
@@ -231,29 +191,57 @@ public class RawCameraRenderActivity extends RenderActivity {
         @Override
         public void onSurfaceCreated() {
             mTextureRaw = new GlTexture();
-            mTextureRaw.bind(GLES30.GL_TEXTURE_2D);
-            mTextureRaw.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
-            mTextureRaw.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
-            mTextureRaw.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
-            mTextureRaw.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
-            mTextureRaw.unbind(GLES30.GL_TEXTURE_2D);
-
+            mTextureRgb = new GlTexture().bind(GLES30.GL_TEXTURE_2D);
+            mTextureRgb.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, 2048, 2048, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null);
+            mTextureRgb.unbind(GLES30.GL_TEXTURE_2D);
             mTextureLensMap = new GlTexture();
-            mTextureLensMap.bind(GLES30.GL_TEXTURE_2D);
-            mTextureLensMap.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
-            mTextureLensMap.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
-            mTextureLensMap.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
-            mTextureLensMap.parameter(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
-            mTextureLensMap.unbind(GLES30.GL_TEXTURE_2D);
+
+            mSamplerNearest = new GlSampler();
+            mSamplerNearest.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
+            mSamplerNearest.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
+            mSamplerNearest.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+            mSamplerNearest.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
+
+            mFramebufferRgb = new GlFramebuffer().bind(GLES30.GL_FRAMEBUFFER);
+            mFramebufferRgb.texture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, mTextureRgb.getTexture(), 0);
+            final int[] ATTACHMENTS = {GLES30.GL_COLOR_ATTACHMENT0};
+            GLES30.glDrawBuffers(1, ATTACHMENTS, 0);
+            if (mFramebufferRgb.checkStatus(GLES30.GL_FRAMEBUFFER) != GLES30.GL_FRAMEBUFFER_COMPLETE) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(RawCameraRenderActivity.this, "Framebuffer create error.", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+            mFramebufferRgb.unbind(GLES30.GL_FRAMEBUFFER);
 
             final byte[] VERTICES = {-1, 1, -1, -1, 1, 1, 1, -1};
-            mVertices = ByteBuffer.allocateDirect(VERTICES.length).order(ByteOrder.nativeOrder());
-            mVertices.put(VERTICES).position(0);
+            mQuadVertices = ByteBuffer.allocateDirect(VERTICES.length).order(ByteOrder.nativeOrder());
+            mQuadVertices.put(VERTICES).position(0);
 
-            mProgram = new GlProgram(VS_SOURCE, FS_SOURCE, null);
-            mProgram.useProgram();
-            GLES30.glUniform1i(mProgram.getUniformLocation("sTextureRaw"), 0);
-            GLES30.glUniform1i(mProgram.getUniformLocation("sTextureLensMap"), 1);
+            try {
+                final String CONVERT_VS = GlUtils.loadString(RawCameraRenderActivity.this, "shaders/camera2raw/convert_vs.txt");
+                final String CONVERT_FS = GlUtils.loadString(RawCameraRenderActivity.this, "shaders/camera2raw/convert_fs.txt");
+                mProgramConvert = new GlProgram(CONVERT_VS, CONVERT_FS, null).useProgram();
+                GLES30.glUniform1i(mProgramConvert.getUniformLocation("sTextureRaw"), 0);
+                GLES30.glUniform1i(mProgramConvert.getUniformLocation("sTextureLensMap"), 1);
+
+                final String COPY_VS = GlUtils.loadString(RawCameraRenderActivity.this, "shaders/camera2raw/copy_vs.txt");
+                final String COPY_FS = GlUtils.loadString(RawCameraRenderActivity.this, "shaders/camera2raw/copy_fs.txt");
+                mProgramCopy = new GlProgram(COPY_VS, COPY_FS, null).useProgram();
+                GLES30.glUniform1i(mProgramCopy.getUniformLocation("sTextureRgb"), 0);
+
+                startPreview();
+            } catch (final Exception ex) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(RawCameraRenderActivity.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                });
+            }
         }
 
         @Override
@@ -266,20 +254,38 @@ public class RawCameraRenderActivity extends RenderActivity {
             if (mImageReader != null) {
                 Image image = mImageReader.acquireLatestImage();
                 if (image != null) {
+                    int imageWidth = image.getWidth();
+                    int imageHeight = image.getHeight();
+
                     mTextureRaw.bind(GLES30.GL_TEXTURE_2D);
-                    mTextureRaw.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_R16UI, image.getWidth(), image.getHeight(), 0, GLES30.GL_RED_INTEGER, GLES30.GL_UNSIGNED_SHORT, image.getPlanes()[0].getBuffer());
+                    mTextureRaw.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_R16UI, imageWidth, imageHeight, 0, GLES30.GL_RED_INTEGER, GLES30.GL_UNSIGNED_SHORT, image.getPlanes()[0].getBuffer());
                     mTextureRaw.unbind(GLES30.GL_TEXTURE_2D);
-                    mProgram.useProgram();
-                    GLES30.glUniform2f(mProgram.getUniformLocation("uTextureRawSize"), image.getWidth(), image.getHeight());
                     image.close();
 
                     mBufferLensMap.position(0);
                     mTextureLensMap.bind(GLES30.GL_TEXTURE_2D);
                     mTextureLensMap.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA32F, mBufferLensMapColumns, mBufferLensMapRows, 0, GLES30.GL_RGBA, GLES30.GL_FLOAT, mBufferLensMap);
                     mTextureLensMap.unbind(GLES30.GL_TEXTURE_2D);
-                }
 
-                mProgram.useProgram();
+                    mFramebufferRgb.bind(GLES30.GL_FRAMEBUFFER);
+                    GLES30.glViewport(0, 0, 2048, 2048);
+                    mProgramConvert.useProgram();
+                    GLES30.glUniform2f(mProgramConvert.getUniformLocation("uTextureRawSize"), imageWidth, imageHeight);
+                    GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, mQuadVertices);
+                    GLES30.glEnableVertexAttribArray(0);
+                    GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+                    mTextureRaw.bind(GLES30.GL_TEXTURE_2D);
+                    mSamplerNearest.bind(0);
+                    GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
+                    mTextureLensMap.bind(GLES30.GL_TEXTURE_2D);
+                    mSamplerNearest.bind(1);
+                    GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
+                    GLES30.glDisableVertexAttribArray(0);
+                    mTextureRaw.unbind(GLES30.GL_TEXTURE_2D);
+                    mTextureLensMap.unbind(GLES30.GL_TEXTURE_2D);
+                    mFramebufferRgb.unbind(GLES30.GL_FRAMEBUFFER);
+                    GLES30.glViewport(0, 0, mSurfaceSize.x, mSurfaceSize.y);
+                }
 
                 float aspectSurface = (float) mSurfaceSize.x / mSurfaceSize.y;
                 float aspectPreview = (float) mPreviewSize.getWidth() / mPreviewSize.getHeight();
@@ -287,26 +293,18 @@ public class RawCameraRenderActivity extends RenderActivity {
                 float aspectX = Math.max(aspectPreview / aspectSurface, 1.0f);
                 float aspectY = Math.max(aspectSurface / aspectPreview, 1.0f);
 
-                GLES30.glUniform2f(mProgram.getUniformLocation("uAspectRatio"), aspectX, aspectY);
-                GLES30.glUniformMatrix4fv(mProgram.getUniformLocation("uOrientationMatrix"), 1, false, mOrientationMatrix, 0);
-
-                GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, mVertices);
+                mProgramCopy.useProgram();
+                GLES30.glUniform2f(mProgramCopy.getUniformLocation("uAspectRatio"), aspectX, aspectY);
+                GLES30.glUniformMatrix4fv(mProgramCopy.getUniformLocation("uFrameMatrix"), 1, false, mFrameMatrix, 0);
+                GLES30.glUniformMatrix4fv(mProgramCopy.getUniformLocation("uOrientationMatrix"), 1, false, mOrientationMatrix, 0);
+                GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, mQuadVertices);
                 GLES30.glEnableVertexAttribArray(0);
-
                 GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-                mTextureRaw.bind(GLES30.GL_TEXTURE_2D);
-                GLES30.glUniform1i(mProgram.getUniformLocation("sTextureRaw"), 0);
-
-                GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
-                mTextureLensMap.bind(GLES30.GL_TEXTURE_2D);
-                GLES30.glUniform1i(mProgram.getUniformLocation("sTextureLensMap"), 1);
-
+                mTextureRgb.bind(GLES30.GL_TEXTURE_2D);
+                mSamplerNearest.bind(0);
                 GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
-
                 GLES30.glDisableVertexAttribArray(0);
-
-                mTextureRaw.unbind(GLES30.GL_TEXTURE_2D);
-                mTextureLensMap.unbind(GLES30.GL_TEXTURE_2D);
+                mTextureRgb.unbind(GLES30.GL_TEXTURE_2D);
             }
         }
 

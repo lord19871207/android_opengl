@@ -17,9 +17,10 @@ public class GlTexture {
         return mTexture[0];
     }
 
-    public void bind(int target) {
+    public GlTexture bind(int target) {
         GLES31.glBindTexture(target, mTexture[0]);
         GlUtils.checkGLErrors();
+        return this;
     }
 
     public void unbind(int target) {
