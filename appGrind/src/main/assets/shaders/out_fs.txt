@@ -1,0 +1,18 @@
+#version 300 es
+
+uniform sampler2D sTexture;
+uniform sampler2D sTextureRand;
+uniform vec2 uTextureRandScale;
+uniform vec2 uTextureRandDiff;
+
+in vec4 vTexPosition;
+
+out vec4 outFragColor;
+
+void main() {
+    float length = length(vTexPosition.xy);
+    float vignette = smoothstep(1.65, 0.75, length);
+    outFragColor = texture(sTexture, vTexPosition.zw);
+    outFragColor.rgb *= vignette;
+    outFragColor.rgb *= mix(0.75, 1.0, texture(sTextureRand, uTextureRandScale * (vTexPosition.zw + uTextureRandDiff)).r);
+}

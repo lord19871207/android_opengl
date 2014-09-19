@@ -34,6 +34,6 @@ void main() {
     outFragColor.a = mix(raw.x, raw.z, sampleFract.y);
 
     outFragColor /= 1023.0;
-    outFragColor *= texture(sTextureLensMap, vTexPosition.xy);
-    outFragColor = vec4(outFragColor.r, (outFragColor.g + outFragColor.b) * 0.5, outFragColor.a, 1.0);
+    //outFragColor *= texture(sTextureLensMap, vTexPosition.xy);
+    outFragColor = vec4(outFragColor.r, mix(outFragColor.g, outFragColor.b, 0.5), outFragColor.a, 1.0);
 }

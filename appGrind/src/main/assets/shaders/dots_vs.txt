@@ -1,0 +1,17 @@
+#version 300 es
+
+uniform mat4 uProjM;
+uniform mat4 uViewM;
+
+layout (location = 0) in vec4 inPosition;
+layout (location = 1) in vec4 inPositionQuad;
+
+out vec2 vPosition;
+
+void main() {
+    gl_Position = uViewM * inPosition;
+    gl_Position /= gl_Position.w;
+    gl_Position.xy += inPositionQuad.xy * 0.85;
+    gl_Position = uProjM * gl_Position;
+    vPosition = inPositionQuad.xy;
+}

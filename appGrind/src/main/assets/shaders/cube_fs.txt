@@ -1,0 +1,11 @@
+#version 300 es
+
+uniform samplerCube sTextureSky;
+
+in vec3 vReflected;
+
+out vec4 outFragColor;
+
+void main() {
+    outFragColor = texture(sTextureSky, normalize(vReflected));
+}

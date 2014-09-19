@@ -1,1 +1,5 @@
-include ':appOpenGL', ':libOpenGL', ':libXMP'
+// Libraries
+include ':libOpenGL', ':libXMP', 'libUtils'
+
+// Applications
+include ':appOpenGL', ':appGrind'

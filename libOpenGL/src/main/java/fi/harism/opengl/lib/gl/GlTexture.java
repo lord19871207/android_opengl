@@ -6,7 +6,7 @@ import java.nio.Buffer;
 
 public class GlTexture {
 
-    private final int[] mTexture = new int[1];
+    private final int[] mTexture = {0};
 
     public GlTexture() {
         GLES31.glGenTextures(1, mTexture, 0);

@@ -3,6 +3,7 @@ package fi.harism.opengl.app.camera2;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -13,6 +14,7 @@ import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.LensShadingMap;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.hardware.camera2.params.TonemapCurve;
 import android.media.Image;
 import android.media.ImageReader;
 import android.opengl.GLES30;
@@ -131,6 +133,7 @@ public class RawCameraRenderActivity extends RenderActivity {
             mImageReader = ImageReader.newInstance(previewSizes[0].getWidth(), previewSizes[0].getHeight(), ImageFormat.RAW_SENSOR, 2);
             mRenderer.setOrientation(cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION));
             mRenderer.setPreviewSize(previewSizes[0]);
+            mRenderer.setTonemapCurveMax(cameraCharacteristics.get(CameraCharacteristics.TONEMAP_MAX_CURVE_POINTS));
             mCameraDevice.createCaptureSession(Arrays.asList(mImageReader.getSurface()), new CameraCaptureSession.StateListener() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
@@ -147,6 +150,7 @@ public class RawCameraRenderActivity extends RenderActivity {
                             @Override
                             public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                                 mRenderer.setLensShadingMap(result.get(CaptureResult.STATISTICS_LENS_SHADING_CORRECTION_MAP));
+                                mRenderer.setTonemapCurve(result.get(CaptureResult.TONEMAP_CURVE));
                                 mGlSurfaceView.renderFrame();
                             }
                         }, null);
@@ -172,6 +176,7 @@ public class RawCameraRenderActivity extends RenderActivity {
         private GlTexture mTextureRaw;
         private GlTexture mTextureRgb;
         private GlTexture mTextureLensMap;
+        private GlTexture mTextureTonemapCurve;
         private GlSampler mSamplerNearest;
         private GlFramebuffer mFramebufferRgb;
         private GlProgram mProgramConvert;
@@ -183,6 +188,9 @@ public class RawCameraRenderActivity extends RenderActivity {
         private final float[] mBufferLensMapArray = new float[4 * 64 * 64];
         private int mBufferLensMapColumns;
         private int mBufferLensMapRows;
+        private FloatBuffer mBufferTonemapCurve;
+        private float[] mBufferTonemapCurveArray;
+        private int mBufferTonemapCurveMax;
 
         public BasicCameraRenderer() {
             mBufferLensMap = FloatBuffer.wrap(mBufferLensMapArray);
@@ -195,6 +203,7 @@ public class RawCameraRenderActivity extends RenderActivity {
             mTextureRgb.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, 2048, 2048, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null);
             mTextureRgb.unbind(GLES30.GL_TEXTURE_2D);
             mTextureLensMap = new GlTexture();
+            mTextureTonemapCurve = new GlTexture();
 
             mSamplerNearest = new GlSampler();
             mSamplerNearest.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
@@ -231,6 +240,7 @@ public class RawCameraRenderActivity extends RenderActivity {
                 final String COPY_FS = GlUtils.loadString(RawCameraRenderActivity.this, "shaders/camera2raw/copy_fs.txt");
                 mProgramCopy = new GlProgram(COPY_VS, COPY_FS, null).useProgram();
                 GLES30.glUniform1i(mProgramCopy.getUniformLocation("sTextureRgb"), 0);
+                GLES30.glUniform1i(mProgramCopy.getUniformLocation("sTextureTonemapCurve"), 1);
 
                 startPreview();
             } catch (final Exception ex) {
@@ -267,6 +277,11 @@ public class RawCameraRenderActivity extends RenderActivity {
                     mTextureLensMap.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA32F, mBufferLensMapColumns, mBufferLensMapRows, 0, GLES30.GL_RGBA, GLES30.GL_FLOAT, mBufferLensMap);
                     mTextureLensMap.unbind(GLES30.GL_TEXTURE_2D);
 
+                    mBufferTonemapCurve.position(0);
+                    mTextureTonemapCurve.bind(GLES30.GL_TEXTURE_2D);
+                    mTextureTonemapCurve.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RG32F, mBufferTonemapCurveMax, 3, 0, GLES30.GL_RG, GLES30.GL_FLOAT, mBufferTonemapCurve);
+                    mTextureTonemapCurve.unbind(GLES30.GL_TEXTURE_2D);
+
                     mFramebufferRgb.bind(GLES30.GL_FRAMEBUFFER);
                     GLES30.glViewport(0, 0, 2048, 2048);
                     mProgramConvert.useProgram();
@@ -302,9 +317,13 @@ public class RawCameraRenderActivity extends RenderActivity {
                 GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
                 mTextureRgb.bind(GLES30.GL_TEXTURE_2D);
                 mSamplerNearest.bind(0);
+                GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
+                mTextureTonemapCurve.bind(GLES30.GL_TEXTURE_2D);
+                mSamplerNearest.bind(1);
                 GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
                 GLES30.glDisableVertexAttribArray(0);
                 mTextureRgb.unbind(GLES30.GL_TEXTURE_2D);
+                mTextureTonemapCurve.unbind(GLES30.GL_TEXTURE_2D);
             }
         }
 
@@ -325,6 +344,18 @@ public class RawCameraRenderActivity extends RenderActivity {
             mBufferLensMapColumns = lensShadingMap.getColumnCount();
             mBufferLensMapRows = lensShadingMap.getRowCount();
             lensShadingMap.copyGainFactors(mBufferLensMapArray, 0);
+        }
+
+        public void setTonemapCurveMax(int max) {
+            mBufferTonemapCurveMax = max;
+            mBufferTonemapCurveArray = new float[2 * 3 * max];
+            mBufferTonemapCurve = FloatBuffer.wrap(mBufferTonemapCurveArray);
+        }
+
+        public void setTonemapCurve(TonemapCurve tonemapCurve) {
+            tonemapCurve.copyColorCurve(TonemapCurve.CHANNEL_RED, mBufferTonemapCurveArray, mBufferTonemapCurveMax * 0);
+            tonemapCurve.copyColorCurve(TonemapCurve.CHANNEL_GREEN, mBufferTonemapCurveArray, mBufferTonemapCurveMax * 2);
+            tonemapCurve.copyColorCurve(TonemapCurve.CHANNEL_BLUE, mBufferTonemapCurveArray, mBufferTonemapCurveMax * 4);
         }
 
     }

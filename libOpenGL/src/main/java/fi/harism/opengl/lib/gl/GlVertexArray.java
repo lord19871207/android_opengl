@@ -4,7 +4,7 @@ import android.opengl.GLES31;
 
 public class GlVertexArray {
 
-    private final int[] mVertexArray = new int[1];
+    private final int[] mVertexArray = {0};
 
     public GlVertexArray() {
         GLES31.glGenVertexArrays(1, mVertexArray, 0);

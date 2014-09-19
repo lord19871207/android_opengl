@@ -4,7 +4,7 @@ import android.opengl.GLES31;
 
 public class GlFramebuffer {
 
-    private final int[] mFramebuffer = new int[1];
+    private final int[] mFramebuffer = {0};
 
     public GlFramebuffer() {
         GLES31.glGenFramebuffers(1, mFramebuffer, 0);

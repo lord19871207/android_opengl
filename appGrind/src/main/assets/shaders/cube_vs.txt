@@ -1,0 +1,20 @@
+#version 300 es
+
+uniform mat4 uViewM;
+uniform mat4 uModelViewM;
+uniform mat4 uModelViewProjM;
+uniform vec3 uEyePositionW;
+
+layout (location = 0) in vec4 inPosition;
+layout (location = 1) in vec3 inNormal;
+
+out vec3 vNormal;
+out vec3 vReflected;
+
+void main() {
+    gl_Position = uModelViewProjM * inPosition;
+    vNormal = mat3(uModelViewM) * inNormal;
+    vec3 posWorld = (uModelViewM * inPosition).xyz;
+    vReflected = reflect(posWorld - uEyePositionW, normalize(vNormal));
+    vReflected = mat3(uViewM) * vReflected;
+}
