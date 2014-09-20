@@ -1,9 +1,10 @@
 package fi.harism.opengl.lib.model;
 
 import android.content.Context;
-import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,14 +15,9 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class GlLoaderObj {
+public class GlObjectLoader {
 
-    private FloatBuffer mBufferVertices;
-    private FloatBuffer mBufferNormals;
-    private FloatBuffer mBufferTexture;
-    private int mVertexCount;
-
-    public GlLoaderObj(Context context, String path) throws IOException {
+    public static GlObject loadObj(Context context, String path) throws IOException {
         Matcher matcher, matcherIndex;
         Pattern patternEmpty = Pattern.compile("^\\s*$");
         Pattern patternComment = Pattern.compile("^#.*");
@@ -90,36 +86,48 @@ public class GlLoaderObj {
             }
         }
 
-        mVertexCount = 3 * arrayFaces.size();
-        mBufferVertices = ByteBuffer.allocateDirect(4 * 3 * mVertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mBufferNormals = ByteBuffer.allocateDirect(4 * 3 * mVertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mBufferTexture = ByteBuffer.allocateDirect(4 * 2 * mVertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        int vertexCount = 3 * arrayFaces.size();
+        FloatBuffer vertexBuffer = ByteBuffer.allocateDirect(4 * 3 * vertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer normalBuffer = ByteBuffer.allocateDirect(4 * 3 * vertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer textureBuffer = ByteBuffer.allocateDirect(4 * 2 * vertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
         for (int[] face : arrayFaces) {
             for (int i = 0; i < 3; ++i) {
-                mBufferVertices.put(arrayVertices.get(face[i * 3 + 0]));
-                mBufferTexture.put(arrayTextures.get(face[i * 3 + 1]));
-                mBufferNormals.put(arrayNormals.get(face[i * 3 + 2]));
+                vertexBuffer.put(arrayVertices.get(face[i * 3 + 0]));
+                normalBuffer.put(arrayNormals.get(face[i * 3 + 2]));
+                textureBuffer.put(arrayTextures.get(face[i * 3 + 1]));
             }
         }
-        mBufferVertices.position(0);
-        mBufferNormals.position(0);
-        mBufferTexture.position(0);
+        vertexBuffer.position(0);
+        normalBuffer.position(0);
+        textureBuffer.position(0);
+
+        return new GlObject(vertexCount, vertexBuffer, normalBuffer, textureBuffer);
     }
 
-    public int getVertexCount() {
-        return mVertexCount;
-    }
+    public static GlObject loadDat(Context context, String path) throws IOException {
+        DataInputStream inputStream = new DataInputStream(new BufferedInputStream(context.getAssets().open(path)));
 
-    public FloatBuffer getBufferVertices() {
-        return mBufferVertices;
-    }
+        int vertexCount = inputStream.readInt();
+        FloatBuffer vertexBuffer = ByteBuffer.allocateDirect(4 * 3 * vertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer normalBuffer = ByteBuffer.allocateDirect(4 * 3 * vertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer textureBuffer = ByteBuffer.allocateDirect(4 * 2 * vertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
 
-    public FloatBuffer getBufferNormals() {
-        return mBufferNormals;
-    }
+        for (int i = 0; i < vertexCount * 3; ++i) {
+            vertexBuffer.put(inputStream.readFloat());
+        }
+        vertexBuffer.position(0);
 
-    public FloatBuffer getBufferTexture() {
-        return mBufferTexture;
+        for (int i = 0; i < vertexCount * 3; ++i) {
+            normalBuffer.put(inputStream.readFloat());
+        }
+        normalBuffer.position(0);
+
+        for (int i = 0; i < vertexCount * 2; ++i) {
+            textureBuffer.put(inputStream.readFloat());
+        }
+        textureBuffer.position(0);
+
+        return new GlObject(vertexCount, vertexBuffer, normalBuffer, textureBuffer);
     }
 
 }

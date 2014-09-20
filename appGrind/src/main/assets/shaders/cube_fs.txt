@@ -1,7 +1,5 @@
 #version 300 es
 
-uniform samplerCube sTextureSky;
-
 in vec3 vPosition;
 in vec3 vNormal;
 in vec3 vReflected;
@@ -25,7 +23,7 @@ void main() {
     Ispec = clamp(Ispec, 0.0, 1.0);
 
     // write Total Color:
-    outFragColor = texture(sTextureSky, normalize(vReflected));
+    outFragColor = vec4(1.0);
     outFragColor.rgb *= (Iamb + Idiff + Ispec);
 
 }

@@ -11,7 +11,7 @@ out vec2 vPosition;
 void main() {
     gl_Position = uViewM * inPosition;
     gl_Position /= gl_Position.w;
-    gl_Position.xy += inPositionQuad.xy * 0.85;
+    gl_Position.xy += inPositionQuad.xy * 0.2;
     gl_Position = uProjM * gl_Position;
     vPosition = inPositionQuad.xy;
 }
