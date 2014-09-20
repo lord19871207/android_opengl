@@ -6,5 +6,5 @@ out vec4 outFragColor;
 
 void main() {
     float dist = length(vPosition);
-    outFragColor = vec4(0.6, 0.65, 0.8, smoothstep(1.0, 0.75, dist) * 0.25);
+    outFragColor = vec4(vec3(0.6, 0.65, 0.80) * 0.5, smoothstep(1.0, 0.75, dist) * 1.0);
 }

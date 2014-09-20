@@ -2,10 +2,30 @@
 
 uniform samplerCube sTextureSky;
 
+in vec3 vPosition;
+in vec3 vNormal;
 in vec3 vReflected;
 
 out vec4 outFragColor;
 
 void main() {
+    vec3 L = normalize(vec3(0, 0, 10) - vPosition);
+    vec3 E = normalize(-vPosition); // we are in Eye Coordinates, so EyePos is (0,0,0)
+    vec3 R = normalize(-reflect(L, vNormal));
+
+    //calculate Ambient Term:
+    float Iamb = 0.6;
+
+    //calculate Diffuse Term:
+    float Idiff = 0.3 * max(dot(vNormal, L), 0.0);
+    Idiff = clamp(Idiff, 0.0, 1.0);
+
+    // calculate Specular Term:
+    float Ispec = 0.3 * pow(max(dot(R, E), 0.0), 0.3 * 8.0);
+    Ispec = clamp(Ispec, 0.0, 1.0);
+
+    // write Total Color:
     outFragColor = texture(sTextureSky, normalize(vReflected));
+    outFragColor.rgb *= (Iamb + Idiff + Ispec);
+
 }

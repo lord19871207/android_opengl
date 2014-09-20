@@ -11,7 +11,7 @@ public class GlCamera {
     private boolean mNeedsMultiply = true;
 
     public void setPerspectiveM(int width, int height, float fov, float zNear, float zFar) {
-        float aspect = (float) height / width;
+        float aspect = (float) width / height;
         Matrix.perspectiveM(mPerspectiveM, 0, fov, aspect, zNear, zFar);
         mNeedsMultiply = true;
     }

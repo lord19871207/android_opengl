@@ -26,4 +26,28 @@ public class GlUtils {
         return scanner.hasNext() ? scanner.next() : "";
     }
 
+    /**
+     * Unlike the other implementation here, which uses the default "uniform"
+     * treatment of t, this computation is used to calculate the same values but
+     * introduces the ability to "parameterize" the t values used in the
+     * calculation. This is based on Figure 3 from
+     * http://www.cemyuksel.com/research/catmullrom_param/catmullrom.pdf
+     *
+     * @param p    An array of double values of length 4, where interpolation
+     *             occurs from p1 to p2.
+     * @param time An array of time measures of length 4, corresponding to each
+     *             p value.
+     * @param t    the actual interpolation ratio from 0 to 1 representing the
+     *             position between p1 and p2 to interpolate the value.
+     * @return
+     */
+    public static float interpolate(float[] p, float[] time, float t) {
+        float L01 = p[0] * (time[1] - t) / (time[1] - time[0]) + p[1] * (t - time[0]) / (time[1] - time[0]);
+        float L12 = p[1] * (time[2] - t) / (time[2] - time[1]) + p[2] * (t - time[1]) / (time[2] - time[1]);
+        float L23 = p[2] * (time[3] - t) / (time[3] - time[2]) + p[3] * (t - time[2]) / (time[3] - time[2]);
+        float L012 = L01 * (time[2] - t) / (time[2] - time[0]) + L12 * (t - time[0]) / (time[2] - time[0]);
+        float L123 = L12 * (time[3] - t) / (time[3] - time[1]) + L23 * (t - time[1]) / (time[3] - time[1]);
+        float C12 = L012 * (time[2] - t) / (time[2] - time[1]) + L123 * (t - time[1]) / (time[2] - time[1]);
+        return C12;
+    }
 }

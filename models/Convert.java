@@ -1,9 +1,7 @@
-package fi.harism.opengl.lib.model;
-
-import android.content.Context;
-import android.util.Log;
-
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,14 +12,22 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class GlLoaderObj {
+public class Convert {
 
-    private FloatBuffer mBufferVertices;
-    private FloatBuffer mBufferNormals;
-    private FloatBuffer mBufferTexture;
-    private int mVertexCount;
+    public static void main(String args[]) {
+        for (String arg : args) {
+            String outputName = arg.substring(0, arg.lastIndexOf('.')) + ".dat";
+            try {
+                System.out.println(arg + " --> " + outputName);
+                convert(arg, outputName);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                break;
+            }
+        }
+    }
 
-    public GlLoaderObj(Context context, String path) throws IOException {
+    private static void convert(String inPath, String outPath) throws IOException {
         Matcher matcher, matcherIndex;
         Pattern patternEmpty = Pattern.compile("^\\s*$");
         Pattern patternComment = Pattern.compile("^#.*");
@@ -42,8 +48,8 @@ public class GlLoaderObj {
         arrayTextures.add(new float[]{0, 0});
 
         String currentLine;
-        InputStream assetStream = context.getAssets().open(path);
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(assetStream));
+        InputStream inputStream = new FileInputStream(inPath);
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         while ((currentLine = bufferedReader.readLine()) != null) {
             if (patternEmpty.matcher(currentLine).matches()) {
 
@@ -90,36 +96,37 @@ public class GlLoaderObj {
             }
         }
 
-        mVertexCount = 3 * arrayFaces.size();
-        mBufferVertices = ByteBuffer.allocateDirect(4 * 3 * mVertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mBufferNormals = ByteBuffer.allocateDirect(4 * 3 * mVertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mBufferTexture = ByteBuffer.allocateDirect(4 * 2 * mVertexCount).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        DataOutputStream outputStream = new DataOutputStream(new FileOutputStream(outPath));
+        outputStream.writeInt(3 * arrayFaces.size());
+
         for (int[] face : arrayFaces) {
             for (int i = 0; i < 3; ++i) {
-                mBufferVertices.put(arrayVertices.get(face[i * 3 + 0]));
-                mBufferTexture.put(arrayTextures.get(face[i * 3 + 1]));
-                mBufferNormals.put(arrayNormals.get(face[i * 3 + 2]));
+                final float[] vertex = arrayVertices.get(face[i * 3]);
+                outputStream.writeFloat(vertex[0]);
+                outputStream.writeFloat(vertex[1]);
+                outputStream.writeFloat(vertex[2]);
             }
         }
-        mBufferVertices.position(0);
-        mBufferNormals.position(0);
-        mBufferTexture.position(0);
-    }
 
-    public int getVertexCount() {
-        return mVertexCount;
-    }
+        for (int[] face : arrayFaces) {
+            for (int i = 0; i < 3; ++i) {
+                final float[] normal = arrayNormals.get(face[i * 3 + 2]);
+                outputStream.writeFloat(normal[0]);
+                outputStream.writeFloat(normal[1]);
+                outputStream.writeFloat(normal[2]);
+            }
+        }
 
-    public FloatBuffer getBufferVertices() {
-        return mBufferVertices;
-    }
+        for (int[] face : arrayFaces) {
+            for (int i = 0; i < 3; ++i) {
+                final float[] texture = arrayTextures.get(face[i * 3 + 1]);
+                outputStream.writeFloat(texture[0]);
+                outputStream.writeFloat(texture[1]);
+            }
+        }
 
-    public FloatBuffer getBufferNormals() {
-        return mBufferNormals;
-    }
-
-    public FloatBuffer getBufferTexture() {
-        return mBufferTexture;
+        outputStream.flush();
+        outputStream.close();
     }
 
 }

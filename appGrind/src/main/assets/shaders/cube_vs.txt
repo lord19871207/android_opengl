@@ -8,13 +8,14 @@ uniform vec3 uEyePositionW;
 layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec3 inNormal;
 
+out vec3 vPosition;
 out vec3 vNormal;
 out vec3 vReflected;
 
 void main() {
     gl_Position = uModelViewProjM * inPosition;
-    vNormal = mat3(uModelViewM) * inNormal;
-    vec3 posWorld = (uModelViewM * inPosition).xyz;
-    vReflected = reflect(posWorld - uEyePositionW, normalize(vNormal));
+    vPosition = (uModelViewM * inPosition).xyz;
+    vNormal = normalize(mat3(uModelViewM) * inNormal);
+    vReflected = reflect(vPosition - uEyePositionW, vNormal);
     vReflected = mat3(uViewM) * vReflected;
 }
