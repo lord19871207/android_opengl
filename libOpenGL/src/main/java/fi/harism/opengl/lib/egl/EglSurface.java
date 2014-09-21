@@ -9,33 +9,33 @@ public class EglSurface {
 
     private static final String TAG = "EglSurface";
 
-    private EglCore mEglCore;
-    private EGLSurface mEGLSurface = EGL14.EGL_NO_SURFACE;
+    private EglCore eglCore;
+    private EGLSurface eglSurface = EGL14.EGL_NO_SURFACE;
 
     public EglSurface(EglCore eglCore, Object surface) {
-        mEglCore = eglCore;
-        mEGLSurface = eglCore.createWindowSurface(surface);
+        this.eglCore = eglCore;
+        eglSurface = eglCore.createWindowSurface(surface);
     }
 
     public void release() {
-        mEglCore.releaseSurface(mEGLSurface);
-        mEGLSurface = EGL14.EGL_NO_SURFACE;
+        eglCore.releaseSurface(eglSurface);
+        eglSurface = EGL14.EGL_NO_SURFACE;
     }
 
     @Override
     protected void finalize() throws Throwable {
-        if (mEGLSurface != EGL14.EGL_NO_SURFACE) {
+        if (eglSurface != EGL14.EGL_NO_SURFACE) {
             Log.e(TAG, "finalize called without release");
         }
         super.finalize();
     }
 
     public void makeCurrent() {
-        mEglCore.makeCurrent(mEGLSurface);
+        eglCore.makeCurrent(eglSurface);
     }
 
     public boolean swapBuffers() {
-        boolean result = mEglCore.swapBuffers(mEGLSurface);
+        boolean result = eglCore.swapBuffers(eglSurface);
         if (!result) {
             Log.d(TAG, "swapBuffers failed");
         }
@@ -43,15 +43,15 @@ public class EglSurface {
     }
 
     public void setPresentationTime(long frameTimeNanos) {
-        mEglCore.setPresentationTime(mEGLSurface, frameTimeNanos);
+        eglCore.setPresentationTime(eglSurface, frameTimeNanos);
     }
 
     public int getWidth() {
-        return mEglCore.querySurface(mEGLSurface, EGL14.EGL_WIDTH);
+        return eglCore.querySurface(eglSurface, EGL14.EGL_WIDTH);
     }
 
     public int getHeight() {
-        return mEglCore.querySurface(mEGLSurface, EGL14.EGL_HEIGHT);
+        return eglCore.querySurface(eglSurface, EGL14.EGL_HEIGHT);
     }
 
 }

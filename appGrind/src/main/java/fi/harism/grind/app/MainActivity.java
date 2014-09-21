@@ -3,7 +3,6 @@ package fi.harism.grind.app;
 import android.animation.Animator;
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
-import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.opengl.GLES30;
 import android.os.Bundle;
@@ -22,11 +21,8 @@ import java.nio.FloatBuffer;
 
 import fi.harism.opengl.lib.egl.EglCore;
 import fi.harism.opengl.lib.gl.GlFramebuffer;
-import fi.harism.opengl.lib.gl.GlProgram;
 import fi.harism.opengl.lib.gl.GlRenderbuffer;
-import fi.harism.opengl.lib.gl.GlSampler;
 import fi.harism.opengl.lib.gl.GlTexture;
-import fi.harism.opengl.lib.gl.GlUtils;
 import fi.harism.opengl.lib.model.GlCamera;
 import fi.harism.opengl.lib.model.GlCameraAnimator;
 import fi.harism.opengl.lib.model.GlObject;
@@ -37,40 +33,38 @@ import fi.harism.utils.lib.MersenneTwisterFast;
 
 public class MainActivity extends Activity {
 
-    private final Choreographer.FrameCallback mFrameCallback = new Choreographer.FrameCallback() {
+    private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
         @Override
         public void doFrame(long frameTimeNanos) {
-            mGlTextureView.renderFrame(frameTimeNanos);
-            mChoreographer.postFrameCallback(this);
+            glTextureView.renderFrame(frameTimeNanos);
+            choreographer.postFrameCallback(this);
         }
     };
 
-    private MediaPlayer mMediaPlayer;
-    private Choreographer mChoreographer;
-    private View mProgressLayout;
-    private ProgressBar mProgressBar;
-    private GlTextureView mGlTextureView;
-    private MainRenderer mRenderer;
+    private MediaPlayer mediaPlayer;
+    private Choreographer choreographer;
+    private View progressLayout;
+    private ProgressBar progressBar;
+    private GlTextureView glTextureView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mChoreographer = Choreographer.getInstance();
+        choreographer = Choreographer.getInstance();
 
         setContentView(R.layout.activity_main);
 
-        mProgressLayout = findViewById(R.id.layout_progress);
-        mProgressLayout.setAlpha(0f);
-        mProgressLayout.animate().setStartDelay(500).setDuration(500).alpha(1f);
-        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
-        mProgressBar.setMax(10);
-        mProgressBar.setProgress(0);
+        progressLayout = findViewById(R.id.layout_progress);
+        progressLayout.setAlpha(0f);
+        progressLayout.animate().setStartDelay(500).setDuration(500).alpha(1f);
+        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        progressBar.setMax(10);
+        progressBar.setProgress(0);
 
-        mRenderer = new MainRenderer();
-        mGlTextureView = (GlTextureView) findViewById(R.id.texture_view);
-        mGlTextureView.setEglContext(EglCore.VERSION_GLES3, 0);
-        mGlTextureView.setGlRenderer(mRenderer);
-        mGlTextureView.setAlpha(0f);
+        glTextureView = (GlTextureView) findViewById(R.id.texture_view);
+        glTextureView.setEglContext(EglCore.VERSION_GLES3, 0);
+        glTextureView.setGlRenderer(new MainRenderer());
+        glTextureView.setAlpha(0f);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
@@ -79,15 +73,15 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
 
-        if (mMediaPlayer != null) {
-            if (mMediaPlayer.isPlaying()) {
-                mMediaPlayer.stop();
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
             }
-            mMediaPlayer.release();
+            mediaPlayer.release();
         }
-        mMediaPlayer = null;
+        mediaPlayer = null;
 
-        mChoreographer.removeFrameCallback(mFrameCallback);
+        choreographer.removeFrameCallback(frameCallback);
 
         finish();
     }
@@ -95,8 +89,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mGlTextureView.onDestroy();
-        mGlTextureView = null;
+        glTextureView.onDestroy();
+        glTextureView = null;
     }
 
     @Override
@@ -115,15 +109,15 @@ public class MainActivity extends Activity {
 
     private void startDemo() {
         try {
-            mMediaPlayer = new MediaPlayer();
+            mediaPlayer = new MediaPlayer();
             AssetFileDescriptor desc = getAssets().openFd("music/music.mp3");
-            mMediaPlayer.setDataSource(desc.getFileDescriptor(), desc.getStartOffset(), desc.getLength());
-            mMediaPlayer.prepare();
-            mMediaPlayer.start();
-            mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            mediaPlayer.setDataSource(desc.getFileDescriptor(), desc.getStartOffset(), desc.getLength());
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
-                    mGlTextureView.animate().alpha(0f).setDuration(500).setListener(new Animator.AnimatorListener() {
+                    glTextureView.animate().alpha(0f).setDuration(500).setListener(new Animator.AnimatorListener() {
                         @Override
                         public void onAnimationStart(Animator animator) {
                         }
@@ -143,16 +137,16 @@ public class MainActivity extends Activity {
                     });
                 }
             });
-            mGlTextureView.animate().alpha(1f).setStartDelay(300).setDuration(2000);
+            glTextureView.animate().alpha(1f).setStartDelay(500).setDuration(2000);
 
-            mProgressLayout.animate().alpha(0f).setDuration(500).setListener(new Animator.AnimatorListener() {
+            progressLayout.animate().alpha(0f).setDuration(400).setListener(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animator) {
                 }
 
                 @Override
                 public void onAnimationEnd(Animator animator) {
-                    mProgressLayout.setVisibility(View.GONE);
+                    progressLayout.setVisibility(View.GONE);
                 }
 
                 @Override
@@ -164,7 +158,7 @@ public class MainActivity extends Activity {
                 }
             });
 
-            mChoreographer.postFrameCallback(mFrameCallback);
+            choreographer.postFrameCallback(frameCallback);
         } catch (IOException ex) {
             ex.printStackTrace();
             Toast.makeText(this, "Unable to start audio playback", Toast.LENGTH_LONG).show();
@@ -173,92 +167,83 @@ public class MainActivity extends Activity {
     }
 
     private class MainRenderer implements GlRenderer {
-
-        private final Point mSurfaceSize = new Point();
-
-        private GlFramebuffer mFramebuffer;
-        private GlTexture mTexture;
-        private GlTexture mTextureRand;
-        private GlSampler mSampler;
+        private GlFramebuffer glFramebufferOut;
+        private GlTexture glTextureOut;
+        private GlTexture glTextureRand;
         private ByteBuffer mBufferQuad;
-        private GlRenderbuffer mRenderbufferDepth;
+        private GlRenderbuffer glRenderbufferDepth;
 
-        private GlCamera mCamera;
-        private GlCameraAnimator mCameraAnimator;
-        private MersenneTwisterFast mMersenneTwisterFast;
+        private GlCamera glCamera;
+        private GlCameraAnimator glCameraAnimator;
 
-        private GlObject mObjectAnd;
-        private GlObject mObjectBy;
-        private GlObject mObjectCoding;
-        private GlObject mObjectDoctrnal;
-        private GlObject mObjectGrind;
-        private GlObject mObjectHarism;
-        private GlObject mObjectMusic;
-        private GlObject mObjectScottXylo;
+        private GlObject glObjectAnd;
+        private GlObject glObjectBy;
+        private GlObject glObjectCoding;
+        private GlObject glObjectDoctrnal;
+        private GlObject glObjectGrind;
+        private GlObject glObjectHarism;
+        private GlObject glObjectMusic;
+        private GlObject glObjectScottXylo;
 
-        private OutRenderer mOutRenderer;
-        private SceneRenderer mSceneRenderer;
+        private RendererOut rendererOut;
+        private RendererScene rendererScene;
+
+        private long mPrevTime;
 
         @Override
         public void onSurfaceCreated() {
-            mCamera = new GlCamera();
-            mCameraAnimator = new GlCameraAnimator();
-            mCameraAnimator.addPosition(0, 0, 10, 0, 0, 0, -10);
-            mCameraAnimator.addPosition(0, 0, 20, 0, 0, 0, 0);
-            mCameraAnimator.addPosition(0, 0, 10, 0, 0, 0, 10);
-            mCameraAnimator.addPosition(0, 0, 20, 0, 0, 0, 20);
-            mCameraAnimator.addPosition(0, 0, 10, -5, 0, 0, 160);
-            mCameraAnimator.addPosition(0, 0, 20, 0, 0, 0, 300);
-            mCameraAnimator.prepare();
-            mMersenneTwisterFast = new MersenneTwisterFast(8473);
+            glCamera = new GlCamera();
+            glCameraAnimator = new GlCameraAnimator();
+            glCameraAnimator.addPosition(0, 0, 10, 0, 0, 0, -10);
+            glCameraAnimator.addPosition(0, 0, 20, 0, 0, 0, 0);
+            glCameraAnimator.addPosition(0, 0, 10, 0, 0, 0, 10);
+            glCameraAnimator.addPosition(0, 0, 20, 0, 0, 0, 20);
+            glCameraAnimator.addPosition(0, 0, 10, -5, 0, 0, 160);
+            glCameraAnimator.addPosition(0, 0, 20, 0, 0, 0, 300);
+            glCameraAnimator.prepare();
 
-            mSampler = new GlSampler();
-            mSampler.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
-            mSampler.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
-            mSampler.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_REPEAT);
-            mSampler.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_REPEAT);
+            glFramebufferOut = new GlFramebuffer();
+            glTextureOut = new GlTexture();
 
-            mFramebuffer = new GlFramebuffer();
-            mTexture = new GlTexture();
-
-            mTextureRand = new GlTexture().bind(GLES30.GL_TEXTURE_2D);
+            MersenneTwisterFast rand = new MersenneTwisterFast(8347);
+            glTextureRand = new GlTexture().bind(GLES30.GL_TEXTURE_2D);
             final FloatBuffer bufferRand = ByteBuffer.allocateDirect(4 * 4 * 256 * 256).order(ByteOrder.nativeOrder()).asFloatBuffer();
             for (int index = 0; index < 4 * 256 * 256; ++index) {
-                bufferRand.put(mMersenneTwisterFast.nextFloat(true, true));
+                bufferRand.put(rand.nextFloat(true, true));
             }
             bufferRand.position(0);
-            mTextureRand.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA32F, 256, 256, 0, GLES30.GL_RGBA, GLES30.GL_FLOAT, bufferRand);
-            mTextureRand.unbind(GLES30.GL_TEXTURE_2D);
+            glTextureRand.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA32F, 256, 256, 0, GLES30.GL_RGBA, GLES30.GL_FLOAT, bufferRand);
+            glTextureRand.unbind(GLES30.GL_TEXTURE_2D);
 
-            mRenderbufferDepth = new GlRenderbuffer();
+            glRenderbufferDepth = new GlRenderbuffer();
 
             final byte[] VERTICES_QUAD = {-1, 1, -1, -1, 1, 1, 1, -1};
             mBufferQuad = ByteBuffer.allocateDirect(VERTICES_QUAD.length).order(ByteOrder.nativeOrder());
             mBufferQuad.put(VERTICES_QUAD).position(0);
 
             try {
-                mOutRenderer = new OutRenderer(MainActivity.this, mBufferQuad, mTexture, mTextureRand);
-                mSceneRenderer = new SceneRenderer(MainActivity.this, mBufferQuad, mCamera, mFramebuffer);
+                rendererOut = new RendererOut(MainActivity.this, mBufferQuad, glTextureOut, glTextureRand);
+                rendererScene = new RendererScene(MainActivity.this, mBufferQuad, glCamera, glFramebufferOut);
 
                 setProgress(9, 1);
-                mObjectAnd = GlObjectLoader.loadDat(MainActivity.this, "models/and.dat");
+                glObjectAnd = GlObjectLoader.loadDat(MainActivity.this, "models/and.dat");
                 setProgress(9, 2);
-                mObjectBy = GlObjectLoader.loadDat(MainActivity.this, "models/by.dat");
+                glObjectBy = GlObjectLoader.loadDat(MainActivity.this, "models/by.dat");
                 setProgress(9, 3);
-                mObjectCoding = GlObjectLoader.loadDat(MainActivity.this, "models/coding.dat");
+                glObjectCoding = GlObjectLoader.loadDat(MainActivity.this, "models/coding.dat");
                 setProgress(9, 4);
-                mObjectDoctrnal = GlObjectLoader.loadDat(MainActivity.this, "models/doctrnal.dat");
+                glObjectDoctrnal = GlObjectLoader.loadDat(MainActivity.this, "models/doctrnal.dat");
                 setProgress(9, 5);
-                mObjectGrind = GlObjectLoader.loadDat(MainActivity.this, "models/grind.dat");
+                glObjectGrind = GlObjectLoader.loadDat(MainActivity.this, "models/grind.dat");
                 setProgress(9, 6);
-                mObjectHarism = GlObjectLoader.loadDat(MainActivity.this, "models/harism.dat");
+                glObjectHarism = GlObjectLoader.loadDat(MainActivity.this, "models/harism.dat");
                 setProgress(9, 7);
-                mObjectMusic = GlObjectLoader.loadDat(MainActivity.this, "models/music.dat");
+                glObjectMusic = GlObjectLoader.loadDat(MainActivity.this, "models/music.dat");
                 setProgress(9, 8);
-                mObjectScottXylo = GlObjectLoader.loadDat(MainActivity.this, "models/scott_xylo.dat");
+                glObjectScottXylo = GlObjectLoader.loadDat(MainActivity.this, "models/scott_xylo.dat");
                 setProgress(9, 9);
 
-                mSceneRenderer.setObject(mObjectGrind);
+                rendererScene.setObject(glObjectScottXylo);
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -282,53 +267,56 @@ public class MainActivity extends Activity {
 
         @Override
         public void onSurfaceChanged(int width, int height) {
-            mSurfaceSize.x = width;
-            mSurfaceSize.y = height;
+            glCamera.setPerspectiveM(width, height, 60f, 1f, 100f);
+            glCamera.setApertureDiameter(3f);
+            glCamera.setPlaneInFocus(10f);
 
-            mCamera.setPerspectiveM(width, height, 60f, 1f, 100f);
+            glTextureOut.bind(GLES30.GL_TEXTURE_2D);
+            glTextureOut.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width, height, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null);
+            glTextureOut.unbind(GLES30.GL_TEXTURE_2D);
 
-            mTexture.bind(GLES30.GL_TEXTURE_2D);
-            mTexture.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width, height, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null);
-            mTexture.unbind(GLES30.GL_TEXTURE_2D);
+            glRenderbufferDepth.bind();
+            glRenderbufferDepth.storage(GLES30.GL_DEPTH_COMPONENT32F, width, height);
+            glRenderbufferDepth.unbind();
 
-            mRenderbufferDepth.bind();
-            mRenderbufferDepth.storage(GLES30.GL_DEPTH_COMPONENT32F, width, height);
-            mRenderbufferDepth.unbind();
-
-            mFramebuffer.bind(GLES30.GL_DRAW_FRAMEBUFFER);
-            mFramebuffer.renderbuffer(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, mRenderbufferDepth.getRenderbuffer());
-            mFramebuffer.texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, mTexture.getTexture(), 0);
+            glFramebufferOut.bind(GLES30.GL_DRAW_FRAMEBUFFER);
+            glFramebufferOut.renderbuffer(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, glRenderbufferDepth.name());
+            glFramebufferOut.texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, glTextureOut.name(), 0);
             final int[] ATTACHMENTS = {GLES30.GL_COLOR_ATTACHMENT0};
             GLES30.glDrawBuffers(1, ATTACHMENTS, 0);
-            mFramebuffer.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
+            glFramebufferOut.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
-            mSceneRenderer.onSurfaceChanged(width, height);
-            mOutRenderer.onSurfaceChanged(width, height);
+            rendererScene.onSurfaceChanged(width, height);
+            rendererOut.onSurfaceChanged(width, height);
         }
 
         @Override
         public void onRenderFrame() {
+            long time = SystemClock.uptimeMillis();
+            Log.d("FPS", "fps = " + (1f / ((time - mPrevTime) / 1000f)));
+            mPrevTime = time;
+
             double angle = SystemClock.uptimeMillis() % 10000 / 5000.0 * Math.PI;
             float rx = (float) (Math.sin(angle) * 5);
             float rz = (float) (Math.cos(angle) * 5);
-            mCamera.setLookAtM(rx, 0, 5, rx, 0, 0, 0, 1, 0);
+            glCamera.setLookAtM(rx, 0, 5, rx, 0, 0, 0, 1, 0);
 
-            mSceneRenderer.onRenderFrame();
-            mOutRenderer.onRenderFrame();
+            rendererScene.onRenderFrame();
+            rendererOut.onRenderFrame();
         }
 
         @Override
         public void onSurfaceReleased() {
-            mSceneRenderer.onSurfaceReleased();
-            mOutRenderer.onSurfaceReleased();
+            rendererScene.onSurfaceReleased();
+            rendererOut.onSurfaceReleased();
         }
 
         private void setProgress(final int max, final int progress) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mProgressBar.setMax(max);
-                    mProgressBar.setProgress(progress);
+                    progressBar.setMax(max);
+                    progressBar.setProgress(progress);
                 }
             });
         }

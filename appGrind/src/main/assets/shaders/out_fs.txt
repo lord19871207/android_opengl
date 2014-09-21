@@ -15,5 +15,5 @@ void main() {
     float rand = texture(sTextureRand, uTextureRandScale * (vTexPosition.zw + uTextureRandDiff)).r;
     outFragColor = texture(sTexture, vTexPosition.zw);
     outFragColor.rgb *= vignette;
-    outFragColor.rgb *= mix(0.85, 1.0, step(0.35, rand));
+    outFragColor.rgb *= max(0.8, step(0.3, rand));
 }

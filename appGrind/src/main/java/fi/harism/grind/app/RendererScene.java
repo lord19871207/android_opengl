@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import fi.harism.opengl.lib.gl.GlBuffer;
 import fi.harism.opengl.lib.gl.GlFramebuffer;
 import fi.harism.opengl.lib.gl.GlProgram;
 import fi.harism.opengl.lib.gl.GlUtils;
@@ -18,7 +19,7 @@ import fi.harism.opengl.lib.model.GlObject;
 import fi.harism.opengl.lib.util.GlRenderer;
 import fi.harism.utils.lib.MersenneTwisterFast;
 
-public class SceneRenderer implements GlRenderer {
+public class RendererScene implements GlRenderer {
 
     private final ByteBuffer mBufferQuad;
     private final GlCamera mCamera;
@@ -29,7 +30,9 @@ public class SceneRenderer implements GlRenderer {
     private final Point mSurfaceSize = new Point();
     private GlObject mObject;
 
-    public SceneRenderer(Context context, ByteBuffer bufferQuad, GlCamera camera, GlFramebuffer framebuffer) throws Exception {
+    private GlBuffer mVboDots;
+
+    public RendererScene(Context context, ByteBuffer bufferQuad, GlCamera camera, GlFramebuffer framebuffer) throws Exception {
         mBufferQuad = bufferQuad;
         mCamera = camera;
         mFramebuffer = framebuffer;
@@ -40,6 +43,10 @@ public class SceneRenderer implements GlRenderer {
             mBufferDots.put(rand.nextFloat(true, true) * 40 - 20);
         }
         mBufferDots.position(0);
+        mVboDots = new GlBuffer();
+        mVboDots.bind(GLES30.GL_ARRAY_BUFFER);
+        mVboDots.data(GLES30.GL_ARRAY_BUFFER, 4 * 3 * 1000, mBufferDots, GLES30.GL_STATIC_DRAW);
+        mVboDots.unbind(GLES30.GL_ARRAY_BUFFER);
 
         final String DOT_VS = GlUtils.loadString(context, "shaders/dots_vs.txt");
         final String DOT_FS = GlUtils.loadString(context, "shaders/dots_fs.txt");
@@ -65,7 +72,7 @@ public class SceneRenderer implements GlRenderer {
     public void onRenderFrame() {
         mFramebuffer.bind(GLES30.GL_DRAW_FRAMEBUFFER);
         GLES30.glViewport(0, 0, mSurfaceSize.x, mSurfaceSize.y);
-        GLES30.glClearColor(0.75f, 0.85f, 1.00f, 1.00f);
+        GLES30.glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
         //renderCubeTest();
@@ -96,10 +103,17 @@ public class SceneRenderer implements GlRenderer {
         Matrix.multiplyMM(modelViewProjM, 0, mCamera.getPerspectiveM(), 0, modelViewProjM, 0);
         GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uModelViewProjM"), 1, false, modelViewProjM, 0);
         GLES30.glUniform3fv(mProgramCube.getUniformLocation("uEyePositionW"), 1, mCamera.getLookAtV(), 0);
-        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, object.getVertexBuffer());
+
+        object.getVertexBuffer().bind(GLES30.GL_ARRAY_BUFFER);
+        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, 0);
+        object.getVertexBuffer().unbind(GLES30.GL_ARRAY_BUFFER);
         GLES30.glEnableVertexAttribArray(0);
-        GLES30.glVertexAttribPointer(1, 3, GLES30.GL_FLOAT, false, 0, object.getNormalBuffer());
+
+        object.getNormalBuffer().bind(GLES30.GL_ARRAY_BUFFER);
+        GLES30.glVertexAttribPointer(1, 3, GLES30.GL_FLOAT, false, 0, 0);
+        object.getNormalBuffer().unbind(GLES30.GL_ARRAY_BUFFER);
         GLES30.glEnableVertexAttribArray(1);
+
         GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, object.getVertexCount());
         GLES30.glDisableVertexAttribArray(0);
         GLES30.glDisableVertexAttribArray(1);
@@ -109,10 +123,14 @@ public class SceneRenderer implements GlRenderer {
         mProgramDots.useProgram();
         GLES30.glUniformMatrix4fv(mProgramDots.getUniformLocation("uProjM"), 1, false, mCamera.getPerspectiveM(), 0);
         GLES30.glUniformMatrix4fv(mProgramDots.getUniformLocation("uViewM"), 1, false, mCamera.getLookAtM(), 0);
-        GLES30.glDepthMask(false);
-        GLES30.glEnable(GLES30.GL_BLEND);
-        GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA);
-        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, mBufferDots);
+        //GLES30.glDepthMask(false);
+        //GLES30.glEnable(GLES30.GL_BLEND);
+        //GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA);
+        mVboDots.bind(GLES30.GL_ARRAY_BUFFER);
+        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, 0);
+        mVboDots.unbind(GLES30.GL_ARRAY_BUFFER);
+
+        //GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, mBufferDots);
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glVertexAttribDivisor(0, 1);
         GLES30.glVertexAttribPointer(1, 2, GLES30.GL_BYTE, false, 0, mBufferQuad);
@@ -122,8 +140,9 @@ public class SceneRenderer implements GlRenderer {
         GLES30.glDisableVertexAttribArray(0);
         GLES30.glDisableVertexAttribArray(1);
         GLES30.glVertexAttribDivisor(0, 0);
-        GLES30.glDisable(GLES30.GL_BLEND);
-        GLES30.glDepthMask(true);
+        //GLES30.glDisable(GLES30.GL_BLEND);
+        //GLES30.glDepthMask(true);
+
     }
 
 }

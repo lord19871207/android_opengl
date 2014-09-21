@@ -4,15 +4,15 @@ import android.opengl.GLES31;
 
 public class GlRenderbuffer {
 
-    private final int[] mRenderbuffer = {0};
+    private final int[] renderbuffer = {0};
 
     public GlRenderbuffer() {
-        GLES31.glGenRenderbuffers(1, mRenderbuffer, 0);
+        GLES31.glGenRenderbuffers(1, renderbuffer, 0);
         GlUtils.checkGLErrors();
     }
 
     public GlRenderbuffer bind() {
-        GLES31.glBindRenderbuffer(GLES31.GL_RENDERBUFFER, mRenderbuffer[0]);
+        GLES31.glBindRenderbuffer(GLES31.GL_RENDERBUFFER, renderbuffer[0]);
         GlUtils.checkGLErrors();
         return this;
     }
@@ -27,8 +27,8 @@ public class GlRenderbuffer {
         GlUtils.checkGLErrors();
     }
 
-    public int getRenderbuffer() {
-        return mRenderbuffer[0];
+    public int name() {
+        return renderbuffer[0];
     }
 
 }

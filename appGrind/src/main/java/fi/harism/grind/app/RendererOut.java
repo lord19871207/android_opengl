@@ -12,7 +12,7 @@ import fi.harism.opengl.lib.gl.GlTexture;
 import fi.harism.opengl.lib.gl.GlUtils;
 import fi.harism.opengl.lib.util.GlRenderer;
 
-public class OutRenderer implements GlRenderer {
+public class RendererOut implements GlRenderer {
 
     private final ByteBuffer mBufferQuad;
     private final GlTexture mTextureIn;
@@ -21,7 +21,7 @@ public class OutRenderer implements GlRenderer {
     private final GlProgram mProgramOut;
     private final Point mSurfaceSize = new Point();
 
-    public OutRenderer(Context context, ByteBuffer bufferQuad, GlTexture textureIn, GlTexture textureRand) throws Exception {
+    public RendererOut(Context context, ByteBuffer bufferQuad, GlTexture textureIn, GlTexture textureRand) throws Exception {
         mBufferQuad = bufferQuad;
         mTextureIn = textureIn;
         mTextureRand = textureRand;

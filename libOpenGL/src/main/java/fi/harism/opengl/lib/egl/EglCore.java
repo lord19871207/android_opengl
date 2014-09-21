@@ -10,28 +10,25 @@ import android.util.Log;
 
 public class EglCore {
 
-    private static final String TAG = "EglCore";
-
     public static final int FLAG_RECORDABLE = 0x01;
-
     public static final int VERSION_GLES2 = 0x00020000;
     public static final int VERSION_GLES3 = 0x00030000;
     public static final int VERSION_GLES31 = 0x00030001;
-
+    private static final String TAG = "EglCore";
     private static final int EGL_RECORDABLE_ANDROID = 0x3142;
 
-    private EGLDisplay mEGLDisplay = EGL14.EGL_NO_DISPLAY;
-    private EGLContext mEGLContext = EGL14.EGL_NO_CONTEXT;
-    private EGLConfig mEGLConfig = null;
+    private EGLDisplay eglDisplay = EGL14.EGL_NO_DISPLAY;
+    private EGLContext eglContext = EGL14.EGL_NO_CONTEXT;
+    private EGLConfig eglConfig = null;
 
     public EglCore(int version, int flags) {
-        mEGLDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
-        if (mEGLDisplay == EGL14.EGL_NO_DISPLAY) {
+        eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
+        if (eglDisplay == EGL14.EGL_NO_DISPLAY) {
             throw new RuntimeException("eglGetDisplay failed");
         }
 
         final int eglVersion[] = new int[2];
-        if (!EGL14.eglInitialize(mEGLDisplay, eglVersion, 0, eglVersion, 1)) {
+        if (!EGL14.eglInitialize(eglDisplay, eglVersion, 0, eglVersion, 1)) {
             release();
             throw new RuntimeException("eglInitialize failed");
         }
@@ -43,10 +40,10 @@ public class EglCore {
                     EGLExt.EGL_CONTEXT_MINOR_VERSION_KHR, version & 0xFFFF,
                     EGL14.EGL_NONE
             };
-            EGLContext context = EGL14.eglCreateContext(mEGLDisplay, config, EGL14.EGL_NO_CONTEXT, attribs, 0);
+            EGLContext context = EGL14.eglCreateContext(eglDisplay, config, EGL14.EGL_NO_CONTEXT, attribs, 0);
             if (EGL14.eglGetError() == EGL14.EGL_SUCCESS) {
-                mEGLContext = context;
-                mEGLConfig = config;
+                eglContext = context;
+                eglConfig = config;
             } else {
                 release();
                 throw new RuntimeException("eglCreateContext failed");
@@ -58,33 +55,33 @@ public class EglCore {
     }
 
     public void release() {
-        if (mEGLDisplay != EGL14.EGL_NO_DISPLAY) {
-            EGL14.eglMakeCurrent(mEGLDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
-            if (mEGLContext != EGL14.EGL_NO_CONTEXT) {
-                EGL14.eglDestroyContext(mEGLDisplay, mEGLContext);
+        if (eglDisplay != EGL14.EGL_NO_DISPLAY) {
+            EGL14.eglMakeCurrent(eglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
+            if (eglContext != EGL14.EGL_NO_CONTEXT) {
+                EGL14.eglDestroyContext(eglDisplay, eglContext);
             }
             EGL14.eglReleaseThread();
-            EGL14.eglTerminate(mEGLDisplay);
+            EGL14.eglTerminate(eglDisplay);
         }
-        mEGLDisplay = EGL14.EGL_NO_DISPLAY;
-        mEGLContext = EGL14.EGL_NO_CONTEXT;
+        eglDisplay = EGL14.EGL_NO_DISPLAY;
+        eglContext = EGL14.EGL_NO_CONTEXT;
     }
 
     @Override
     protected void finalize() throws Throwable {
-        if (mEGLDisplay != EGL14.EGL_NO_DISPLAY || mEGLContext != EGL14.EGL_NO_CONTEXT) {
+        if (eglDisplay != EGL14.EGL_NO_DISPLAY || eglContext != EGL14.EGL_NO_CONTEXT) {
             Log.e(TAG, "finalize called without release");
         }
         super.finalize();
     }
 
     public void releaseSurface(EGLSurface eglSurface) {
-        EGL14.eglDestroySurface(mEGLDisplay, eglSurface);
+        EGL14.eglDestroySurface(eglDisplay, eglSurface);
     }
 
     public EGLSurface createWindowSurface(Object surface) {
         int[] surfaceAttribs = {EGL14.EGL_NONE};
-        EGLSurface eglSurface = EGL14.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, surface,
+        EGLSurface eglSurface = EGL14.eglCreateWindowSurface(eglDisplay, eglConfig, surface,
                 surfaceAttribs, 0);
         checkEglError("eglCreateWindowSurface");
         if (eglSurface == null) {
@@ -94,22 +91,22 @@ public class EglCore {
     }
 
     public void makeCurrent(EGLSurface eglSurface) {
-        if (!EGL14.eglMakeCurrent(mEGLDisplay, eglSurface, eglSurface, mEGLContext)) {
+        if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
             throw new RuntimeException("eglMakeCurrent failed");
         }
     }
 
     public boolean swapBuffers(EGLSurface eglSurface) {
-        return EGL14.eglSwapBuffers(mEGLDisplay, eglSurface);
+        return EGL14.eglSwapBuffers(eglDisplay, eglSurface);
     }
 
     public void setPresentationTime(EGLSurface eglSurface, long frameTimeNanos) {
-        EGLExt.eglPresentationTimeANDROID(mEGLDisplay, eglSurface, frameTimeNanos);
+        EGLExt.eglPresentationTimeANDROID(eglDisplay, eglSurface, frameTimeNanos);
     }
 
     public int querySurface(EGLSurface eglSurface, int key) {
         final int value[] = new int[1];
-        EGL14.eglQuerySurface(mEGLDisplay, eglSurface, key, value, 0);
+        EGL14.eglQuerySurface(eglDisplay, eglSurface, key, value, 0);
         return value[0];
     }
 
@@ -133,7 +130,7 @@ public class EglCore {
         }
         EGLConfig[] configs = new EGLConfig[1];
         int[] numConfigs = new int[1];
-        if (!EGL14.eglChooseConfig(mEGLDisplay, attribList, 0, configs, 0, configs.length,
+        if (!EGL14.eglChooseConfig(eglDisplay, attribList, 0, configs, 0, configs.length,
                 numConfigs, 0)) {
             Log.w(TAG, "unable to find RGB8888 / " + Integer.toHexString(version) + " EGLConfig");
             return null;

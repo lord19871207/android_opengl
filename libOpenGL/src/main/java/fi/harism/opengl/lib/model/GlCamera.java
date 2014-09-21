@@ -4,44 +4,77 @@ import android.opengl.Matrix;
 
 public class GlCamera {
 
-    private final float[] mPerspectiveM = new float[16];
-    private final float[] mLookAtM = new float[16];
-    private final float[] mMultipliedM = new float[16];
-    private final float[] mLookAtV = new float[3];
-    private boolean mNeedsMultiply = true;
+    private final float[] perspectiveM = new float[16];
+    private final float[] lookAtM = new float[16];
+    private final float[] multipliedM = new float[16];
+    private final float[] lookAtV = new float[3];
+    private boolean needsMultiply = true;
+
+    private float sensorHeight;
+    private float sensorWidth;
+    private float focalLength;
+    private float planeInFocus;
+    private float apertureDiameter;
+
+    public GlCamera() {
+        sensorHeight = 0.024f;
+    }
 
     public void setPerspectiveM(int width, int height, float fov, float zNear, float zFar) {
         float aspect = (float) width / height;
-        Matrix.perspectiveM(mPerspectiveM, 0, fov, aspect, zNear, zFar);
-        mNeedsMultiply = true;
+        Matrix.perspectiveM(perspectiveM, 0, fov, aspect, zNear, zFar);
+        needsMultiply = true;
+
+        sensorWidth = sensorHeight * aspect;
+        focalLength = (float) ((0.5f * sensorWidth) / Math.tan(Math.PI * fov / 360));
     }
 
     public float[] getPerspectiveM() {
-        return mPerspectiveM;
+        return perspectiveM;
     }
 
     public void setLookAtM(float posX, float posY, float posZ, float lookAtX, float lookAtY, float lookAtZ, float upX, float upY, float upZ) {
-        mLookAtM[0] = posX;
-        mLookAtM[1] = posY;
-        mLookAtM[2] = posZ;
-        Matrix.setLookAtM(mLookAtM, 0, posX, posY, posZ, lookAtX, lookAtY, lookAtZ, upX, upY, upZ);
-        mNeedsMultiply = true;
+        lookAtM[0] = posX;
+        lookAtM[1] = posY;
+        lookAtM[2] = posZ;
+        Matrix.setLookAtM(lookAtM, 0, posX, posY, posZ, lookAtX, lookAtY, lookAtZ, upX, upY, upZ);
+        needsMultiply = true;
     }
 
     public float[] getLookAtM() {
-        return mLookAtM;
+        return lookAtM;
     }
 
     public float[] getLookAtV() {
-        return mLookAtV;
+        return lookAtV;
     }
 
     public float[] getMultipliedM() {
-        if (mNeedsMultiply) {
-            mNeedsMultiply = false;
-            Matrix.multiplyMM(mMultipliedM, 0, mPerspectiveM, 0, mLookAtM, 0);
+        if (needsMultiply) {
+            needsMultiply = false;
+            Matrix.multiplyMM(multipliedM, 0, perspectiveM, 0, lookAtM, 0);
         }
-        return mMultipliedM;
+        return multipliedM;
+    }
+
+    public float getFocalLength() {
+        return focalLength;
+    }
+
+    public float getPlaneInFocus() {
+        return planeInFocus;
+    }
+
+    public void setPlaneInFocus(float planeInFocus) {
+        this.planeInFocus = planeInFocus;
+    }
+
+    public float getApertureDiameter() {
+        return apertureDiameter;
+    }
+
+    public void setApertureDiameter(float apertureDiameter) {
+        this.apertureDiameter = apertureDiameter;
     }
 
 }

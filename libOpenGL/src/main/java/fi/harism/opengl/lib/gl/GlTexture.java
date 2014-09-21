@@ -6,19 +6,19 @@ import java.nio.Buffer;
 
 public class GlTexture {
 
-    private final int[] mTexture = {0};
+    private final int[] texture = {0};
 
     public GlTexture() {
-        GLES31.glGenTextures(1, mTexture, 0);
+        GLES31.glGenTextures(1, texture, 0);
         GlUtils.checkGLErrors();
     }
 
-    public int getTexture() {
-        return mTexture[0];
+    public int name() {
+        return texture[0];
     }
 
     public GlTexture bind(int target) {
-        GLES31.glBindTexture(target, mTexture[0]);
+        GLES31.glBindTexture(target, texture[0]);
         GlUtils.checkGLErrors();
         return this;
     }

@@ -4,15 +4,15 @@ import android.opengl.GLES31;
 
 public class GlFramebuffer {
 
-    private final int[] mFramebuffer = {0};
+    private final int[] framebuffer = {0};
 
     public GlFramebuffer() {
-        GLES31.glGenFramebuffers(1, mFramebuffer, 0);
+        GLES31.glGenFramebuffers(1, framebuffer, 0);
         GlUtils.checkGLErrors();
     }
 
     public GlFramebuffer bind(int target) {
-        GLES31.glBindFramebuffer(target, mFramebuffer[0]);
+        GLES31.glBindFramebuffer(target, framebuffer[0]);
         GlUtils.checkGLErrors();
         return this;
     }
@@ -37,8 +37,8 @@ public class GlFramebuffer {
         return GLES31.glCheckFramebufferStatus(target);
     }
 
-    public int framebuffer() {
-        return mFramebuffer[0];
+    public int name() {
+        return framebuffer[0];
     }
 
 }

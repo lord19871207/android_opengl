@@ -4,25 +4,25 @@ import android.opengl.GLES31;
 
 public class GlSampler {
 
-    private final int mSampler[] = {0};
+    private final int sampler[] = {0};
 
     public GlSampler() {
-        GLES31.glGenSamplers(1, mSampler, 0);
+        GLES31.glGenSamplers(1, sampler, 0);
         GlUtils.checkGLErrors();
     }
 
     public void parameter(int pname, float pvalue) {
-        GLES31.glSamplerParameterf(mSampler[0], pname, pvalue);
+        GLES31.glSamplerParameterf(sampler[0], pname, pvalue);
         GlUtils.checkGLErrors();
     }
 
     public void parameter(int pname, int pvalue) {
-        GLES31.glSamplerParameteri(mSampler[0], pname, pvalue);
+        GLES31.glSamplerParameteri(sampler[0], pname, pvalue);
         GlUtils.checkGLErrors();
     }
 
     public void bind(int textureUnit) {
-        GLES31.glBindSampler(textureUnit, mSampler[0]);
+        GLES31.glBindSampler(textureUnit, sampler[0]);
         GlUtils.checkGLErrors();
     }
 
