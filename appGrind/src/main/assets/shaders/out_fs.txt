@@ -2,6 +2,7 @@
 
 uniform sampler2D sTexture;
 uniform sampler2D sTextureRand;
+uniform vec2 uAspectRatio;
 uniform vec2 uTextureRandScale;
 uniform vec2 uTextureRandDiff;
 
@@ -13,7 +14,7 @@ void main() {
     float length = length(vTexPosition.xy);
     float vignette = smoothstep(1.65, 0.75, length);
     float rand = texture(sTextureRand, uTextureRandScale * (vTexPosition.zw + uTextureRandDiff)).r;
-    outFragColor = texture(sTexture, vTexPosition.zw);
+    outFragColor = texture(sTexture, vTexPosition.xy * uAspectRatio * 0.5 + 0.5);
     outFragColor.rgb *= vignette;
     outFragColor.rgb *= max(0.8, step(0.3, rand));
 }

@@ -87,91 +87,11 @@ public class RendererDof implements GlRenderer {
 
     @Override
     public void onRenderFrame() {
-
+        float aspectRatio = (float)surfaceSize.x / surfaceSize.y;
         renderDofCoc();
-        renderDofBokeh(1f / (surfaceSize.x / 8), 1f / (surfaceSize.y / 8), 4,
+        renderDofBokeh(0.004f, aspectRatio * 0.004f, 4,
                 glFramebufferHalf1, glFramebufferHalf2, glTextureHalf1, glTextureHalf2);
-        //renderDofBokeh(1f / (surfaceSize.x / 4), 1f / (surfaceSize.y / 4), 1,
-        //        glFramebufferHalf1, glFramebufferHalf2, glTextureHalf1, glTextureHalf2);
         renderDofOut();
-
-
-
-
-        /*
-
-        float pixelX = 1f / (surfaceSize.x / 16);
-        float pixelY = 1f / (surfaceSize.y / 16);
-        int count = 3;
-
-        glFramebufferHalf1.bind(GLES30.GL_DRAW_FRAMEBUFFER);
-        glProgramDofFarVert.useProgram();
-        GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
-        GLES30.glUniform2f(glProgramDofFarVert.getUniformLocation("uSampleOffset"), pixelX, 0f);
-        GLES30.glUniform1i(glProgramDofFarVert.getUniformLocation("uCount"), count);
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
-        GLES30.glEnableVertexAttribArray(0);
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-        glTextureIn.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
-        GLES30.glDisableVertexAttribArray(0);
-        glTextureIn.unbind(GLES30.GL_TEXTURE_2D);
-        glFramebufferHalf1.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
-
-        glFramebufferHalf2.bind(GLES30.GL_DRAW_FRAMEBUFFER);
-        glProgramDofFarDiag.useProgram();
-        GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
-        GLES30.glUniform2f(glProgramDofFarDiag.getUniformLocation("uSampleOffset1"), 0.53f * pixelX, pixelY);
-        GLES30.glUniform2f(glProgramDofFarDiag.getUniformLocation("uSampleOffset2"), -0.53f * pixelX, pixelY);
-        GLES30.glUniform1i(glProgramDofFarDiag.getUniformLocation("uCount"), count);
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
-        GLES30.glEnableVertexAttribArray(0);
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-        glTextureHalf1.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
-        GLES30.glDisableVertexAttribArray(0);
-        glTextureHalf1.unbind(GLES30.GL_TEXTURE_2D);
-        glFramebufferHalf2.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
-
-
-        pixelX = 1f / (surfaceSize.x / 4);
-        pixelY = 1f / (surfaceSize.y / 4);
-        count = 2;
-
-        glFramebufferHalf1.bind(GLES30.GL_DRAW_FRAMEBUFFER);
-        glProgramDofFarVert.useProgram();
-        GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
-        GLES30.glUniform2f(glProgramDofFarVert.getUniformLocation("uSampleOffset"), pixelX, 0f);
-        GLES30.glUniform1i(glProgramDofFarVert.getUniformLocation("uCount"), count);
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
-        GLES30.glEnableVertexAttribArray(0);
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-        glTextureHalf2.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
-        GLES30.glDisableVertexAttribArray(0);
-        glTextureHalf2.unbind(GLES30.GL_TEXTURE_2D);
-        glFramebufferHalf1.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
-
-        glFramebufferHalf2.bind(GLES30.GL_DRAW_FRAMEBUFFER);
-        glProgramDofFarDiag.useProgram();
-        GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
-        GLES30.glUniform2f(glProgramDofFarDiag.getUniformLocation("uSampleOffset1"), 0.53f * pixelX, pixelY);
-        GLES30.glUniform2f(glProgramDofFarDiag.getUniformLocation("uSampleOffset2"), -0.53f * pixelX, pixelY);
-        GLES30.glUniform1i(glProgramDofFarDiag.getUniformLocation("uCount"), count);
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
-        GLES30.glEnableVertexAttribArray(0);
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-        glTextureHalf1.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
-        GLES30.glDisableVertexAttribArray(0);
-        glTextureHalf1.unbind(GLES30.GL_TEXTURE_2D);
-        glFramebufferHalf2.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
-        */
-
     }
 
     @Override

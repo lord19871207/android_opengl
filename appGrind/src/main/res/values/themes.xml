@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <color name="bg_color">#222</color>
+
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar.Overscan">
-        <item name="android:windowBackground">@null</item>
+        <item name="android:windowBackground">@color/bg_color</item>
     </style>
 
 </resources>

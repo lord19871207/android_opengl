@@ -15,11 +15,11 @@ void main() {
     float Iamb = 0.6;
 
     //calculate Diffuse Term:
-    float Idiff = 0.3 * max(dot(vNormal, L), 0.0);
+    float Idiff = 0.6 * max(dot(vNormal, L), 0.0);
     Idiff = clamp(Idiff, 0.0, 1.0);
 
     // calculate Specular Term:
-    float Ispec = 0.3 * pow(max(dot(R, E), 0.0), 0.3 * 8.0);
+    float Ispec = 0.6 * pow(max(dot(R, E), 0.0), 0.3 * 8.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
 
     // write Total Color:

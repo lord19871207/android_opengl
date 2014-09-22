@@ -2,6 +2,7 @@ package fi.harism.grind.app;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.opengl.GLES30;
 
 import java.nio.ByteBuffer;
@@ -14,29 +15,30 @@ import fi.harism.opengl.lib.util.GlRenderer;
 
 public class RendererOut implements GlRenderer {
 
-    private final ByteBuffer mBufferQuad;
-    private final GlTexture mTextureIn;
-    private final GlTexture mTextureRand;
-    private final GlSampler mSampler;
-    private final GlProgram mProgramOut;
-    private final Point mSurfaceSize = new Point();
+    private final ByteBuffer bufferQuad;
+    private final GlTexture glTextureIn;
+    private final GlTexture glTextureRand;
+    private final GlSampler glSampler;
+    private final GlProgram glProgramOut;
+    private final Point surfaceSize = new Point();
+    private final PointF aspectRatio = new PointF();
 
     public RendererOut(Context context, ByteBuffer bufferQuad, GlTexture textureIn, GlTexture textureRand) throws Exception {
-        mBufferQuad = bufferQuad;
-        mTextureIn = textureIn;
-        mTextureRand = textureRand;
+        this.bufferQuad = bufferQuad;
+        glTextureIn = textureIn;
+        glTextureRand = textureRand;
 
-        mSampler = new GlSampler();
-        mSampler.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
-        mSampler.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
-        mSampler.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_REPEAT);
-        mSampler.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_REPEAT);
+        glSampler = new GlSampler();
+        glSampler.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR);
+        glSampler.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
+        glSampler.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+        glSampler.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
 
         final String OUT_VS = GlUtils.loadString(context, "shaders/out_vs.txt");
         final String OUT_FS = GlUtils.loadString(context, "shaders/out_fs.txt");
-        mProgramOut = new GlProgram(OUT_VS, OUT_FS, null).useProgram();
-        GLES30.glUniform1i(mProgramOut.getUniformLocation("sTexture"), 0);
-        GLES30.glUniform1i(mProgramOut.getUniformLocation("sTextureRand"), 1);
+        glProgramOut = new GlProgram(OUT_VS, OUT_FS, null).useProgram();
+        GLES30.glUniform1i(glProgramOut.getUniformLocation("sTexture"), 0);
+        GLES30.glUniform1i(glProgramOut.getUniformLocation("sTextureRand"), 1);
     }
 
     @Override
@@ -46,31 +48,37 @@ public class RendererOut implements GlRenderer {
 
     @Override
     public void onSurfaceChanged(int width, int height) {
-        mSurfaceSize.x = width;
-        mSurfaceSize.y = height;
+        surfaceSize.x = width;
+        surfaceSize.y = height;
     }
 
     @Override
     public void onRenderFrame() {
-        mProgramOut.useProgram();
-        GLES30.glViewport(0, 0, mSurfaceSize.x, mSurfaceSize.y);
-        GLES30.glUniform2f(mProgramOut.getUniformLocation("uTextureRandScale"), mSurfaceSize.x / 1024f, mSurfaceSize.y / 1024f);
-        GLES30.glUniform2f(mProgramOut.getUniformLocation("uTextureRandDiff"), (float) (Math.random() * 2), (float) (Math.random() * 2));
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, mBufferQuad);
+        glProgramOut.useProgram();
+        GLES30.glViewport(0, 0, surfaceSize.x, surfaceSize.y);
+        GLES30.glUniform2f(glProgramOut.getUniformLocation("uAspectRatio"), aspectRatio.x, aspectRatio.y);
+        GLES30.glUniform2f(glProgramOut.getUniformLocation("uTextureRandScale"), surfaceSize.x / 1024f, surfaceSize.y / 1024f);
+        GLES30.glUniform2f(glProgramOut.getUniformLocation("uTextureRandDiff"), (float) (Math.random() * 2), (float) (Math.random() * 2));
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-        mTextureIn.bind(GLES30.GL_TEXTURE_2D);
-        mSampler.bind(0);
+        glTextureIn.bind(GLES30.GL_TEXTURE_2D);
+        glSampler.bind(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
-        mTextureRand.bind(GLES30.GL_TEXTURE_2D);
-        mSampler.bind(1);
+        glTextureRand.bind(GLES30.GL_TEXTURE_2D);
+        glSampler.bind(1);
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
         GLES30.glDisableVertexAttribArray(0);
-        mTextureIn.unbind(GLES30.GL_TEXTURE_2D);
-        mTextureRand.unbind(GLES30.GL_TEXTURE_2D);
+        glTextureIn.unbind(GLES30.GL_TEXTURE_2D);
+        glTextureRand.unbind(GLES30.GL_TEXTURE_2D);
     }
 
     @Override
     public void onSurfaceReleased() {
+    }
+
+    public void setAspectRatio(float aspectX, float aspectY) {
+        aspectRatio.x = aspectX;
+        aspectRatio.y = aspectY;
     }
 }

@@ -2,8 +2,8 @@ package fi.harism.grind.app;
 
 import android.animation.Animator;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
-import android.graphics.Outline;
 import android.media.MediaPlayer;
 import android.opengl.GLES30;
 import android.os.Bundle;
@@ -35,6 +35,10 @@ import fi.harism.utils.lib.MersenneTwisterFast;
 
 public class MainActivity extends Activity {
 
+    public final static String EXTRA_RESOLUTION_WIDTH = "EXTRA_RESOLUTION_WIDTH";
+    public final static String EXTRA_RESOLUTION_HEIGHT = "EXTRA_RESOLUTION_HEIGHT";
+    public final static String EXTRA_SHOW_FPS = "EXTRA_SHOW_FPS";
+
     private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
         @Override
         public void doFrame(long frameTimeNanos) {
@@ -56,6 +60,8 @@ public class MainActivity extends Activity {
     private ProgressBar progressBar;
     private TextView textViewFps;
     private GlTextureView glTextureView;
+    private int resolutionWidth;
+    private int resolutionHeight;
     private float fps;
 
     @Override
@@ -81,6 +87,13 @@ public class MainActivity extends Activity {
         glTextureView.setAlpha(0f);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        Intent intent = getIntent();
+        if (!intent.getBooleanExtra(EXTRA_SHOW_FPS, true)) {
+            textViewFps.setVisibility(View.GONE);
+        }
+        resolutionWidth = intent.getIntExtra(EXTRA_RESOLUTION_WIDTH, 1920);
+        resolutionHeight = intent.getIntExtra(EXTRA_RESOLUTION_HEIGHT, 1080);
     }
 
     @Override
@@ -298,16 +311,16 @@ public class MainActivity extends Activity {
 
         @Override
         public void onSurfaceChanged(int width, int height) {
-            glCamera.setPerspectiveM(width, height, 60f, 1f, 100f);
-            glCamera.setApertureDiameter(2.4f);
-            glCamera.setPlaneInFocus(10f);
+            glCamera.setPerspectiveM(resolutionWidth, resolutionHeight, 60f, 1f, 100f);
+            glCamera.setApertureDiameter(4.8f);
+            glCamera.setPlaneInFocus(5.0f);
 
             glTextureOut.bind(GLES30.GL_TEXTURE_2D)
-                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width, height, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
+                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth, resolutionHeight, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
                     .unbind(GLES30.GL_TEXTURE_2D);
 
             glRenderbufferDepth.bind()
-                    .storage(GLES30.GL_DEPTH_COMPONENT32F, width, height)
+                    .storage(GLES30.GL_DEPTH_COMPONENT32F, resolutionWidth, resolutionHeight)
                     .unbind();
 
             glFramebufferOut.bind(GLES30.GL_DRAW_FRAMEBUFFER)
@@ -317,11 +330,11 @@ public class MainActivity extends Activity {
             glFramebufferOut.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
             glTextureHalf1.bind(GLES30.GL_TEXTURE_2D)
-                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width / 2, height / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
+                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth / 2, resolutionHeight / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
                     .unbind(GLES30.GL_TEXTURE_2D);
 
             glTextureHalf2.bind(GLES30.GL_TEXTURE_2D)
-                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width / 2, height / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
+                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth / 2, resolutionHeight / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
                     .unbind(GLES30.GL_TEXTURE_2D);
 
             glFramebufferHalf1.bind(GLES30.GL_DRAW_FRAMEBUFFER)
@@ -334,9 +347,17 @@ public class MainActivity extends Activity {
             GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
             glFramebufferHalf2.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
-            rendererScene.onSurfaceChanged(width, height);
-            rendererDof.onSurfaceChanged(width, height);
+            rendererScene.onSurfaceChanged(resolutionWidth, resolutionHeight);
+            rendererDof.onSurfaceChanged(resolutionWidth, resolutionHeight);
             rendererOut.onSurfaceChanged(width, height);
+
+            float aspectOffscreen = (float)resolutionWidth / resolutionHeight;
+            float aspectSurface = (float)width / height;
+            if (aspectOffscreen >= aspectSurface) {
+                rendererOut.setAspectRatio(aspectSurface / aspectOffscreen, 1.0f);
+            } else {
+                rendererOut.setAspectRatio(1.0f, aspectOffscreen / aspectSurface);
+            }
         }
 
         @Override

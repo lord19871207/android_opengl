@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="25dp"
+    android:fitsSystemWindows="true">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/app_title"
+        android:fontFamily="monospace"
+        android:textSize="52sp" />
+
+    <RadioGroup
+        android:id="@+id/radiogroup_resolution"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true">
+
+        <RadioButton
+            android:id="@+id/radiobutton_1080p"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/resolution_1080p"
+            android:textSize="20sp"
+            android:fontFamily="monospace"
+            android:layout_marginBottom="10dp" />
+
+        <RadioButton
+            android:id="@+id/radiobutton_720p"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/resolution_720p"
+            android:textSize="20sp"
+            android:fontFamily="monospace" />
+
+    </RadioGroup>
+
+    <CheckBox
+        android:id="@+id/checkbox_fps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:fontFamily="monospace"
+        android:text="@string/show_fps"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true" />
+
+    <Button
+        android:id="@+id/button_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/start"
+        android:textAllCaps="false"
+        android:fontFamily="monospace"
+        android:textSize="24sp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout>
