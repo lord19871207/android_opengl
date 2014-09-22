@@ -1,0 +1,20 @@
+#version 300 es
+
+uniform sampler2D sTexture;
+
+uniform float uApertureDiameter;
+uniform float uFocalLength;
+uniform float uPlaneInFocus;
+uniform float uSensorHeight;
+
+in vec2 vTexPosition;
+
+out vec4 outFragColor;
+
+void main() {
+    vec4 color = texture(sTexture, vTexPosition);
+    color.a = abs(uApertureDiameter * uFocalLength * (uPlaneInFocus - color.a) /
+                        (color.a * (uPlaneInFocus - uFocalLength))   );
+    color.a = clamp(color.a / uSensorHeight, 0.0, 1.0);
+    outFragColor = color;
+}

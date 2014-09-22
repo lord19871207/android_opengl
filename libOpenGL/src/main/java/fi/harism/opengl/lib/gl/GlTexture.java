@@ -28,19 +28,22 @@ public class GlTexture {
         GlUtils.checkGLErrors();
     }
 
-    public void texImage2D(int target, int level, int internalFormat, int width, int height, int border, int format, int type, Buffer data) {
+    public GlTexture texImage2D(int target, int level, int internalFormat, int width, int height, int border, int format, int type, Buffer data) {
         GLES31.glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
         GlUtils.checkGLErrors();
+        return this;
     }
 
-    public void parameter(int target, int pname, float pvalue) {
+    public GlTexture parameter(int target, int pname, float pvalue) {
         GLES31.glTexParameterf(target, pname, pvalue);
         GlUtils.checkGLErrors();
+        return this;
     }
 
-    public void parameter(int target, int pname, int pvalue) {
+    public GlTexture parameter(int target, int pname, int pvalue) {
         GLES31.glTexParameteri(target, pname, pvalue);
         GlUtils.checkGLErrors();
+        return this;
     }
 
 }

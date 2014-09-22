@@ -1,13 +1,14 @@
 #version 300 es
 
-in vec2 vPosition;
+in vec3 vPosition;
+in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
 void main() {
-    float dist = length(vPosition);
+    float dist = length(vTexPosition);
     if (dist >= 1.0) {
         discard;
     }
-    outFragColor = vec4(1.0);
+    outFragColor = vec4(2.0, 2.0, 2.0, -vPosition.z);
 }

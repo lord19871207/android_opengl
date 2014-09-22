@@ -77,4 +77,12 @@ public class GlCamera {
         this.apertureDiameter = apertureDiameter;
     }
 
+    public float getSensorHeight() {
+        return sensorHeight;
+    }
+
+    public float getSensorWidth() {
+        return sensorWidth;
+    }
+
 }

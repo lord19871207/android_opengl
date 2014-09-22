@@ -3,6 +3,7 @@ package fi.harism.grind.app;
 import android.animation.Animator;
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Outline;
 import android.media.MediaPlayer;
 import android.opengl.GLES30;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.view.Choreographer;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -41,11 +43,20 @@ public class MainActivity extends Activity {
         }
     };
 
+    private final Runnable fpsRunnable = new Runnable() {
+        @Override
+        public void run() {
+            textViewFps.setText("FPS " + Math.round(fps));
+        }
+    };
+
     private MediaPlayer mediaPlayer;
     private Choreographer choreographer;
     private View progressLayout;
     private ProgressBar progressBar;
+    private TextView textViewFps;
     private GlTextureView glTextureView;
+    private float fps;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +71,9 @@ public class MainActivity extends Activity {
         progressBar = (ProgressBar) findViewById(R.id.progress_bar);
         progressBar.setMax(10);
         progressBar.setProgress(0);
+
+        textViewFps = (TextView) findViewById(R.id.textview_fps);
+        textViewFps.setAlpha(0f);
 
         glTextureView = (GlTextureView) findViewById(R.id.texture_view);
         glTextureView.setEglContext(EglCore.VERSION_GLES3, 0);
@@ -138,6 +152,7 @@ public class MainActivity extends Activity {
                 }
             });
             glTextureView.animate().alpha(1f).setStartDelay(500).setDuration(2000);
+            textViewFps.animate().alpha(1f).setStartDelay(500).setDuration(2000);
 
             progressLayout.animate().alpha(0f).setDuration(400).setListener(new Animator.AnimatorListener() {
                 @Override
@@ -169,6 +184,10 @@ public class MainActivity extends Activity {
     private class MainRenderer implements GlRenderer {
         private GlFramebuffer glFramebufferOut;
         private GlTexture glTextureOut;
+        private GlFramebuffer glFramebufferHalf1;
+        private GlFramebuffer glFramebufferHalf2;
+        private GlTexture glTextureHalf1;
+        private GlTexture glTextureHalf2;
         private GlTexture glTextureRand;
         private ByteBuffer mBufferQuad;
         private GlRenderbuffer glRenderbufferDepth;
@@ -185,10 +204,14 @@ public class MainActivity extends Activity {
         private GlObject glObjectMusic;
         private GlObject glObjectScottXylo;
 
-        private RendererOut rendererOut;
         private RendererScene rendererScene;
+        private RendererDof rendererDof;
+        private RendererOut rendererOut;
 
-        private long mPrevTime;
+        private float fpsSum;
+        private int fpsCount;
+        private long timeStart;
+        private long timePrev;
 
         @Override
         public void onSurfaceCreated() {
@@ -204,6 +227,11 @@ public class MainActivity extends Activity {
 
             glFramebufferOut = new GlFramebuffer();
             glTextureOut = new GlTexture();
+
+            glFramebufferHalf1 = new GlFramebuffer();
+            glFramebufferHalf2 = new GlFramebuffer();
+            glTextureHalf1 = new GlTexture();
+            glTextureHalf2 = new GlTexture();
 
             MersenneTwisterFast rand = new MersenneTwisterFast(8347);
             glTextureRand = new GlTexture().bind(GLES30.GL_TEXTURE_2D);
@@ -222,8 +250,11 @@ public class MainActivity extends Activity {
             mBufferQuad.put(VERTICES_QUAD).position(0);
 
             try {
-                rendererOut = new RendererOut(MainActivity.this, mBufferQuad, glTextureOut, glTextureRand);
                 rendererScene = new RendererScene(MainActivity.this, mBufferQuad, glCamera, glFramebufferOut);
+                rendererDof = new RendererDof(MainActivity.this, mBufferQuad, glCamera,
+                        glFramebufferOut, glFramebufferHalf1, glFramebufferHalf2,
+                        glTextureOut, glTextureHalf1, glTextureHalf2);
+                rendererOut = new RendererOut(MainActivity.this, mBufferQuad, glTextureOut, glTextureRand);
 
                 setProgress(9, 1);
                 glObjectAnd = GlObjectLoader.loadDat(MainActivity.this, "models/and.dat");
@@ -268,46 +299,74 @@ public class MainActivity extends Activity {
         @Override
         public void onSurfaceChanged(int width, int height) {
             glCamera.setPerspectiveM(width, height, 60f, 1f, 100f);
-            glCamera.setApertureDiameter(3f);
+            glCamera.setApertureDiameter(2.4f);
             glCamera.setPlaneInFocus(10f);
 
-            glTextureOut.bind(GLES30.GL_TEXTURE_2D);
-            glTextureOut.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width, height, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null);
-            glTextureOut.unbind(GLES30.GL_TEXTURE_2D);
+            glTextureOut.bind(GLES30.GL_TEXTURE_2D)
+                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width, height, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
+                    .unbind(GLES30.GL_TEXTURE_2D);
 
-            glRenderbufferDepth.bind();
-            glRenderbufferDepth.storage(GLES30.GL_DEPTH_COMPONENT32F, width, height);
-            glRenderbufferDepth.unbind();
+            glRenderbufferDepth.bind()
+                    .storage(GLES30.GL_DEPTH_COMPONENT32F, width, height)
+                    .unbind();
 
-            glFramebufferOut.bind(GLES30.GL_DRAW_FRAMEBUFFER);
-            glFramebufferOut.renderbuffer(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, glRenderbufferDepth.name());
-            glFramebufferOut.texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, glTextureOut.name(), 0);
-            final int[] ATTACHMENTS = {GLES30.GL_COLOR_ATTACHMENT0};
-            GLES30.glDrawBuffers(1, ATTACHMENTS, 0);
+            glFramebufferOut.bind(GLES30.GL_DRAW_FRAMEBUFFER)
+                    .renderbuffer(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, glRenderbufferDepth.name())
+                    .texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, glTextureOut.name(), 0);
+            GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
             glFramebufferOut.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
+            glTextureHalf1.bind(GLES30.GL_TEXTURE_2D)
+                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width / 2, height / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
+                    .unbind(GLES30.GL_TEXTURE_2D);
+
+            glTextureHalf2.bind(GLES30.GL_TEXTURE_2D)
+                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, width / 2, height / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
+                    .unbind(GLES30.GL_TEXTURE_2D);
+
+            glFramebufferHalf1.bind(GLES30.GL_DRAW_FRAMEBUFFER)
+                    .texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, glTextureHalf1.name(), 0);
+            GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
+            glFramebufferHalf1.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
+
+            glFramebufferHalf2.bind(GLES30.GL_DRAW_FRAMEBUFFER)
+                    .texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, glTextureHalf2.name(), 0);
+            GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
+            glFramebufferHalf2.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
+
             rendererScene.onSurfaceChanged(width, height);
+            rendererDof.onSurfaceChanged(width, height);
             rendererOut.onSurfaceChanged(width, height);
         }
 
         @Override
         public void onRenderFrame() {
             long time = SystemClock.uptimeMillis();
-            Log.d("FPS", "fps = " + (1f / ((time - mPrevTime) / 1000f)));
-            mPrevTime = time;
+            fpsSum += 1f / ((time - timePrev) / 1000f);
+            fpsCount += 1;
+            timePrev = time;
+            if (time > timeStart + 1000) {
+                timeStart = time;
+                fps = fpsSum / fpsCount;
+                fpsSum = 0;
+                fpsCount = 0;
+                runOnUiThread(fpsRunnable);
+            }
 
             double angle = SystemClock.uptimeMillis() % 10000 / 5000.0 * Math.PI;
             float rx = (float) (Math.sin(angle) * 5);
-            float rz = (float) (Math.cos(angle) * 5);
-            glCamera.setLookAtM(rx, 0, 5, rx, 0, 0, 0, 1, 0);
+            float rz = (float) (Math.cos(angle) * 10) + 12;
+            glCamera.setLookAtM(0, 0, rz, 0, 0, 0, 0, 1, 0);
 
             rendererScene.onRenderFrame();
+            rendererDof.onRenderFrame();
             rendererOut.onRenderFrame();
         }
 
         @Override
         public void onSurfaceReleased() {
             rendererScene.onSurfaceReleased();
+            rendererDof.onSurfaceReleased();
             rendererOut.onSurfaceReleased();
         }
 

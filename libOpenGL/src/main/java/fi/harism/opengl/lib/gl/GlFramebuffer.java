@@ -22,14 +22,16 @@ public class GlFramebuffer {
         GlUtils.checkGLErrors();
     }
 
-    public void renderbuffer(int target, int attachment, int renderbuffer) {
+    public GlFramebuffer renderbuffer(int target, int attachment, int renderbuffer) {
         GLES31.glFramebufferRenderbuffer(target, attachment, GLES31.GL_RENDERBUFFER, renderbuffer);
         GlUtils.checkGLErrors();
+        return this;
     }
 
-    public void texture2D(int target, int attachment, int textarget, int texture, int level) {
+    public GlFramebuffer texture2D(int target, int attachment, int textarget, int texture, int level) {
         GLES31.glFramebufferTexture2D(target, attachment, textarget, texture, level);
         GlUtils.checkGLErrors();
+        return this;
     }
 
     public int checkStatus(int target) {

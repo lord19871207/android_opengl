@@ -21,6 +21,8 @@ import fi.harism.utils.lib.MersenneTwisterFast;
 
 public class RendererScene implements GlRenderer {
 
+    private final int DOT_COUNT = 500;
+
     private final ByteBuffer mBufferQuad;
     private final GlCamera mCamera;
     private final GlFramebuffer mFramebuffer;
@@ -38,14 +40,14 @@ public class RendererScene implements GlRenderer {
         mFramebuffer = framebuffer;
 
         MersenneTwisterFast rand = new MersenneTwisterFast(7348);
-        mBufferDots = ByteBuffer.allocateDirect(4 * 3 * 1000).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        for (int i = 0; i < 3 * 1000; ++i) {
+        mBufferDots = ByteBuffer.allocateDirect(4 * 3 * DOT_COUNT).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        for (int i = 0; i < 3 * DOT_COUNT; ++i) {
             mBufferDots.put(rand.nextFloat(true, true) * 40 - 20);
         }
         mBufferDots.position(0);
         mVboDots = new GlBuffer();
         mVboDots.bind(GLES30.GL_ARRAY_BUFFER);
-        mVboDots.data(GLES30.GL_ARRAY_BUFFER, 4 * 3 * 1000, mBufferDots, GLES30.GL_STATIC_DRAW);
+        mVboDots.data(GLES30.GL_ARRAY_BUFFER, 4 * 3 * DOT_COUNT, mBufferDots, GLES30.GL_STATIC_DRAW);
         mVboDots.unbind(GLES30.GL_ARRAY_BUFFER);
 
         final String DOT_VS = GlUtils.loadString(context, "shaders/dots_vs.txt");
@@ -72,7 +74,7 @@ public class RendererScene implements GlRenderer {
     public void onRenderFrame() {
         mFramebuffer.bind(GLES30.GL_DRAW_FRAMEBUFFER);
         GLES30.glViewport(0, 0, mSurfaceSize.x, mSurfaceSize.y);
-        GLES30.glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
+        GLES30.glClearColor(0.2f, 0.4f, 0.6f, 0.0f);
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
         //renderCubeTest();
@@ -96,7 +98,7 @@ public class RendererScene implements GlRenderer {
         final float[] modelViewProjM = new float[16];
         Matrix.setIdentityM(modelViewProjM, 0);
         //Matrix.translateM(modelViewProjM, 0, 0, 0, 0);
-        //Matrix.rotateM(modelViewProjM, 0, angle, 1, 0, 0);
+        //Matrix.rotateM(modelViewProjM, 0, angle, 0, 1, 0);
         GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uViewM"), 1, false, mCamera.getLookAtM(), 0);
         Matrix.multiplyMM(modelViewProjM, 0, mCamera.getLookAtM(), 0, modelViewProjM, 0);
         GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uModelViewM"), 1, false, modelViewProjM, 0);
@@ -136,7 +138,7 @@ public class RendererScene implements GlRenderer {
         GLES30.glVertexAttribPointer(1, 2, GLES30.GL_BYTE, false, 0, mBufferQuad);
         GLES30.glEnableVertexAttribArray(1);
         GLES30.glVertexAttribDivisor(1, 0);
-        GLES30.glDrawArraysInstanced(GLES30.GL_TRIANGLE_STRIP, 0, 4, 1000);
+        GLES30.glDrawArraysInstanced(GLES30.GL_TRIANGLE_STRIP, 0, 4, DOT_COUNT);
         GLES30.glDisableVertexAttribArray(0);
         GLES30.glDisableVertexAttribArray(1);
         GLES30.glVertexAttribDivisor(0, 0);

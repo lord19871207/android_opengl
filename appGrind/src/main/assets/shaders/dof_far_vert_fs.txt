@@ -1,0 +1,38 @@
+#version 300 es
+
+uniform sampler2D sTexture;
+uniform vec2 uSampleOffset;
+uniform int uCount;
+
+in vec2 vTexPosition;
+
+out vec4 outFragColor;
+
+void main() {
+    vec4 colorCenter = texture(sTexture, vTexPosition);
+
+    vec4 sample = vec4(0.0);
+    vec4 colorSum = vec4(0.0);
+
+    float centerCoc = colorCenter.a;
+    float weight = 0.0;
+    float weightSum = 0.0;
+
+    vec2 texOffset = uSampleOffset * centerCoc * 0.5;
+
+    for (int i = 0; i < uCount; ++i) {
+        sample = texture(sTexture, vTexPosition + texOffset);
+        weight = centerCoc > sample.a ? sample.a : 1.0;
+        colorSum += sample * weight;
+        weightSum += weight;
+
+        sample = texture(sTexture, vTexPosition - texOffset);
+        weight = centerCoc > sample.a ? sample.a : 1.0;
+        colorSum += sample * weight;
+        weightSum += weight;
+
+        texOffset += uSampleOffset * centerCoc;
+    }
+
+    outFragColor = colorSum / weightSum;
+}

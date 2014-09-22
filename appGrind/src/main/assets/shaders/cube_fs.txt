@@ -23,7 +23,7 @@ void main() {
     Ispec = clamp(Ispec, 0.0, 1.0);
 
     // write Total Color:
-    outFragColor = vec4(1.0);
+    outFragColor = vec4(1.0, 1.0, 1.0, -vPosition.z);
     outFragColor.rgb *= (Iamb + Idiff + Ispec);
 
 }

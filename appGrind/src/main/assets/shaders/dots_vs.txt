@@ -6,12 +6,14 @@ uniform mat4 uViewM;
 layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec4 inPositionQuad;
 
-out vec2 vPosition;
+out vec3 vPosition;
+out vec2 vTexPosition;
 
 void main() {
+    vPosition = (uViewM * inPosition).xyz;
     gl_Position = uViewM * inPosition;
     gl_Position /= gl_Position.w;
     gl_Position.xy += inPositionQuad.xy * 0.2;
     gl_Position = uProjM * gl_Position;
-    vPosition = inPositionQuad.xy;
+    vTexPosition = inPositionQuad.xy;
 }

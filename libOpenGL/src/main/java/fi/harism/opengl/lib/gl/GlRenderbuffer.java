@@ -22,9 +22,10 @@ public class GlRenderbuffer {
         GlUtils.checkGLErrors();
     }
 
-    public void storage(int internalFormat, int width, int height) {
+    public GlRenderbuffer storage(int internalFormat, int width, int height) {
         GLES31.glRenderbufferStorage(GLES31.GL_RENDERBUFFER, internalFormat, width, height);
         GlUtils.checkGLErrors();
+        return this;
     }
 
     public int name() {
