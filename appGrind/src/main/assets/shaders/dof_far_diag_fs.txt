@@ -9,45 +9,42 @@ in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
+void sample(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in float centerCoC) {
+    const float bleedingMult = 1.5;
+    const float bleedingBias = 0.01;
+
+    vec4 sample = texture(sTexture, texPos);
+    float weight = sample.a < centerCoC ? sample.a * bleedingMult : 1.0;
+    weight = (centerCoC > sample.a + bleedingBias) ? weight : 1.0;
+    weight = clamp(weight, 0.0, 1.0);
+    sampleSum += sample * weight;
+    weightSum += weight;
+}
+
 void main() {
-    vec4 colorCenter = texture(sTexture, vTexPosition);
+    vec4 sampleCenter = texture(sTexture, vTexPosition);
+    //outFragColor = sampleCenter;
+    //return;
 
-    vec4 sample = vec4(0.0);
-    vec4 colorSum1 = vec4(0.0);
-    vec4 colorSum2 = vec4(0.0);
-
-    float centerCoc = colorCenter.a;
-    float weight = 0.0;
+    vec4 sampleSum1 = vec4(0.0);
+    vec4 sampleSum2 = vec4(0.0);
     float weightSum1 = 0.0;
     float weightSum2 = 0.0;
 
-    vec2 texOffset1 = uSampleOffset1 * centerCoc * 0.5;
-    vec2 texOffset2 = uSampleOffset2 * centerCoc * 0.5;
+    vec2 texOffset1 = uSampleOffset1 * sampleCenter.a * 0.5;
+    vec2 texOffset2 = uSampleOffset2 * sampleCenter.a * 0.5;
 
     for (int i = 0; i < uCount; ++i) {
-        sample = texture(sTexture, vTexPosition + texOffset1);
-        weight = centerCoc > sample.a ? sample.a : 1.0;
-        colorSum1 += sample * weight;
-        weightSum1 += weight;
+        sample(sampleSum1, weightSum1, vTexPosition + texOffset1, sampleCenter.a);
+        sample(sampleSum1, weightSum1, vTexPosition - texOffset1, sampleCenter.a);
+        sample(sampleSum2, weightSum2, vTexPosition + texOffset2, sampleCenter.a);
+        sample(sampleSum2, weightSum2, vTexPosition - texOffset2, sampleCenter.a);
 
-        sample = texture(sTexture, vTexPosition - texOffset1);
-        weight = centerCoc > sample.a ? sample.a : 1.0;
-        colorSum1 += sample * weight;
-        weightSum1 += weight;
-
-        sample = texture(sTexture, vTexPosition + texOffset2);
-        weight = centerCoc > sample.a ? sample.a : 1.0;
-        colorSum2 += sample * weight;
-        weightSum2 += weight;
-
-        sample = texture(sTexture, vTexPosition - texOffset2);
-        weight = centerCoc > sample.a ? sample.a : 1.0;
-        colorSum2 += sample * weight;
-        weightSum2 += weight;
-
-        texOffset1 += uSampleOffset1 * centerCoc;
-        texOffset2 += uSampleOffset2 * centerCoc;
+        texOffset1 += uSampleOffset1 * sampleCenter.a;
+        texOffset2 += uSampleOffset2 * sampleCenter.a;
     }
 
-    outFragColor = min(colorSum1 / weightSum1, colorSum2 / weightSum2);
+    sampleSum1 = weightSum1 > 0.0 ? sampleSum1 / weightSum1 : sampleCenter;
+    sampleSum2 = weightSum2 > 0.0 ? sampleSum2 / weightSum2 : sampleCenter;
+    outFragColor = min(sampleSum1, sampleSum2);
 }

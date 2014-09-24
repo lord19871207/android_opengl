@@ -74,7 +74,7 @@ public class RendererScene implements GlRenderer {
     public void onRenderFrame() {
         mFramebuffer.bind(GLES30.GL_DRAW_FRAMEBUFFER);
         GLES30.glViewport(0, 0, mSurfaceSize.x, mSurfaceSize.y);
-        GLES30.glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
+        GLES30.glClearColor(0.2f, 0.4f, 0.6f, 100.0f);
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
         renderObject(mObject);

@@ -99,25 +99,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-            }
-            mediaPlayer.release();
-        }
-        mediaPlayer = null;
-
-        choreographer.removeFrameCallback(frameCallback);
-
+        stopDemo();
         finish();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        glTextureView.onDestroy();
-        glTextureView = null;
+        stopDemo();
     }
 
     @Override
@@ -192,6 +181,23 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "Unable to start audio playback", Toast.LENGTH_LONG).show();
             finish();
         }
+    }
+
+    private void stopDemo() {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+
+        if (glTextureView != null) {
+            glTextureView.onDestroy();
+            glTextureView = null;
+        }
+
+        choreographer.removeFrameCallback(frameCallback);
     }
 
     private class MainRenderer implements GlRenderer {
@@ -312,8 +318,8 @@ public class MainActivity extends Activity {
         @Override
         public void onSurfaceChanged(int width, int height) {
             glCamera.setPerspectiveM(resolutionWidth, resolutionHeight, 60f, 1f, 100f);
-            glCamera.setApertureDiameter(4.8f);
-            glCamera.setPlaneInFocus(5.0f);
+            glCamera.setApertureDiameter(3.4f);
+            glCamera.setPlaneInFocus(10f);
 
             glTextureOut.bind(GLES30.GL_TEXTURE_2D)
                     .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth, resolutionHeight, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
@@ -351,8 +357,8 @@ public class MainActivity extends Activity {
             rendererDof.onSurfaceChanged(resolutionWidth, resolutionHeight);
             rendererOut.onSurfaceChanged(width, height);
 
-            float aspectOffscreen = (float)resolutionWidth / resolutionHeight;
-            float aspectSurface = (float)width / height;
+            float aspectOffscreen = (float) resolutionWidth / resolutionHeight;
+            float aspectSurface = (float) width / height;
             if (aspectOffscreen >= aspectSurface) {
                 rendererOut.setAspectRatio(aspectSurface / aspectOffscreen, 1.0f);
             } else {

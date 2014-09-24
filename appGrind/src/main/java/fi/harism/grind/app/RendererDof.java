@@ -87,9 +87,11 @@ public class RendererDof implements GlRenderer {
 
     @Override
     public void onRenderFrame() {
-        float aspectRatio = (float)surfaceSize.x / surfaceSize.y;
+        float aspectRatio = (float) surfaceSize.x / surfaceSize.y;
         renderDofCoc();
-        renderDofBokeh(0.004f, aspectRatio * 0.004f, 4,
+        renderDofBokeh(0.008f, aspectRatio * 0.008f, 4,
+                glFramebufferHalf1, glFramebufferHalf2, glTextureHalf1, glTextureHalf2);
+        renderDofBokeh(0.004f, aspectRatio * 0.004f, 2,
                 glFramebufferHalf1, glFramebufferHalf2, glTextureHalf1, glTextureHalf2);
         renderDofOut();
     }
@@ -99,14 +101,25 @@ public class RendererDof implements GlRenderer {
     }
 
     private void renderDofCoc() {
+
+        // ( apertureDiameter * focalLength * (planeInFocus - x) ) /
+        // ( x * (planeInFocus - focalLength) * sensorHeight )
+        //
+        // simplifies to
+        //
+        // (k4 / x) -  k3
+
+        float k1 = glCamera.getApertureDiameter() * glCamera.getFocalLength();
+        float k2 = glCamera.getPlaneInFocus() - glCamera.getFocalLength();
+        float k3 = k1 / (k2 * glCamera.getSensorHeight());
+        float k4 = k3 * glCamera.getPlaneInFocus();
+
         glFramebufferHalf1.bind(GLES30.GL_DRAW_FRAMEBUFFER);
         glProgramDofCoc.useProgram();
         GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
 
-        GLES30.glUniform1f(glProgramDofCoc.getUniformLocation("uApertureDiameter"), glCamera.getApertureDiameter());
-        GLES30.glUniform1f(glProgramDofCoc.getUniformLocation("uFocalLength"), glCamera.getFocalLength());
-        GLES30.glUniform1f(glProgramDofCoc.getUniformLocation("uPlaneInFocus"), glCamera.getPlaneInFocus());
-        GLES30.glUniform1f(glProgramDofCoc.getUniformLocation("uSensorHeight"), glCamera.getSensorHeight());
+        GLES30.glUniform1f(glProgramDofCoc.getUniformLocation("uCamera1"), k4);
+        GLES30.glUniform1f(glProgramDofCoc.getUniformLocation("uCamera2"), k3);
 
         GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
         GLES30.glEnableVertexAttribArray(0);

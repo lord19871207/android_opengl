@@ -2,10 +2,13 @@
 
 uniform sampler2D sTexture;
 
-uniform float uApertureDiameter;
-uniform float uFocalLength;
-uniform float uPlaneInFocus;
-uniform float uSensorHeight;
+//uniform float uApertureDiameter;
+//uniform float uFocalLength;
+//uniform float uPlaneInFocus;
+//uniform float uSensorHeight;
+
+uniform float uCamera1;
+uniform float uCamera2;
 
 in vec2 vTexPosition;
 
@@ -13,7 +16,10 @@ out vec4 outFragColor;
 
 void main() {
     vec4 color = texture(sTexture, vTexPosition);
-    float x = abs(  uApertureDiameter * uFocalLength * (uPlaneInFocus - color.a) /
-                    (color.a * (uPlaneInFocus - uFocalLength))  );
-    outFragColor = vec4(color.rgb, clamp(x / uSensorHeight, 0.0, 1.0));
+
+    float coc = (uCamera1 / color.a) - uCamera2;
+    vec2 coc2 = vec2(-coc, coc);
+    coc2 = clamp(coc2, 0.0, 1.0);
+
+    outFragColor = vec4(color.rgb, coc2.x);
 }
