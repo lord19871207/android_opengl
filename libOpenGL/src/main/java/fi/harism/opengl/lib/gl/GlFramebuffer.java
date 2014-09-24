@@ -34,6 +34,12 @@ public class GlFramebuffer {
         return this;
     }
 
+    public GlFramebuffer drawBuffers(int... buffers) {
+        GLES31.glDrawBuffers(buffers.length, buffers, 0);
+        GlUtils.checkGLErrors();
+        return this;
+    }
+
     public int checkStatus(int target) {
         GlUtils.checkGLErrors();
         return GLES31.glCheckFramebufferStatus(target);
