@@ -2,4 +2,4 @@
 include ':libOpenGL', ':libXMP', 'libUtils'
 
 // Applications
-include ':appOpenGL', ':appGrind'
+include ':appGrind', 'appOpenGL3X'

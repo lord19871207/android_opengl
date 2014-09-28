@@ -1,25 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="fi.harism.app.grind"
+    package="fi.harism.app.opengl3x"
     android:installLocation="auto">
 
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:icon="@drawable/ic_launcher"
-        android:theme="@style/AppTheme">
+        android:icon="@drawable/opengl_128"
+        android:theme="@style/AppTheme"
+        android:name="fi.harism.app.opengl3x.MainApplication">
+
         <activity
-            android:name="fi.harism.app.grind.LauncherActivity"
-            android:screenOrientation="landscape">
+            android:name="fi.harism.app.opengl3x.MainActivity"
+            android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="fi.harism.app.grind.MainActivity"
-            android:screenOrientation="landscape" />
-
     </application>
 
 </manifest>

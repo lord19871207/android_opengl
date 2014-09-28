@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">OpenGL 3X</string>
+
+    <string name="section_tests">TESTS</string>
+    <string name="renderer_tests_clear_title">Random Clear</string>
+    <string name="renderer_tests_clear_caption">Clears framebuffer with random color.</string>
+
+</resources>
