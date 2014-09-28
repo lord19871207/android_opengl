@@ -10,65 +10,112 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
+import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
+import fi.harism.app.opengl3x.event.GetRendererFragmentEvent;
+import fi.harism.app.opengl3x.event.SetRendererFragmentEvent;
 import fi.harism.app.opengl3x.renderer.RendererFragment;
-import fi.harism.app.opengl3x.renderer.test.RandRendererFragment;
+import fi.harism.app.opengl3x.renderer.test.ClearRendererFragment;
 
 public class ListFragment extends Fragment {
 
+    private int selectedPosition = 0;
     private ArrayList<RendererFragment> rendererFragments;
+    private RecyclerView recyclerView;
+    private SectionedAdapter recyclerViewAdapter;
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list, null);
 
         rendererFragments = new ArrayList<>();
-        rendererFragments.add(new RandRendererFragment());
-        rendererFragments.add(new RandRendererFragment());
-        rendererFragments.add(new RandRendererFragment());
-        rendererFragments.add(new RandRendererFragment());
-        rendererFragments.add(new RandRendererFragment());
+        ArrayList<SectionedAdapter.Section> sections = new ArrayList<>();
+
+        sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_tests));
+        rendererFragments.add(new ClearRendererFragment());
+        sections.add(new SectionedAdapter.Section(rendererFragments.size(), -1));
 
         RendererFragmentAdapter baseAdapter = new RendererFragmentAdapter();
-        SectionedAdapter adapter = new SectionedAdapter(getActivity(), R.layout.container_recyclerview_section, R.id.textview, baseAdapter);
+        recyclerViewAdapter = new SectionedAdapter(getActivity(),
+                R.layout.container_recyclerview_section, R.id.textview, baseAdapter);
+        recyclerViewAdapter.setSections(
+                sections.toArray(new SectionedAdapter.Section[sections.size()]));
 
-        SectionedAdapter.Section[] sections = {
-                new SectionedAdapter.Section(0, R.string.section_tests),
-                new SectionedAdapter.Section(rendererFragments.size(), -1),
-        };
-
-        adapter.setSections(sections);
-
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
+        recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(recyclerViewAdapter);
 
         return view;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    public void onEvent(GetRendererFragmentEvent event) {
+        EventBus.getDefault().post(new SetRendererFragmentEvent(new ClearRendererFragment()));
+    }
+
+    private void onSelectPosition(int position) {
+        if (position != selectedPosition) {
+            RendererFragmentViewHolder holder =
+                    (RendererFragmentViewHolder) recyclerView.findViewHolderForPosition(
+                            recyclerViewAdapter.positionToSectionedPosition(selectedPosition));
+            if (holder != null) {
+                holder.clickableView.setSelected(false);
+            }
+        }
+        RendererFragmentViewHolder holder =
+                (RendererFragmentViewHolder) recyclerView.findViewHolderForPosition(
+                        recyclerViewAdapter.positionToSectionedPosition(position));
+        if (holder != null) {
+            holder.clickableView.setSelected(true);
+            selectedPosition = position;
+        }
+    }
+
     private class RendererFragmentViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView titleTextView;
-        private TextView captionTextView;
+        private final View clickableView;
+        private final TextView titleTextView;
+        private final TextView captionTextView;
         private RendererFragment rendererFragment;
+        private int position;
 
         public RendererFragmentViewHolder(View itemView) {
             super(itemView);
             titleTextView = (TextView) itemView.findViewById(R.id.textview_title);
             captionTextView = (TextView) itemView.findViewById(R.id.textview_caption);
-            itemView.findViewById(R.id.view_clickable).setOnClickListener(new View.OnClickListener() {
+            clickableView = itemView.findViewById(R.id.view_clickable);
+            clickableView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    //Intent intent = new Intent(getActivity(), mRenderActivity.getClass());
-                    //startActivity(intent);
+                    if (position == selectedPosition) {
+                        return;
+                    }
+                    onSelectPosition(position);
+                    EventBus.getDefault().post(new SetRendererFragmentEvent(rendererFragment));
                 }
             });
         }
 
-        public void setRendererFragment(RendererFragment rendererFragment) {
-            this.rendererFragment = rendererFragment;
+        public void setRendererFragment(int position) {
+            this.position = position;
+            this.rendererFragment = rendererFragments.get(position);
             titleTextView.setText(rendererFragment.getTitleStringId());
             captionTextView.setText(rendererFragment.getCaptionStringId());
+            clickableView.setSelected(position == selectedPosition);
         }
 
     }
@@ -83,7 +130,7 @@ public class ListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(RendererFragmentViewHolder holder, int position) {
-            holder.setRendererFragment(rendererFragments.get(position));
+            holder.setRendererFragment(position);
         }
 
         @Override

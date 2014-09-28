@@ -3,8 +3,6 @@ package fi.harism.app.opengl3x;
 import android.app.Application;
 import android.renderscript.RenderScript;
 
-import fi.harism.app.opengl3x.ScriptC_BlurEffect;
-
 public class MainApplication extends Application {
 
     private RenderScript renderScript;

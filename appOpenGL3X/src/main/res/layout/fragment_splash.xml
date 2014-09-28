@@ -17,7 +17,7 @@
             android:layout_width="85dp"
             android:layout_height="85dp"
             android:src="@drawable/opengl_512"
-            android:padding="5dp"/>
+            android:padding="5dp" />
 
         <ProgressBar
             style="@android:style/Widget.Material.Light.ProgressBar.Horizontal"
@@ -32,9 +32,10 @@
             android:layout_height="wrap_content"
             android:textSize="24sp"
             android:textColor="#FFF"
+            android:text="@string/splash_name"
             android:fontFamily="sans-serif-thin"
-            android:text="OPENGL ES 3X"
-            android:padding="5dp"/>
+            android:singleLine="true"
+            android:padding="5dp" />
 
     </LinearLayout>
 

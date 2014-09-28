@@ -2,5 +2,8 @@
 <resources>
 
     <integer name="splash_transition_time">1000</integer>
+    <integer name="action_button_transition_time">200</integer>
+
+    <dimen name="settings_round_radius">5dp</dimen>
 
 </resources>

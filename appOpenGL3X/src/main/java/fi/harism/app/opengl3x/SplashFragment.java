@@ -9,10 +9,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import de.greenrobot.event.EventBus;
+import fi.harism.app.opengl3x.event.SplashDoneEvent;
+
 public class SplashFragment extends Fragment {
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_splash, null);
+        View view = inflater.inflate(R.layout.fragment_splash, container, false);
 
         FadeTextView tv = (FadeTextView) view.findViewById(R.id.textview_title);
         tv.setAlphaLeft(0f);
@@ -60,7 +63,7 @@ public class SplashFragment extends Fragment {
 
             @Override
             public void onFinish() {
-                ((MainActivity) getActivity()).onSplashDone();
+                EventBus.getDefault().post(new SplashDoneEvent());
             }
         };
         cdt.start();

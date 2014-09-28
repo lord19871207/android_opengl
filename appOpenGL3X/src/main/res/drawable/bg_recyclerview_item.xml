@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#686868">
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#484848" />
-        </shape>
-
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <ripple android:color="#486888">
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#284868" />
+                </shape>
+            </item>
+        </ripple>
     </item>
-</ripple>
+    <item>
+        <ripple android:color="#686868">
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#484848" />
+                </shape>
+
+            </item>
+        </ripple>
+    </item>
+</selector>
