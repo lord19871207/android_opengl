@@ -18,6 +18,7 @@ import fi.harism.app.opengl3x.R;
 import fi.harism.app.opengl3x.event.GetRendererFragmentEvent;
 import fi.harism.app.opengl3x.event.SetRendererFragmentEvent;
 import fi.harism.app.opengl3x.renderer.RendererFragment;
+import fi.harism.app.opengl3x.renderer.camera2.Camera2BasicRendererFragment;
 import fi.harism.app.opengl3x.renderer.test.ClearRendererFragment;
 
 public class ListFragment extends Fragment {
@@ -40,7 +41,9 @@ public class ListFragment extends Fragment {
         rendererFragments = new ArrayList<>();
         ArrayList<SectionedAdapter.Section> sections = new ArrayList<>();
 
-        sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_tests));
+        sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_camera2));
+        rendererFragments.add(new Camera2BasicRendererFragment());
+        sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_test));
         rendererFragments.add(new ClearRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), -1));
 
@@ -64,7 +67,7 @@ public class ListFragment extends Fragment {
     }
 
     public void onEvent(GetRendererFragmentEvent event) {
-        EventBus.getDefault().post(new SetRendererFragmentEvent(new ClearRendererFragment()));
+        EventBus.getDefault().post(new SetRendererFragmentEvent(rendererFragments.get(selectedPosition)));
     }
 
     private void onSelectPosition(int position) {

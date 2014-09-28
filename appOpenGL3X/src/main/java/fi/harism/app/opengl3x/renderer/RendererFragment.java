@@ -1,7 +1,6 @@
 package fi.harism.app.opengl3x.renderer;
 
 import android.app.Fragment;
-import android.opengl.GLES30;
 import android.os.Bundle;
 import android.view.Choreographer;
 import android.view.LayoutInflater;
@@ -28,6 +27,7 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
 
     private Choreographer choreographer;
     private GlTextureView glTextureView;
+    private boolean manualRendering;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,7 +48,9 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
     @Override
     public void onResume() {
         super.onResume();
-        choreographer.postFrameCallback(frameCallback);
+        if (!manualRendering) {
+            choreographer.postFrameCallback(frameCallback);
+        }
     }
 
     @Override
@@ -64,8 +66,20 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
         EventBus.getDefault().unregister(this);
     }
 
-    public void onEvent(GetSettingsFragmentEvent event) {
+    public final void onEvent(GetSettingsFragmentEvent event) {
         EventBus.getDefault().post(new SetSettingsFragmentEvent(getSettingsFragment()));
+    }
+
+    public final void setManualRendering(boolean manualRendering) {
+        this.manualRendering = manualRendering;
+    }
+
+    public final void requestRender() {
+        glTextureView.renderFrame();
+    }
+
+    public Fragment getSettingsFragment() {
+        return new SettingsFragment();
     }
 
     public abstract String getRendererId();
@@ -74,6 +88,12 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
 
     public abstract int getCaptionStringId();
 
-    public abstract Fragment getSettingsFragment();
+    public static class SettingsFragment extends Fragment {
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View view = inflater.inflate(R.layout.fragment_settings_default, container, false);
+            return view;
+        }
+    }
 
 }

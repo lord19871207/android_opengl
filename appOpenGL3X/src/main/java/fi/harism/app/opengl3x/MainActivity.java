@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
             ft.commit();
         } else {
             FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.setCustomAnimations(R.animator.fragment_settings_in, R.animator.fragment_settings_out);
+            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
             ft.replace(R.id.fragment_renderer, event.getFragment());
             ft.commit();
         }

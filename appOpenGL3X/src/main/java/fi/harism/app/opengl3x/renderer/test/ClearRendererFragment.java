@@ -44,12 +44,12 @@ public class ClearRendererFragment extends RendererFragment {
 
     @Override
     public int getTitleStringId() {
-        return R.string.renderer_tests_clear_title;
+        return R.string.renderer_test_clear_title;
     }
 
     @Override
     public int getCaptionStringId() {
-        return R.string.renderer_tests_clear_caption;
+        return R.string.renderer_test_clear_caption;
     }
 
     @Override

@@ -1,0 +1,248 @@
+package fi.harism.app.opengl3x.renderer.camera2;
+
+import android.app.Fragment;
+import android.content.Context;
+import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.opengl.GLES11Ext;
+import android.opengl.GLES30;
+import android.opengl.Matrix;
+import android.os.Bundle;
+import android.util.Size;
+import android.view.Surface;
+import android.widget.Toast;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
+
+import fi.harism.app.opengl3x.R;
+import fi.harism.app.opengl3x.renderer.RendererFragment;
+import fi.harism.lib.opengl.gl.GlProgram;
+import fi.harism.lib.opengl.gl.GlTexture;
+import fi.harism.lib.opengl.gl.GlUtils;
+
+public class Camera2BasicRendererFragment extends RendererFragment implements SurfaceTexture.OnFrameAvailableListener {
+
+    private static final String RENDERER_ID = "renderer.camera2.basic";
+    private static final int IN_POSITION = 0;
+
+    private CameraManager cameraManager;
+    private CameraDevice cameraDevice;
+
+    private GlTexture glTexture;
+    private GlProgram glProgram;
+    private SurfaceTexture surfaceTexture;
+    private Surface surface;
+    private Size surfaceSize;
+    private Size previewSize;
+    private boolean frameAvailable;
+
+    private ByteBuffer verticesQuad;
+
+    private int cameraOrientation;
+    private final float[] frameMatrix = new float[16];
+    private final float[] orientationMatrix = new float[16];
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        cameraManager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+        frameAvailable = false;
+        setManualRendering(true);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        openCamera();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (cameraDevice != null) {
+            cameraDevice.close();
+            cameraDevice = null;
+        }
+    }
+
+    @Override
+    public String getRendererId() {
+        return RENDERER_ID;
+    }
+
+    @Override
+    public int getTitleStringId() {
+        return R.string.renderer_camera2_basic_title;
+    }
+
+    @Override
+    public int getCaptionStringId() {
+        return R.string.renderer_camera2_basic_caption;
+    }
+
+    @Override
+    public void onSurfaceCreated() {
+        glTexture = new GlTexture();
+        surfaceTexture = new SurfaceTexture(glTexture.name());
+        surfaceTexture.setOnFrameAvailableListener(this);
+        surface = new Surface(surfaceTexture);
+
+        final byte[] VERTICES = {-1, 1, -1, -1, 1, 1, 1, -1};
+        verticesQuad = ByteBuffer.allocateDirect(VERTICES.length).order(ByteOrder.nativeOrder());
+        verticesQuad.put(VERTICES).position(0);
+
+        try {
+            final String SOURCE_VS = GlUtils.loadString(getActivity(), "shaders/camera2/basic/shader_vs.txt");
+            final String SOURCE_FS = GlUtils.loadString(getActivity(), "shaders/camera2/basic/shader_fs.txt");
+            glProgram = new GlProgram(SOURCE_VS, SOURCE_FS, null);
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    startPreview();
+                }
+            });
+        } catch (final Exception ex) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), ex.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onSurfaceChanged(int width, int height) {
+        surfaceSize = new Size(width, height);
+    }
+
+    @Override
+    public void onRenderFrame() {
+        if (frameAvailable) {
+            frameAvailable = false;
+            surfaceTexture.getTransformMatrix(frameMatrix);
+            surfaceTexture.updateTexImage();
+
+            glProgram.useProgram();
+
+            float aspectSurface = (float) surfaceSize.getWidth() / surfaceSize.getHeight();
+            float aspectPreview = (float) previewSize.getWidth() / previewSize.getHeight();
+            aspectPreview = cameraOrientation % 180 == 0 ? aspectPreview : 1.0f / aspectPreview;
+            float aspectX = Math.max(aspectPreview / aspectSurface, 1.0f);
+            float aspectY = Math.max(aspectSurface / aspectPreview, 1.0f);
+
+            GLES30.glUniform2f(glProgram.getUniformLocation("uAspectRatio"), aspectX, aspectY);
+            GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uFrameMatrix"), 1, false, frameMatrix, 0);
+            GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uOrientationMatrix"), 1, false, orientationMatrix, 0);
+
+            GLES30.glVertexAttribPointer(IN_POSITION, 2, GLES30.GL_BYTE, false, 0, verticesQuad);
+            GLES30.glEnableVertexAttribArray(IN_POSITION);
+
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+            glTexture.bind(GLES11Ext.GL_TEXTURE_EXTERNAL_OES);
+
+            GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
+
+            GLES30.glDisableVertexAttribArray(IN_POSITION);
+
+            glTexture.unbind(GLES11Ext.GL_TEXTURE_EXTERNAL_OES);
+        }
+    }
+
+    @Override
+    public void onSurfaceReleased() {
+        surface.release();
+        surfaceTexture.release();
+        surface = null;
+        surfaceTexture = null;
+    }
+
+    @Override
+    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+        frameAvailable = true;
+        requestRender();
+    }
+
+    private void setOrientation(int orientation) {
+        cameraOrientation = orientation;
+        Matrix.setRotateM(orientationMatrix, 0, orientation, 0, 0, -1);
+    }
+
+    public void setSurfaceTextureSize(Size previewSize) {
+        this.previewSize = previewSize;
+        surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+    }
+
+    private void openCamera() {
+        try {
+            String cameraIds[] = cameraManager.getCameraIdList();
+            for (String cameraId : cameraIds) {
+                CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
+                int lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
+                if (lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
+                    cameraManager.openCamera(cameraId, new CameraDevice.StateListener() {
+                        @Override
+                        public void onOpened(CameraDevice device) {
+                            cameraDevice = device;
+                            startPreview();
+                        }
+
+                        @Override
+                        public void onDisconnected(CameraDevice cameraDevice) {
+                        }
+
+                        @Override
+                        public void onError(CameraDevice cameraDevice, int i) {
+                        }
+                    }, null);
+                    break;
+                }
+            }
+        } catch (CameraAccessException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void startPreview() {
+        if (cameraDevice == null || surface == null) {
+            return;
+        }
+        try {
+            CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraDevice.getId());
+            StreamConfigurationMap streamConfigurationMap = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Size previewSizes[] = streamConfigurationMap.getOutputSizes(SurfaceTexture.class);
+            setOrientation(cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION));
+            setSurfaceTextureSize(previewSizes[0]);
+            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateListener() {
+                @Override
+                public void onConfigured(CameraCaptureSession cameraCaptureSession) {
+                    try {
+                        CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+                        captureRequestBuilder.addTarget(surface);
+                        cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                    } catch (CameraAccessException ex) {
+                        ex.printStackTrace();
+                    }
+
+                }
+
+                @Override
+                public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
+                }
+            }, null);
+        } catch (CameraAccessException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+}

@@ -1,0 +1,17 @@
+#version 300 es
+
+uniform vec2 uAspectRatio;
+uniform mat4 uFrameMatrix;
+uniform mat4 uOrientationMatrix;
+
+layout (location = 0) in vec4 inPosition;
+
+out vec2 vTexPosition;
+
+void main() {
+    gl_Position = uOrientationMatrix * inPosition;
+    gl_Position /= gl_Position.w;
+    vec4 texPosition = uFrameMatrix * vec4(gl_Position.xy * 0.5 + 0.5, 0.0, 1.0);
+    gl_Position.xy *= uAspectRatio;
+    vTexPosition = texPosition.xy / texPosition.w;
+}

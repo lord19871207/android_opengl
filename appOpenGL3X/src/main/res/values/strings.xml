@@ -2,8 +2,12 @@
     <string name="app_name">OpenGL 3X</string>
     <string name="splash_name">OPENGL ES 3X</string>
 
-    <string name="section_tests">RENDERING TESTS</string>
-    <string name="renderer_tests_clear_title">Random Clear</string>
-    <string name="renderer_tests_clear_caption">Clears framebuffer with random color.</string>
+    <string name="section_camera2">CAMERA2</string>
+    <string name="renderer_camera2_basic_title">Camera2 Basic</string>
+    <string name="renderer_camera2_basic_caption">Renders camera preview from Surface texture using Camera2 API.</string>
+
+    <string name="section_test">RENDERING TESTS</string>
+    <string name="renderer_test_clear_title">Random Clear</string>
+    <string name="renderer_test_clear_caption">Clears framebuffer with random color.</string>
 
 </resources>
