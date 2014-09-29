@@ -17,9 +17,10 @@ public class GlFramebuffer {
         return this;
     }
 
-    public void unbind(int target) {
+    public GlFramebuffer unbind(int target) {
         GLES31.glBindFramebuffer(target, 0);
         GlUtils.checkGLErrors();
+        return this;
     }
 
     public GlFramebuffer renderbuffer(int target, int attachment, int renderbuffer) {

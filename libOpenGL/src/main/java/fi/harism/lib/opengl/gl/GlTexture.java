@@ -23,9 +23,10 @@ public class GlTexture {
         return this;
     }
 
-    public void unbind(int target) {
+    public GlTexture unbind(int target) {
         GLES31.glBindTexture(target, 0);
         GlUtils.checkGLErrors();
+        return this;
     }
 
     public GlTexture texImage2D(int target, int level, int internalFormat, int width, int height, int border, int format, int type, Buffer data) {
