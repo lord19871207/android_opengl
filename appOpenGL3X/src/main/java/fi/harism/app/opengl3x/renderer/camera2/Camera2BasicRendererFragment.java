@@ -1,6 +1,5 @@
 package fi.harism.app.opengl3x.renderer.camera2;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -15,6 +14,8 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Size;
 import android.view.Surface;
 import android.widget.Toast;
@@ -36,6 +37,8 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
 
     private CameraManager cameraManager;
     private CameraDevice cameraDevice;
+    private HandlerThread cameraHandlerThread;
+    private Handler cameraHandler;
 
     private GlTexture glTexture;
     private GlProgram glProgram;
@@ -55,6 +58,9 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         cameraManager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+        cameraHandlerThread = new HandlerThread("CameraHandler");
+        cameraHandlerThread.start();
+        cameraHandler = new Handler(cameraHandlerThread.getLooper());
         frameAvailable = false;
         setManualRendering(true);
     }
@@ -72,6 +78,12 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
             cameraDevice.close();
             cameraDevice = null;
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        cameraHandlerThread.quit();
     }
 
     @Override
@@ -203,7 +215,7 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
                         @Override
                         public void onError(CameraDevice cameraDevice, int i) {
                         }
-                    }, null);
+                    }, cameraHandler);
                     break;
                 }
             }
@@ -229,7 +241,7 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
                         CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
                         captureRequestBuilder.addTarget(surface);
-                        cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                        cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, cameraHandler);
                     } catch (CameraAccessException ex) {
                         ex.printStackTrace();
                     }
@@ -239,7 +251,7 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
                 @Override
                 public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
                 }
-            }, null);
+            }, cameraHandler);
         } catch (CameraAccessException ex) {
             ex.printStackTrace();
         }

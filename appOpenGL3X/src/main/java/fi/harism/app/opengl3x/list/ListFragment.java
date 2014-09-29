@@ -20,6 +20,7 @@ import fi.harism.app.opengl3x.event.SetRendererFragmentEvent;
 import fi.harism.app.opengl3x.renderer.RendererFragment;
 import fi.harism.app.opengl3x.renderer.camera2.Camera2BasicRendererFragment;
 import fi.harism.app.opengl3x.renderer.camera2.Camera2RawRendererFragment;
+import fi.harism.app.opengl3x.renderer.camera2.Camera2YuvRendererFragment;
 import fi.harism.app.opengl3x.renderer.test.ClearRendererFragment;
 
 public class ListFragment extends Fragment {
@@ -44,6 +45,7 @@ public class ListFragment extends Fragment {
 
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_camera2));
         rendererFragments.add(new Camera2BasicRendererFragment());
+        rendererFragments.add(new Camera2YuvRendererFragment());
         rendererFragments.add(new Camera2RawRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_test));
         rendererFragments.add(new ClearRendererFragment());

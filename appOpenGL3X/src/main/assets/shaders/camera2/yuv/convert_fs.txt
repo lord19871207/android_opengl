@@ -1,0 +1,29 @@
+#version 300 es
+
+uniform sampler2D sTextureY;
+uniform sampler2D sTextureU;
+uniform sampler2D sTextureV;
+uniform sampler2D sTextureLensMap;
+uniform sampler2D sTextureTonemapCurve;
+
+in vec2 vTexPosition;
+
+out vec4 outFragColor;
+
+void main() {
+    float Y = texture(sTextureY, vTexPosition).r;
+    float U = texture(sTextureU, vTexPosition).r - 0.5;
+    float V = texture(sTextureV, vTexPosition).r - 0.5;
+
+    outFragColor.r = Y + (1.772 * V);
+    outFragColor.g = Y - (0.344 * V + 0.714 * U);
+    outFragColor.b = Y + (            1.402 * U);
+    outFragColor.a = 1.0;
+
+    outFragColor.rgb *= texture(sTextureLensMap, vTexPosition).rga;
+    outFragColor = clamp(outFragColor, 0.0, 1.0);
+
+    outFragColor.r = textureOffset(sTextureTonemapCurve, vec2(outFragColor.r, 0.0), ivec2(0, 0)).y;
+    outFragColor.g = textureOffset(sTextureTonemapCurve, vec2(outFragColor.g, 0.0), ivec2(0, 1)).y;
+    outFragColor.b = textureOffset(sTextureTonemapCurve, vec2(outFragColor.b, 0.0), ivec2(0, 2)).y;
+}
