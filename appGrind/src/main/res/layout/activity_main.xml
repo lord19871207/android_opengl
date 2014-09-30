@@ -35,10 +35,10 @@
             android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/loading"
             android:textColor="#FFF"
-            android:textSize="20sp"
-            android:fontFamily="monospace"
-            android:text="loading" />
+            android:textSize="24sp"
+            android:fontFamily="sans-serif-thin" />
 
         <ProgressBar
             style="@android:style/Widget.Material.ProgressBar.Horizontal"

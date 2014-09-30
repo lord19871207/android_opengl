@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Grind</string>
-
     <string name="app_title">grind</string>
-    <string name="start">start</string>
-    <string name="show_fps">show fps</string>
+    <string name="start">START</string>
+    <string name="show_fps">Show Fps</string>
     <string name="resolution_1080p">1080p (1920×1080)</string>
     <string name="resolution_720p">720p (1280×720)</string>
+    <string name="loading">Loading&#8230;</string>
 </resources>
