@@ -10,7 +10,6 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.ColorSpaceTransform;
 import android.hardware.camera2.params.LensShadingMap;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.hardware.camera2.params.TonemapCurve;
@@ -32,7 +31,6 @@ import java.util.Arrays;
 
 import fi.harism.app.opengl3x.R;
 import fi.harism.app.opengl3x.renderer.RendererFragment;
-import fi.harism.lib.opengl.gl.GlFramebuffer;
 import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlSampler;
 import fi.harism.lib.opengl.gl.GlTexture;
@@ -50,6 +48,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
 
     private ImageReader imageReader;
 
+    private boolean surfaceCreated;
     private GlTexture glTextureY;
     private GlTexture glTextureU;
     private GlTexture glTextureV;
@@ -158,6 +157,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
             GLES30.glUniform1i(glProgramConvert.getUniformLocation("sTextureLensMap"), 3);
             GLES30.glUniform1i(glProgramConvert.getUniformLocation("sTextureTonemapCurve"), 4);
 
+            surfaceCreated = true;
             startPreview();
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
@@ -179,6 +179,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
         if (imageReader != null) {
             Image image = imageReader.acquireLatestImage();
             if (image != null) {
+
                 int imageWidth = image.getWidth();
                 int imageHeight = image.getHeight();
                 setTextureData(glTextureY, imageWidth, imageHeight, image.getPlanes()[0]);
@@ -186,13 +187,10 @@ public class Camera2YuvRendererFragment extends RendererFragment {
                 setTextureData(glTextureV, imageWidth / 2, imageHeight / 2, image.getPlanes()[2]);
                 image.close();
 
-                //bufferLensMap.position(0);
                 glTextureLensMap
                         .bind(GLES30.GL_TEXTURE_2D)
                         .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, bufferLensMapColumns, bufferLensMapRows, 0, GLES30.GL_RGBA, GLES30.GL_FLOAT, bufferLensMap)
                         .unbind(GLES30.GL_TEXTURE_2D);
-
-                //bufferTonemapCurve.position(0);
                 glTextureTonemapCurve
                         .bind(GLES30.GL_TEXTURE_2D)
                         .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RG16F, bufferTonemapCurveMax, 3, 0, GLES30.GL_RG, GLES30.GL_FLOAT, bufferTonemapCurve)
@@ -237,6 +235,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
 
     @Override
     public void onSurfaceReleased() {
+        surfaceCreated = false;
     }
 
     private void setTextureData(GlTexture texture, int width, int height, Image.Plane plane) {
@@ -307,6 +306,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
                         @Override
                         public void onOpened(CameraDevice device) {
                             cameraDevice = device;
+                            startPreview();
                         }
 
                         @Override
@@ -326,6 +326,9 @@ public class Camera2YuvRendererFragment extends RendererFragment {
     }
 
     private void startPreview() {
+        if (!surfaceCreated) {
+            return;
+        }
         try {
             CameraCharacteristics cameraCharacteristics =
                     cameraManager.getCameraCharacteristics(cameraDevice.getId());
