@@ -3,7 +3,9 @@
 uniform usampler2D sTextureRaw;
 uniform sampler2D sTextureLensMap;
 uniform vec2 uTextureRawSize;
-uniform float uRawMaxValue;
+uniform vec4 uColorCorrectionGains;
+uniform float uWhiteLevel;
+uniform vec4 uBlackLevel;
 
 in vec4 vTexPosition;
 
@@ -34,8 +36,8 @@ void main() {
     raw.z = mix(raw.z, raw.a, sampleFract.x);
     outFragColor.a = mix(raw.x, raw.z, sampleFract.y);
 
+    outFragColor = (outFragColor - uBlackLevel) / (uWhiteLevel - uBlackLevel);
+    outFragColor *= uColorCorrectionGains;
     outFragColor *= texture(sTextureLensMap, vTexPosition.xy);
-    outFragColor = outFragColor / uRawMaxValue;
     outFragColor = vec4(outFragColor.r, mix(outFragColor.g, outFragColor.b, 0.5), outFragColor.a, 1.0);
-    outFragColor = clamp(outFragColor, 0.0, 1.0);
 }

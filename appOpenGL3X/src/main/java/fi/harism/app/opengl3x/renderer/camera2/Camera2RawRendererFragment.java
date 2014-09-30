@@ -11,6 +11,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.LensShadingMap;
+import android.hardware.camera2.params.RggbChannelVector;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.hardware.camera2.params.TonemapCurve;
 import android.media.Image;
@@ -49,6 +50,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
 
     private ImageReader imageReader;
 
+    private boolean surfaceCreated;
     private GlTexture glTextureRaw;
     private GlTexture glTextureRgb;
     private GlTexture glTextureLensMap;
@@ -60,7 +62,8 @@ public class Camera2RawRendererFragment extends RendererFragment {
     private GlProgram glProgramCopy;
     private ByteBuffer verticesQuad;
 
-    private int rawMaxValue;
+    private int whiteLevel;
+    private int[] blackLevel;
     private int cameraOrientation;
     private Size surfaceSize;
     private Size previewSize;
@@ -72,8 +75,8 @@ public class Camera2RawRendererFragment extends RendererFragment {
     private float[] bufferTonemapCurveArray;
     private FloatBuffer bufferTonemapCurve;
     private int bufferTonemapCurveMax;
+    private final float[] colorCorrectionGains = new float[4];
 
-    private final float[] frameMatrix = new float[16];
     private final float[] orientationMatrix = new float[16];
 
     @Override
@@ -164,6 +167,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
             GLES30.glUniform1i(glProgramCopy.getUniformLocation("sTextureRgb"), 0);
             GLES30.glUniform1i(glProgramCopy.getUniformLocation("sTextureTonemapCurve"), 1);
 
+            surfaceCreated = true;
             startPreview();
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
@@ -219,7 +223,9 @@ public class Camera2RawRendererFragment extends RendererFragment {
                 GLES30.glViewport(0, 0, imageWidth, imageHeight);
                 glProgramConvert.useProgram();
                 GLES30.glUniform2f(glProgramConvert.getUniformLocation("uTextureRawSize"), imageWidth, imageHeight);
-                GLES30.glUniform1f(glProgramConvert.getUniformLocation("uRawMaxValue"), rawMaxValue);
+                GLES30.glUniform4fv(glProgramConvert.getUniformLocation("uColorCorrectionGains"), 1, colorCorrectionGains, 0);
+                GLES30.glUniform1f(glProgramConvert.getUniformLocation("uWhiteLevel"), whiteLevel);
+                GLES30.glUniform4f(glProgramConvert.getUniformLocation("uBlackLevel"), blackLevel[0], blackLevel[1], blackLevel[2], blackLevel[3]);
                 GLES30.glVertexAttribPointer(IN_POSITION, 2, GLES30.GL_BYTE, false, 0, verticesQuad);
                 GLES30.glEnableVertexAttribArray(IN_POSITION);
                 GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
@@ -244,7 +250,6 @@ public class Camera2RawRendererFragment extends RendererFragment {
 
             glProgramCopy.useProgram();
             GLES30.glUniform2f(glProgramCopy.getUniformLocation("uAspectRatio"), aspectX, aspectY);
-            GLES30.glUniformMatrix4fv(glProgramCopy.getUniformLocation("uFrameMatrix"), 1, false, frameMatrix, 0);
             GLES30.glUniformMatrix4fv(glProgramCopy.getUniformLocation("uOrientationMatrix"), 1, false, orientationMatrix, 0);
             GLES30.glVertexAttribPointer(IN_POSITION, 2, GLES30.GL_BYTE, false, 0, verticesQuad);
             GLES30.glEnableVertexAttribArray(IN_POSITION);
@@ -263,33 +268,47 @@ public class Camera2RawRendererFragment extends RendererFragment {
 
     @Override
     public void onSurfaceReleased() {
+        surfaceCreated = false;
     }
 
-    public void setOrientation(int orientation) {
+    private void setOrientation(int orientation) {
         cameraOrientation = orientation;
         Matrix.setRotateM(orientationMatrix, 0, orientation, 0, 0, -1);
     }
 
-    public void setPreviewSize(Size previewSize) {
+    private void setPreviewSize(Size previewSize) {
         this.previewSize = previewSize;
     }
 
-    public void setLensShadingMap(LensShadingMap lensShadingMap) {
+    private void setLensShadingMap(LensShadingMap lensShadingMap) {
         bufferLensMapColumns = lensShadingMap.getColumnCount();
         bufferLensMapRows = lensShadingMap.getRowCount();
         lensShadingMap.copyGainFactors(bufferLensMapArray, 0);
     }
 
-    public void setTonemapCurveMax(int max) {
+    private void setTonemapCurveMax(int max) {
         bufferTonemapCurveMax = max;
         bufferTonemapCurveArray = new float[2 * 3 * max];
         bufferTonemapCurve = FloatBuffer.wrap(bufferTonemapCurveArray);
     }
 
-    public void setTonemapCurve(TonemapCurve tonemapCurve) {
+    private void setWhiteLevel(int whiteLevel) {
+        this.whiteLevel = whiteLevel;
+    }
+
+    private void setBlackLevel(int[] blackLevel) {
+        this.blackLevel = blackLevel;
+    }
+
+
+    private void setTonemapCurve(TonemapCurve tonemapCurve) {
         tonemapCurve.copyColorCurve(TonemapCurve.CHANNEL_RED, bufferTonemapCurveArray, bufferTonemapCurveMax * 0);
         tonemapCurve.copyColorCurve(TonemapCurve.CHANNEL_GREEN, bufferTonemapCurveArray, bufferTonemapCurveMax * 2);
         tonemapCurve.copyColorCurve(TonemapCurve.CHANNEL_BLUE, bufferTonemapCurveArray, bufferTonemapCurveMax * 4);
+    }
+
+    private void setColorCorrectionGains(RggbChannelVector gains) {
+        gains.copyTo(colorCorrectionGains, 0);
     }
 
     private void openCamera() {
@@ -303,6 +322,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
                         @Override
                         public void onOpened(CameraDevice device) {
                             cameraDevice = device;
+                            startPreview();
                         }
 
                         @Override
@@ -322,6 +342,9 @@ public class Camera2RawRendererFragment extends RendererFragment {
     }
 
     private void startPreview() {
+        if (!surfaceCreated) {
+            return;
+        }
         try {
             CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraDevice.getId());
             StreamConfigurationMap streamConfigurationMap = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -330,7 +353,8 @@ public class Camera2RawRendererFragment extends RendererFragment {
             setOrientation(cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION));
             setPreviewSize(previewSizes[0]);
             setTonemapCurveMax(cameraCharacteristics.get(CameraCharacteristics.TONEMAP_MAX_CURVE_POINTS));
-            rawMaxValue = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL);
+            setWhiteLevel(cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL));
+            setBlackLevel(cameraCharacteristics.get(CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN));
             cameraDevice.createCaptureSession(Arrays.asList(imageReader.getSurface()), new CameraCaptureSession.StateListener() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
@@ -339,6 +363,9 @@ public class Camera2RawRendererFragment extends RendererFragment {
                         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO);
                         captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                         captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+                        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
+                        captureRequestBuilder.set(CaptureRequest.TONEMAP_MODE, CaptureRequest.TONEMAP_MODE_FAST);
+                        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_FAST);
                         captureRequestBuilder.set(CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE, CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE_ON);
                         captureRequestBuilder.addTarget(imageReader.getSurface());
 
@@ -347,6 +374,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
                             public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                                 setLensShadingMap(result.get(CaptureResult.STATISTICS_LENS_SHADING_CORRECTION_MAP));
                                 setTonemapCurve(result.get(CaptureResult.TONEMAP_CURVE));
+                                setColorCorrectionGains(result.get(CaptureResult.COLOR_CORRECTION_GAINS));
                                 requestRender();
                             }
                         }, cameraHandler);
