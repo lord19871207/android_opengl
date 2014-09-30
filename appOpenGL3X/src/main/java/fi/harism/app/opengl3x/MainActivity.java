@@ -45,49 +45,6 @@ public class MainActivity extends Activity {
                     .commit();
             getFragmentManager().executePendingTransactions();
         }
-
-
-        /*
-        viewSeparator.setVisibility(View.VISIBLE);
-        viewSeparator.animate().alpha(1f).setDuration(getResources()
-                .getInteger(R.integer.splash_transition_time)).start();
-
-        FragmentTransaction ft;
-        ft = getFragmentManager().beginTransaction();
-        ft.setCustomAnimations(0, R.animator.fragment_splash_out);
-        ft.remove(splashFragment);
-        ft.commit();
-
-        ft = getFragmentManager().beginTransaction();
-        ft.setCustomAnimations(R.animator.fragment_list_in, 0);
-        ft.add(R.id.fragment_list, new ListFragment());
-        ft.commit();
-
-        ft = getFragmentManager().beginTransaction();
-        ft.setCustomAnimations(R.animator.fragment_action_button_in, 0);
-        ft.add(R.id.fragment_list, new ActionButtonFragment());
-        ft.commit();
-
-        getFragmentManager().executePendingTransactions();
-        EventBus.getDefault().post(new GetRendererFragmentEvent());
-        */
-    }
-
-    public void onEvent(SetRendererFragmentEvent event) {
-        /*
-        if (splashFragment != null) {
-            splashFragment = null;
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.setCustomAnimations(R.animator.fragment_renderer_in, 0);
-            ft.replace(R.id.fragment_renderer, event.getFragment());
-            ft.commit();
-        } else {
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.setCustomAnimations(R.animator.fragment_renderer_switch_in, R.animator.fragment_renderer_switch_out);
-            ft.replace(R.id.fragment_renderer, event.getFragment());
-            ft.commit();
-        }
-        */
     }
 
 }
