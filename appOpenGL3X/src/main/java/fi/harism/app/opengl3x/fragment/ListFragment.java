@@ -1,6 +1,8 @@
 package fi.harism.app.opengl3x.fragment;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,6 +23,8 @@ import fi.harism.app.opengl3x.fragment.camera2.Camera2YuvRendererFragment;
 import fi.harism.app.opengl3x.fragment.test.ClearRendererFragment;
 
 public class ListFragment extends Fragment {
+
+    private static final String PREFERENCE_RENDERER = "listfragment.renderer";
 
     private int selectedPosition = 0;
     private ArrayList<RendererFragment> rendererFragments;
@@ -48,6 +52,16 @@ public class ListFragment extends Fragment {
         rendererFragments.add(new ClearRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), -1));
 
+        SharedPreferences prefs = getActivity().getPreferences(Activity.MODE_PRIVATE);
+        String rendererId = prefs.getString(PREFERENCE_RENDERER, null);
+        selectedPosition = 0;
+        for (int index = 0; index < rendererFragments.size(); ++index) {
+            if (rendererId != null && rendererId.equals(rendererFragments.get(index).getRendererId())) {
+                selectedPosition = index;
+                break;
+            }
+        }
+
         RendererFragmentAdapter baseAdapter = new RendererFragmentAdapter();
         recyclerViewAdapter = new SectionedAdapter(getActivity(),
                 R.layout.container_recyclerview_section, R.id.textview, baseAdapter);
@@ -57,6 +71,9 @@ public class ListFragment extends Fragment {
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerView.getLayoutManager().scrollToPosition(
+                recyclerViewAdapter.positionToSectionedPosition(selectedPosition)
+        );
 
         return view;
     }
@@ -109,6 +126,12 @@ public class ListFragment extends Fragment {
                         return;
                     }
                     onSelectPosition(position);
+
+                    SharedPreferences.Editor prefs = getActivity()
+                            .getPreferences(Activity.MODE_PRIVATE).edit();
+                    prefs.putString(PREFERENCE_RENDERER, rendererFragment.getRendererId());
+                    prefs.commit();
+
                     EventBus.getDefault().post(new SetRendererFragmentEvent(rendererFragment));
                 }
             });
