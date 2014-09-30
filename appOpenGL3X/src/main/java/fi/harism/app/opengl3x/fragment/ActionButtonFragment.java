@@ -1,4 +1,4 @@
-package fi.harism.app.opengl3x;
+package fi.harism.app.opengl3x.fragment;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import de.greenrobot.event.EventBus;
+import fi.harism.app.opengl3x.R;
 import fi.harism.app.opengl3x.event.GetSettingsFragmentEvent;
 import fi.harism.app.opengl3x.event.SetSettingsFragmentEvent;
 

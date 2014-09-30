@@ -1,4 +1,4 @@
-package fi.harism.app.opengl3x.list;
+package fi.harism.app.opengl3x.fragment;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -10,18 +10,15 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 
 import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
 import fi.harism.app.opengl3x.event.GetRendererFragmentEvent;
 import fi.harism.app.opengl3x.event.SetRendererFragmentEvent;
-import fi.harism.app.opengl3x.renderer.RendererFragment;
-import fi.harism.app.opengl3x.renderer.camera2.Camera2BasicRendererFragment;
-import fi.harism.app.opengl3x.renderer.camera2.Camera2RawRendererFragment;
-import fi.harism.app.opengl3x.renderer.camera2.Camera2YuvRendererFragment;
-import fi.harism.app.opengl3x.renderer.test.ClearRendererFragment;
+import fi.harism.app.opengl3x.fragment.camera2.Camera2BasicRendererFragment;
+import fi.harism.app.opengl3x.fragment.camera2.Camera2RawRendererFragment;
+import fi.harism.app.opengl3x.fragment.camera2.Camera2YuvRendererFragment;
+import fi.harism.app.opengl3x.fragment.test.ClearRendererFragment;
 
 public class ListFragment extends Fragment {
 

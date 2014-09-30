@@ -1,4 +1,4 @@
-package fi.harism.app.opengl3x.renderer;
+package fi.harism.app.opengl3x.fragment;
 
 import android.app.Fragment;
 import android.os.Bundle;

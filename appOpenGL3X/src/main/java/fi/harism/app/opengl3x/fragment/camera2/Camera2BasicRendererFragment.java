@@ -1,5 +1,6 @@
-package fi.harism.app.opengl3x.renderer.camera2;
+package fi.harism.app.opengl3x.fragment.camera2;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -16,8 +17,11 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
+import android.view.Display;
 import android.view.Surface;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
@@ -25,7 +29,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import fi.harism.app.opengl3x.R;
-import fi.harism.app.opengl3x.renderer.RendererFragment;
+import fi.harism.app.opengl3x.fragment.RendererFragment;
 import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlTexture;
 import fi.harism.lib.opengl.gl.GlUtils;
@@ -148,7 +152,7 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
 
             float aspectSurface = (float) surfaceSize.getWidth() / surfaceSize.getHeight();
             float aspectPreview = (float) previewSize.getWidth() / previewSize.getHeight();
-            aspectPreview = cameraOrientation % 180 == 0 ? aspectPreview : 1.0f / aspectPreview;
+            aspectPreview = cameraOrientation % 180 != 0 ? aspectPreview : 1.0f / aspectPreview;
             float aspectX = Math.max(aspectPreview / aspectSurface, 1.0f);
             float aspectY = Math.max(aspectSurface / aspectPreview, 1.0f);
 
@@ -185,8 +189,11 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
     }
 
     private void setOrientation(int orientation) {
-        cameraOrientation = orientation;
-        Matrix.setRotateM(orientationMatrix, 0, orientation, 0, 0, -1);
+        Display d = ((WindowManager)getActivity()
+                .getSystemService(Activity.WINDOW_SERVICE))
+                .getDefaultDisplay();
+        cameraOrientation = d.getRotation() * 90;
+        Matrix.setRotateM(orientationMatrix, 0, cameraOrientation, 0, 0, 1);
     }
 
     public void setSurfaceTextureSize(Size previewSize) {

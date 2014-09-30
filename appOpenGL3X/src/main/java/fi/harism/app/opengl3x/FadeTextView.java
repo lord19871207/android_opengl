@@ -61,7 +61,7 @@ public class FadeTextView extends TextView {
         fadeStruct.alphaLeft = 1.0f;
         fadeStruct.alphaRight = 1.0f;
         fadeStruct.blurLeft = 0.0f;
-        fadeStruct.blurRight = 1.0f;
+        fadeStruct.blurRight = 0.0f;
     }
 
     @Override

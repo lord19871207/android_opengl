@@ -9,9 +9,7 @@
         android:theme="@style/AppTheme"
         android:name="fi.harism.app.opengl3x.MainApplication">
 
-        <activity
-            android:name="fi.harism.app.opengl3x.MainActivity"
-            android:screenOrientation="portrait">
+        <activity android:name="fi.harism.app.opengl3x.MainActivity">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

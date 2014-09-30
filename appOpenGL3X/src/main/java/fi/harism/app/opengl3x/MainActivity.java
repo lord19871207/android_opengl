@@ -4,32 +4,27 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 
 import de.greenrobot.event.EventBus;
-import fi.harism.app.opengl3x.event.GetRendererFragmentEvent;
+import fi.harism.app.opengl3x.event.SetProgressEvent;
 import fi.harism.app.opengl3x.event.SetRendererFragmentEvent;
-import fi.harism.app.opengl3x.event.SplashDoneEvent;
-import fi.harism.app.opengl3x.list.ListFragment;
+import fi.harism.app.opengl3x.fragment.MainFragment;
+import fi.harism.app.opengl3x.fragment.SplashFragment;
 
 public class MainActivity extends Activity {
-
-    private Fragment splashFragment;
-    private View viewSeparator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        viewSeparator = findViewById(R.id.view_separator);
-        viewSeparator.setVisibility(View.GONE);
-        viewSeparator.setAlpha(0f);
-
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.add(R.id.fragment_splash, splashFragment = new SplashFragment());
-        ft.commit();
+        if (savedInstanceState == null) {
+            Fragment f = new SplashFragment();
+            f.setRetainInstance(true);
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.add(R.id.fragment_main, f);
+            ft.commit();
+        }
 
         EventBus.getDefault().register(this);
     }
@@ -40,7 +35,19 @@ public class MainActivity extends Activity {
         EventBus.getDefault().unregister(this);
     }
 
-    public void onEvent(SplashDoneEvent event) {
+    public void onEvent(SetProgressEvent event) {
+        if (event.getProgress() == event.getMaxProgress()) {
+            Fragment f = new MainFragment();
+            f.setRetainInstance(true);
+            getFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.animator.fragment_main_in, R.animator.fragment_splash_out)
+                    .replace(R.id.fragment_main, f)
+                    .commit();
+            getFragmentManager().executePendingTransactions();
+        }
+
+
+        /*
         viewSeparator.setVisibility(View.VISIBLE);
         viewSeparator.animate().alpha(1f).setDuration(getResources()
                 .getInteger(R.integer.splash_transition_time)).start();
@@ -63,9 +70,11 @@ public class MainActivity extends Activity {
 
         getFragmentManager().executePendingTransactions();
         EventBus.getDefault().post(new GetRendererFragmentEvent());
+        */
     }
 
     public void onEvent(SetRendererFragmentEvent event) {
+        /*
         if (splashFragment != null) {
             splashFragment = null;
             FragmentTransaction ft = getFragmentManager().beginTransaction();
@@ -78,6 +87,7 @@ public class MainActivity extends Activity {
             ft.replace(R.id.fragment_renderer, event.getFragment());
             ft.commit();
         }
+        */
     }
 
 }

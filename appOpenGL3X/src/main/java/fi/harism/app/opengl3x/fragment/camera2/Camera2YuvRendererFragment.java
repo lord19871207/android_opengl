@@ -1,5 +1,6 @@
-package fi.harism.app.opengl3x.renderer.camera2;
+package fi.harism.app.opengl3x.fragment.camera2;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
@@ -22,6 +23,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Size;
+import android.view.Display;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
@@ -30,7 +33,7 @@ import java.nio.FloatBuffer;
 import java.util.Arrays;
 
 import fi.harism.app.opengl3x.R;
-import fi.harism.app.opengl3x.renderer.RendererFragment;
+import fi.harism.app.opengl3x.fragment.RendererFragment;
 import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlSampler;
 import fi.harism.lib.opengl.gl.GlTexture;
@@ -269,8 +272,11 @@ public class Camera2YuvRendererFragment extends RendererFragment {
     }
 
     private void setOrientation(int orientation) {
-        cameraOrientation = orientation;
-        Matrix.setRotateM(orientationMatrix, 0, orientation, 0, 0, -1);
+        Display d = ((WindowManager)getActivity()
+                .getSystemService(Activity.WINDOW_SERVICE))
+                .getDefaultDisplay();
+        cameraOrientation = orientation - d.getRotation() * 90;
+        Matrix.setRotateM(orientationMatrix, 0, cameraOrientation, 0, 0, -1);
     }
 
     private void setPreviewSize(Size previewSize) {

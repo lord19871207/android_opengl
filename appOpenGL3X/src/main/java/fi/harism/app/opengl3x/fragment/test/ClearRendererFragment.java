@@ -1,4 +1,4 @@
-package fi.harism.app.opengl3x.renderer.test;
+package fi.harism.app.opengl3x.fragment.test;
 
 import android.app.Fragment;
 import android.content.Context;
@@ -14,7 +14,7 @@ import android.widget.SeekBar;
 import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
 import fi.harism.app.opengl3x.event.SetColorEvent;
-import fi.harism.app.opengl3x.renderer.RendererFragment;
+import fi.harism.app.opengl3x.fragment.RendererFragment;
 
 public class ClearRendererFragment extends RendererFragment {
 

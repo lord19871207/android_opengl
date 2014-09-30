@@ -1,4 +1,4 @@
-package fi.harism.app.opengl3x.list;
+package fi.harism.app.opengl3x.fragment;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
