@@ -21,6 +21,7 @@
             android:textStyle="bold"
             android:textColor="#FFF"
             android:fontFamily="sans-serif-thin"
+            android:singleLine="true"
             android:gravity="right" />
 
         <SeekBar
@@ -49,6 +50,7 @@
             android:textStyle="bold"
             android:textColor="#FFF"
             android:fontFamily="sans-serif-thin"
+            android:singleLine="true"
             android:gravity="right" />
 
         <SeekBar
@@ -77,6 +79,7 @@
             android:textStyle="bold"
             android:textColor="#FFF"
             android:fontFamily="sans-serif-thin"
+            android:singleLine="true"
             android:gravity="right" />
 
         <SeekBar
