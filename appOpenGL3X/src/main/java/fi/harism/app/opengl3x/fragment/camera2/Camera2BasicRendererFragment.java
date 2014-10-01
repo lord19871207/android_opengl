@@ -119,7 +119,9 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
         try {
             final String SOURCE_VS = GlUtils.loadString(getActivity(), "shaders/camera2/basic/shader_vs.txt");
             final String SOURCE_FS = GlUtils.loadString(getActivity(), "shaders/camera2/basic/shader_fs.txt");
-            glProgram = new GlProgram(SOURCE_VS, SOURCE_FS, null);
+            glProgram = new GlProgram(SOURCE_VS, SOURCE_FS, null).useProgram();
+            GLES30.glUniform1i(glProgram.getUniformLocation("sTexture"), 0);
+
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -189,7 +191,7 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
     }
 
     private void setOrientation(int orientation) {
-        Display d = ((WindowManager)getActivity()
+        Display d = ((WindowManager) getActivity()
                 .getSystemService(Activity.WINDOW_SERVICE))
                 .getDefaultDisplay();
         cameraOrientation = d.getRotation() * 90;
