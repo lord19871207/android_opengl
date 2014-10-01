@@ -3,6 +3,7 @@ package fi.harism.app.opengl3x.fragment.camera2;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -44,6 +45,13 @@ import fi.harism.lib.opengl.gl.GlUtils;
 public class Camera2FilterRendererFragment extends RendererFragment implements SurfaceTexture.OnFrameAvailableListener {
 
     private static final String RENDERER_ID = "renderer.camera2.filter";
+    private static final String PREFERENCE_HUE = "renderer.camera2.filter.hue";
+    private static final String PREFERENCE_SATURATION = "renderer.camera2.filter.saturation";
+    private static final String PREFERENCE_VALUE = "renderer.camera2.filter.value";
+    private static final int DEFAULT_HUE = 127;
+    private static final int DEFAULT_SATURATION = 127;
+    private static final int DEFAULT_VALUE = 127;
+
     private static final int IN_POSITION = 0;
 
     private CameraManager cameraManager;
@@ -85,6 +93,12 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         cameraHandler = new Handler(cameraHandlerThread.getLooper());
         frameAvailable = false;
         setManualRendering(true);
+
+        SharedPreferences prefs =
+                getActivity().getPreferences(Context.MODE_PRIVATE);
+        hsvVector[0] = prefs.getInt(PREFERENCE_HUE, DEFAULT_HUE) / 255f;
+        hsvVector[1] = prefs.getInt(PREFERENCE_SATURATION, DEFAULT_SATURATION) / 255f;
+        hsvVector[2] = prefs.getInt(PREFERENCE_VALUE, DEFAULT_VALUE) / 255f;
     }
 
     @Override
@@ -398,14 +412,12 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                //int color = Color.rgb(
-                //        seekBarRed.getProgress(),
-                //        seekBarGreen.getProgress(),
-                //        seekBarBlue.getProgress());
-                //SharedPreferences.Editor editor =
-                //        getActivity().getPreferences(Context.MODE_PRIVATE).edit();
-                //editor.putInt(PREFERENCE_COLOR, color);
-                //editor.commit();
+                SharedPreferences.Editor editor =
+                        getActivity().getPreferences(Context.MODE_PRIVATE).edit();
+                editor.putInt(PREFERENCE_HUE, seekBarHue.getProgress());
+                editor.putInt(PREFERENCE_SATURATION, seekBarSaturation.getProgress());
+                editor.putInt(PREFERENCE_VALUE, seekBarValue.getProgress());
+                editor.commit();
             }
         };
 
@@ -429,11 +441,10 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
             seekBarSaturation.setOnSeekBarChangeListener(seekBarChangeListener);
             seekBarValue.setOnSeekBarChangeListener(seekBarChangeListener);
 
-            //int color = getActivity().getPreferences(Context.MODE_PRIVATE)
-            //        .getInt(PREFERENCE_COLOR, DEFAULT_COLOR);
-            //seekBarRed.setProgress(Color.red(color));
-            //seekBarGreen.setProgress(Color.green(color));
-            //seekBarBlue.setProgress(Color.blue(color));
+            SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
+            seekBarHue.setProgress(prefs.getInt(PREFERENCE_HUE, DEFAULT_HUE));
+            seekBarSaturation.setProgress(prefs.getInt(PREFERENCE_SATURATION, DEFAULT_SATURATION));
+            seekBarValue.setProgress(prefs.getInt(PREFERENCE_VALUE, DEFAULT_VALUE));
 
             return view;
         }
