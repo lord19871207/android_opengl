@@ -2,15 +2,17 @@
     <string name="app_name">OpenGL 3X</string>
     <string name="splash_name">OPENGL ES 3X</string>
 
-    <string name="section_camera2">CAMERA2</string>
-    <string name="renderer_camera2_basic_title">Camera2 Basic</string>
-    <string name="renderer_camera2_basic_caption">Renders camera preview from Surface texture using Camera2 API.</string>
-    <string name="renderer_camera2_yuv_title">Camera2 Yuv</string>
-    <string name="renderer_camera2_yuv_caption">Renders camera preview from ImageReader using Camera2 API and GLSL shaders to concert yuv images into rgb.</string>
-    <string name="renderer_camera2_raw_title">Camera2 Raw</string>
-    <string name="renderer_camera2_raw_caption">Renders camera preview from ImageReader using Camera2 API and GLSL shaders to concert raw images into rgb.</string>
+    <string name="section_camera2">Camera2</string>
+    <string name="renderer_camera2_basic_title">Basic</string>
+    <string name="renderer_camera2_basic_caption">Renders camera preview from surface texture using Camera2 API.</string>
+    <string name="renderer_camera2_filter_title">Filters</string>
+    <string name="renderer_camera2_filter_caption">Renders camera preview from surface texture using Camera2 API and applies filters to it.</string>
+    <string name="renderer_camera2_yuv_title">Yuv Input</string>
+    <string name="renderer_camera2_yuv_caption">Renders camera preview from ImageReader using Camera2 API and GLSL shaders to convert yuv images into rgb.</string>
+    <string name="renderer_camera2_raw_title">Raw Input</string>
+    <string name="renderer_camera2_raw_caption">Renders camera preview from ImageReader using Camera2 API and GLSL shaders to convert raw images into rgb.</string>
 
-    <string name="section_test">RENDERING TESTS</string>
+    <string name="section_test">Tests</string>
     <string name="renderer_test_clear_title">Random Clear</string>
     <string name="renderer_test_clear_caption">Clears framebuffer with random color.</string>
 
