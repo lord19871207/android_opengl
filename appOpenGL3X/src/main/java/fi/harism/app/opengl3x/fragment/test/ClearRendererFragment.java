@@ -13,7 +13,6 @@ import android.widget.SeekBar;
 
 import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
-import fi.harism.app.opengl3x.event.SetColorEvent;
 import fi.harism.app.opengl3x.fragment.RendererFragment;
 
 public class ClearRendererFragment extends RendererFragment {
@@ -140,6 +139,20 @@ public class ClearRendererFragment extends RendererFragment {
             seekBarBlue.setProgress(Color.blue(color));
 
             return view;
+        }
+
+    }
+
+    public static class SetColorEvent {
+
+        private int color;
+
+        public SetColorEvent(int color) {
+            this.color = color;
+        }
+
+        public int getColor() {
+            return color;
         }
 
     }
