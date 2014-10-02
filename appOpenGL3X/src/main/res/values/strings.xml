@@ -6,7 +6,7 @@
     <string name="saturation">Saturation</string>
     <string name="brightness">Brightness</string>
     <string name="filter">Filter</string>
-    <string name="effect">Effect</string>
+    <string name="effect">Post Fx</string>
 
     <string name="section_camera2">Camera2</string>
     <string name="renderer_camera2_basic_title">Basic</string>
@@ -30,6 +30,7 @@
 
     <string-array name="camera2_filter_effects">
         <item>None</item>
+        <item>Radial Dots</item>
         <item>Oil Painting</item>
     </string-array>
 

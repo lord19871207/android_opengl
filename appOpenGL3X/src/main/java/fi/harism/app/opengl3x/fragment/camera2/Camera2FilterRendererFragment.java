@@ -79,6 +79,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private GlProgram glProgramHsv;
     private GlProgram glProgramFilterSepia;
     private GlProgram glProgramFilterBlackAndWhite;
+    private GlProgram glProgramEffectRadialDots;
     private GlProgram glProgramEffectOilPainting;
 
     private SurfaceTexture surfaceTexture;
@@ -217,6 +218,13 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
                     .useProgram();
             GLES30.glUniform1i(glProgramFilterBlackAndWhite.getUniformLocation("sTexture"), 0);
 
+            glProgramEffectRadialDots = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_radial_dots_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_radial_dots_fs.txt"),
+                    null)
+                    .useProgram();
+            GLES30.glUniform1i(glProgramEffectRadialDots.getUniformLocation("sTexture"), 0);
+
             glProgramEffectOilPainting = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_oil_painting_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_oil_painting_fs.txt"),
@@ -338,8 +346,15 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
 
         switch (effectIndex) {
             case 1:
+                glProgramEffectRadialDots.useProgram();
+                GLES30.glUniform2f(
+                        glProgramEffectRadialDots.getUniformLocation("uAspectRatio"),
+                        1f, (float)surfaceSize.getHeight() / surfaceSize.getWidth());
+                break;
+            case 2:
                 glProgramEffectOilPainting.useProgram();
-                GLES30.glUniform2f(glProgramEffectOilPainting.getUniformLocation("uSampleOffset"),
+                GLES30.glUniform2f(
+                        glProgramEffectOilPainting.getUniformLocation("uSampleOffset"),
                         2f / surfaceSize.getWidth(),
                         2f / surfaceSize.getHeight());
                 break;
