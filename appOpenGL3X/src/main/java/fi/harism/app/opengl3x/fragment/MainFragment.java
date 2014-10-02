@@ -1,10 +1,7 @@
 package fi.harism.app.opengl3x.fragment;
 
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.util.EventLogTags;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
