@@ -52,10 +52,12 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private static final String PREFERENCE_SATURATION = "renderer.camera2.filter.saturation";
     private static final String PREFERENCE_VALUE = "renderer.camera2.filter.value";
     private static final String PREFERENCE_FILTER = "renderer.camera2.filter.filter";
-    private static final int DEFAULT_HUE = 127;
-    private static final int DEFAULT_SATURATION = 127;
-    private static final int DEFAULT_VALUE = 127;
+    private static final String PREFERENCE_EFFECT = "renderer.camera2.filter.effect";
+    private static final int DEFAULT_HUE = 10;
+    private static final int DEFAULT_SATURATION = 5;
+    private static final int DEFAULT_VALUE = 5;
     private static final int DEFAULT_FILTER = 0;
+    private static final int DEFAULT_EFFECT = 0;
 
     private static final int IN_POSITION = 0;
 
@@ -77,6 +79,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private GlProgram glProgramHsv;
     private GlProgram glProgramFilterSepia;
     private GlProgram glProgramFilterBlackAndWhite;
+    private GlProgram glProgramEffectOilPainting;
 
     private SurfaceTexture surfaceTexture;
     private Surface surface;
@@ -92,6 +95,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private final float[] hsvVector = new float[3];
 
     private int filterIndex;
+    private int effectIndex;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -105,10 +109,11 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
 
         SharedPreferences prefs =
                 getActivity().getPreferences(Context.MODE_PRIVATE);
-        hsvVector[0] = prefs.getInt(PREFERENCE_HUE, DEFAULT_HUE) / 255f;
-        hsvVector[1] = prefs.getInt(PREFERENCE_SATURATION, DEFAULT_SATURATION) / 255f;
-        hsvVector[2] = prefs.getInt(PREFERENCE_VALUE, DEFAULT_VALUE) / 255f;
+        hsvVector[0] = prefs.getInt(PREFERENCE_HUE, DEFAULT_HUE) / 20f;
+        hsvVector[1] = prefs.getInt(PREFERENCE_SATURATION, DEFAULT_SATURATION) / 10f;
+        hsvVector[2] = prefs.getInt(PREFERENCE_VALUE, DEFAULT_VALUE) / 10f;
         filterIndex = prefs.getInt(PREFERENCE_FILTER, DEFAULT_FILTER);
+        effectIndex = prefs.getInt(PREFERENCE_EFFECT, DEFAULT_EFFECT);
     }
 
     @Override
@@ -211,6 +216,13 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
                     null)
                     .useProgram();
             GLES30.glUniform1i(glProgramFilterBlackAndWhite.getUniformLocation("sTexture"), 0);
+
+            glProgramEffectOilPainting = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_oil_painting_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_oil_painting_fs.txt"),
+                    null)
+                    .useProgram();
+            GLES30.glUniform1i(glProgramEffectOilPainting.getUniformLocation("sTexture"), 0);
 
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -324,7 +336,17 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
         GLES30.glDisableVertexAttribArray(IN_POSITION);
 
-        glProgramCopy.useProgram();
+        switch (effectIndex) {
+            case 1:
+                glProgramEffectOilPainting.useProgram();
+                GLES30.glUniform2f(glProgramEffectOilPainting.getUniformLocation("uSampleOffset"),
+                        2f / surfaceSize.getWidth(),
+                        2f / surfaceSize.getHeight());
+                break;
+            default:
+                glProgramCopy.useProgram();
+                break;
+        }
         GLES30.glBindFramebuffer(GLES30.GL_DRAW_FRAMEBUFFER, 0);
         GLES30.glViewport(0, 0, surfaceSize.getWidth(), surfaceSize.getHeight());
         GLES30.glVertexAttribPointer(IN_POSITION, 2, GLES30.GL_BYTE, false, 0, verticesQuad);
@@ -427,10 +449,11 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     }
 
     public void onEvent(SetFilterValuesEvent event) {
-        hsvVector[0] = event.getHue() / 255f;
-        hsvVector[1] = event.getSaturation() / 255f;
-        hsvVector[2] = event.getValue() / 255f;
+        hsvVector[0] = event.getHue() / 20f;
+        hsvVector[1] = event.getSaturation() / 10f;
+        hsvVector[2] = event.getValue() / 10f;
         filterIndex = event.getFilter();
+        effectIndex = event.getEffect();
     }
 
     public static class SettingsFragment extends Fragment {
@@ -469,6 +492,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         private SeekBar seekBarSaturation;
         private SeekBar seekBarValue;
         private Spinner spinnerFilter;
+        private Spinner spinnerEffect;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -484,21 +508,29 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
             seekBarValue = (SeekBar) view.findViewById(R.id.seekbar_value);
 
             spinnerFilter = (Spinner) view.findViewById(R.id.spinner_filter);
-            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),
+            ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(getActivity(),
                     R.array.camera2_filter_filters, R.layout.container_spinner_selected_item);
-            adapter.setDropDownViewResource(R.layout.container_spinner_dropdown_item);
-            spinnerFilter.setAdapter(adapter);
+            filterAdapter.setDropDownViewResource(R.layout.container_spinner_dropdown_item);
+            spinnerFilter.setAdapter(filterAdapter);
+
+            spinnerEffect = (Spinner) view.findViewById(R.id.spinner_effect);
+            ArrayAdapter<CharSequence> effectAdapter = ArrayAdapter.createFromResource(getActivity(),
+                    R.array.camera2_filter_effects, R.layout.container_spinner_selected_item);
+            effectAdapter.setDropDownViewResource(R.layout.container_spinner_dropdown_item);
+            spinnerEffect.setAdapter(effectAdapter);
 
             SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
             seekBarHue.setProgress(prefs.getInt(PREFERENCE_HUE, DEFAULT_HUE));
             seekBarSaturation.setProgress(prefs.getInt(PREFERENCE_SATURATION, DEFAULT_SATURATION));
             seekBarValue.setProgress(prefs.getInt(PREFERENCE_VALUE, DEFAULT_VALUE));
             spinnerFilter.setSelection(prefs.getInt(PREFERENCE_FILTER, DEFAULT_FILTER));
+            spinnerEffect.setSelection(prefs.getInt(PREFERENCE_EFFECT, DEFAULT_EFFECT));
 
             seekBarHue.setOnSeekBarChangeListener(seekBarChangeListener);
             seekBarSaturation.setOnSeekBarChangeListener(seekBarChangeListener);
             seekBarValue.setOnSeekBarChangeListener(seekBarChangeListener);
             spinnerFilter.setOnItemSelectedListener(spinnerSelectedListener);
+            spinnerEffect.setOnItemSelectedListener(spinnerSelectedListener);
 
             return view;
         }
@@ -508,8 +540,9 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
             int saturation = seekBarSaturation.getProgress();
             int value = seekBarValue.getProgress();
             int filter = spinnerFilter.getSelectedItemPosition();
+            int effect = spinnerEffect.getSelectedItemPosition();
             EventBus.getDefault().post(
-                    new SetFilterValuesEvent(hue, saturation, value, filter));
+                    new SetFilterValuesEvent(hue, saturation, value, filter, effect));
         }
 
         private void saveFilterValues() {
@@ -519,6 +552,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
             editor.putInt(PREFERENCE_SATURATION, seekBarSaturation.getProgress());
             editor.putInt(PREFERENCE_VALUE, seekBarValue.getProgress());
             editor.putInt(PREFERENCE_FILTER, spinnerFilter.getSelectedItemPosition());
+            editor.putInt(PREFERENCE_EFFECT, spinnerEffect.getSelectedItemPosition());
             editor.commit();
         }
 
@@ -530,13 +564,15 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         private int saturation;
         private int value;
         private int filter;
+        private int effect;
 
         public SetFilterValuesEvent(int hue, int saturation, int value,
-                                    int filter) {
+                                    int filter, int effect) {
             this.hue = hue;
             this.saturation = saturation;
             this.value = value;
             this.filter = filter;
+            this.effect = effect;
         }
 
         public int getHue() {
@@ -553,6 +589,10 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
 
         public int getFilter() {
             return filter;
+        }
+
+        public int getEffect() {
+            return effect;
         }
 
     }

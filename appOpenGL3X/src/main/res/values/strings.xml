@@ -6,6 +6,7 @@
     <string name="saturation">Saturation</string>
     <string name="brightness">Brightness</string>
     <string name="filter">Filter</string>
+    <string name="effect">Effect</string>
 
     <string name="section_camera2">Camera2</string>
     <string name="renderer_camera2_basic_title">Basic</string>
@@ -25,6 +26,11 @@
         <item>None</item>
         <item>Black and White</item>
         <item>Sepia</item>
+    </string-array>
+
+    <string-array name="camera2_filter_effects">
+        <item>None</item>
+        <item>Oil Painting</item>
     </string-array>
 
 </resources>
