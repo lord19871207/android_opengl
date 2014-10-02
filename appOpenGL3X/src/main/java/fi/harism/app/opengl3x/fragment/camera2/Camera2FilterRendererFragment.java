@@ -76,6 +76,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private GlProgram glProgramCopy;
     private GlProgram glProgramHsv;
     private GlProgram glProgramFilterSepia;
+    private GlProgram glProgramFilterBlackAndWhite;
 
     private SurfaceTexture surfaceTexture;
     private Surface surface;
@@ -176,25 +177,40 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         verticesQuad.put(VERTICES).position(0);
 
         try {
-            final String CAMERA_IN_VS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/camera_in_vs.txt");
-            final String CAMERA_IN_FS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/camera_in_fs.txt");
-            glProgramCameraIn = new GlProgram(CAMERA_IN_VS, CAMERA_IN_FS, null).useProgram();
+            glProgramCameraIn = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/camera_in_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/camera_in_fs.txt"),
+                    null)
+                    .useProgram();
             GLES30.glUniform1i(glProgramCameraIn.getUniformLocation("sTextureOES"), 0);
 
-            final String COPY_VS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/copy_vs.txt");
-            final String COPY_FS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/copy_fs.txt");
-            glProgramCopy = new GlProgram(COPY_VS, COPY_FS, null).useProgram();
+            glProgramCopy = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/copy_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/copy_fs.txt"),
+                    null)
+                    .useProgram();
             GLES30.glUniform1i(glProgramCopy.getUniformLocation("sTexture"), 0);
 
-            final String HSV_VS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/hsv_vs.txt");
-            final String HSV_FS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/hsv_fs.txt");
-            glProgramHsv = new GlProgram(HSV_VS, HSV_FS, null).useProgram();
+            glProgramHsv = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/hsv_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/hsv_fs.txt"),
+                    null)
+                    .useProgram();
             GLES30.glUniform1i(glProgramHsv.getUniformLocation("sTexture"), 0);
 
-            final String FILTER_SEPIA_VS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/filter_sepia_vs.txt");
-            final String FILTER_SEPIA_FS = GlUtils.loadString(getActivity(), "shaders/camera2/filter/filter_sepia_fs.txt");
-            glProgramFilterSepia = new GlProgram(FILTER_SEPIA_VS, FILTER_SEPIA_FS, null).useProgram();
+            glProgramFilterSepia = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/filter_sepia_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/filter_sepia_fs.txt"),
+                    null)
+                    .useProgram();
             GLES30.glUniform1i(glProgramFilterSepia.getUniformLocation("sTexture"), 0);
+
+            glProgramFilterBlackAndWhite = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/filter_black_and_white_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/filter_black_and_white_fs.txt"),
+                    null)
+                    .useProgram();
+            GLES30.glUniform1i(glProgramFilterBlackAndWhite.getUniformLocation("sTexture"), 0);
 
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -275,6 +291,9 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         }
 
         switch (filterIndex) {
+            case 1:
+                glProgramFilterBlackAndWhite.useProgram();
+                break;
             case 2:
                 glProgramFilterSepia.useProgram();
                 break;
