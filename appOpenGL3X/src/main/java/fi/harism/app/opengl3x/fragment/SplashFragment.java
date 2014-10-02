@@ -33,7 +33,6 @@ public class SplashFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_splash, container, false);
         progressBar = (ProgressBar) view.findViewById(R.id.seekbar_progress);
-        EventBus.getDefault().post(new GetProgressEvent());
 
         if (!isRunning) {
             isRunning = true;
