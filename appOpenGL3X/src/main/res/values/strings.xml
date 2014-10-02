@@ -2,6 +2,11 @@
     <string name="app_name">OpenGL 3X</string>
     <string name="splash_name">OPENGL ES 3X</string>
 
+    <string name="hue">Hue</string>
+    <string name="saturation">Saturation</string>
+    <string name="brightness">Brightness</string>
+    <string name="filter">Filter</string>
+
     <string name="section_camera2">Camera2</string>
     <string name="renderer_camera2_basic_title">Basic</string>
     <string name="renderer_camera2_basic_caption">Renders camera preview from surface texture using Camera2 API.</string>
@@ -15,5 +20,11 @@
     <string name="section_test">Tests</string>
     <string name="renderer_test_clear_title">Random Clear</string>
     <string name="renderer_test_clear_caption">Clears framebuffer with random color.</string>
+
+    <string-array name="camera2_filter_filters">
+        <item>None</item>
+        <item>Black and White</item>
+        <item>Sepia</item>
+    </string-array>
 
 </resources>

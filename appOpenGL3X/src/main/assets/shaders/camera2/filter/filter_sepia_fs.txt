@@ -1,0 +1,16 @@
+#version 300 es
+
+uniform sampler2D sTexture;
+
+in vec2 vTexPosition;
+
+out vec4 outFragColor;
+
+void main() {
+    vec3 c = texture(sTexture, vTexPosition).rgb;
+
+    outFragColor.r = dot(c, vec3(.393, .769, .189));
+    outFragColor.g = dot(c, vec3(.349, .686, .168));
+    outFragColor.b = dot(c, vec3(.272, .534, .131));
+    outFragColor.a = 1.0;
+}

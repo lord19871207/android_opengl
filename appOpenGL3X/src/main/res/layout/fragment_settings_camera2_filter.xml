@@ -16,10 +16,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:text="Hue"
+            android:text="@string/hue"
             android:textStyle="bold"
             android:textSize="18sp"
-            android:textColor="#FFF"
+            android:textColor="#C8C8C8"
             android:fontFamily="sans-serif-thin"
             android:singleLine="true"
             android:gravity="right" />
@@ -45,10 +45,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:text="Saturation"
+            android:text="@string/saturation"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#FFF"
+            android:textColor="#C8C8C8"
             android:fontFamily="sans-serif-thin"
             android:singleLine="true"
             android:gravity="right" />
@@ -74,10 +74,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:text="Brightness"
+            android:text="@string/brightness"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#FFF"
+            android:textColor="#C8C8C8"
             android:fontFamily="sans-serif-thin"
             android:singleLine="true"
             android:gravity="right" />
@@ -90,6 +90,34 @@
             android:layout_weight="2"
             android:max="255"
             android:progress="100" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:text="@string/filter"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#C8C8C8"
+            android:fontFamily="sans-serif-thin"
+            android:singleLine="true"
+            android:gravity="right" />
+
+        <Spinner
+            android:id="@+id/spinner_filter"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="2"
+            android:padding="10dp" />
     </LinearLayout>
 
 </LinearLayout>

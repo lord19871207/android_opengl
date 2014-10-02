@@ -97,6 +97,7 @@ public class ActionButtonFragment extends Fragment {
         ft.replace(R.id.container_settings, settingsFragment);
         ft.addToBackStack(null);
         ft.commit();
+        fm.executePendingTransactions();
     }
 
     private void setActionButtonRotated(boolean rotated) {
