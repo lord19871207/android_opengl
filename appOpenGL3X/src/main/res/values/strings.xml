@@ -31,6 +31,7 @@
     <string-array name="camera2_filter_effects">
         <item>None</item>
         <item>Radial Dots</item>
+        <item>Edge Detection</item>
         <item>Oil Painting</item>
     </string-array>
 

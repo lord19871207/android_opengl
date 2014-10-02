@@ -80,6 +80,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private GlProgram glProgramFilterSepia;
     private GlProgram glProgramFilterBlackAndWhite;
     private GlProgram glProgramEffectRadialDots;
+    private GlProgram glProgramEffectEdgeDetection;
     private GlProgram glProgramEffectOilPainting;
 
     private SurfaceTexture surfaceTexture;
@@ -225,6 +226,13 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
                     .useProgram();
             GLES30.glUniform1i(glProgramEffectRadialDots.getUniformLocation("sTexture"), 0);
 
+            glProgramEffectEdgeDetection = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_edge_detection_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_edge_detection_fs.txt"),
+                    null)
+                    .useProgram();
+            GLES30.glUniform1i(glProgramEffectEdgeDetection.getUniformLocation("sTexture"), 0);
+
             glProgramEffectOilPainting = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_oil_painting_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_oil_painting_fs.txt"),
@@ -349,9 +357,15 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
                 glProgramEffectRadialDots.useProgram();
                 GLES30.glUniform2f(
                         glProgramEffectRadialDots.getUniformLocation("uAspectRatio"),
-                        1f, (float)surfaceSize.getHeight() / surfaceSize.getWidth());
+                        1f, (float) surfaceSize.getHeight() / surfaceSize.getWidth());
                 break;
             case 2:
+                glProgramEffectEdgeDetection.useProgram();
+                GLES30.glUniform2f(
+                        glProgramEffectEdgeDetection.getUniformLocation("uPixelSize"),
+                        1f / surfaceSize.getWidth(), 1f / surfaceSize.getHeight());
+                break;
+            case 3:
                 glProgramEffectOilPainting.useProgram();
                 GLES30.glUniform2f(
                         glProgramEffectOilPainting.getUniformLocation("uSampleOffset"),
