@@ -26,14 +26,27 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        EventBus.getDefault().register(this);
-        EventBus.getDefault().post(new GetProgressEvent());
+        EventBus eventBus = EventBus.getDefault();
+        eventBus.register(this);
+        eventBus.post(new GetProgressEvent());
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        EventBus eventBus = EventBus.getDefault();
+        if (eventBus.isRegistered(this)) {
+            eventBus.unregister(this);
+        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        EventBus.getDefault().unregister(this);
+        EventBus eventBus = EventBus.getDefault();
+        if (eventBus.isRegistered(this)) {
+            eventBus.unregister(this);
+        }
     }
 
     public void onEvent(SetProgressEvent event) {
