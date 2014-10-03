@@ -19,6 +19,7 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.util.Size;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -34,6 +35,7 @@ import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.Arrays;
 
 import de.greenrobot.event.EventBus;
@@ -44,6 +46,7 @@ import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlSampler;
 import fi.harism.lib.opengl.gl.GlTexture;
 import fi.harism.lib.opengl.gl.GlUtils;
+import fi.harism.lib.utils.MersenneTwisterFast;
 
 public class Camera2FilterRendererFragment extends RendererFragment implements SurfaceTexture.OnFrameAvailableListener {
 
@@ -70,10 +73,12 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private GlTexture glTextureCamera;
     private GlTexture glTextureHsv;
     private GlTexture glTextureFilter;
+    private GlTexture glTextureNoise;
     private GlFramebuffer glFramebufferCamera;
     private GlFramebuffer glFramebufferHsv;
     private GlFramebuffer glFramebufferFilter;
     private GlSampler glSamplerNearest;
+    private GlSampler glSamplerLinear;
     private GlProgram glProgramCameraIn;
     private GlProgram glProgramCopy;
     private GlProgram glProgramHsv;
@@ -81,6 +86,7 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
     private GlProgram glProgramFilterBlackAndWhite;
     private GlProgram glProgramEffectRadialDots;
     private GlProgram glProgramEffectEdgeDetection;
+    private GlProgram glProgramEffectVoronoi;
     private GlProgram glProgramEffectOilPainting;
 
     private SurfaceTexture surfaceTexture;
@@ -165,6 +171,20 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         glTextureCamera = new GlTexture();
         glTextureHsv = new GlTexture();
         glTextureFilter = new GlTexture();
+        glTextureNoise = new GlTexture();
+
+        MersenneTwisterFast rand = new MersenneTwisterFast(8349);
+        FloatBuffer randBuffer = ByteBuffer
+                .allocateDirect(4 * 4 * 256 * 256)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        for (int i = 0; i < 4 * 256 * 256; ++i) {
+            randBuffer.put(rand.nextFloat(true, true));
+        }
+        glTextureNoise
+                .bind(GLES30.GL_TEXTURE_2D)
+                .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, 256, 256, 0, GLES30.GL_RGBA, GLES30.GL_FLOAT, randBuffer.position(0));
+
         glFramebufferCamera = new GlFramebuffer();
         glFramebufferHsv = new GlFramebuffer();
         glFramebufferFilter = new GlFramebuffer();
@@ -174,6 +194,12 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         glSamplerNearest.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
         glSamplerNearest.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
         glSamplerNearest.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
+
+        glSamplerLinear = new GlSampler();
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
 
         surfaceTexture = new SurfaceTexture(glTextureCameraIn.name());
         surfaceTexture.setOnFrameAvailableListener(this);
@@ -232,6 +258,14 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
                     null)
                     .useProgram();
             GLES30.glUniform1i(glProgramEffectEdgeDetection.getUniformLocation("sTexture"), 0);
+
+            glProgramEffectVoronoi = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_voronoi_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_voronoi_fs.txt"),
+                    null)
+                    .useProgram();
+            GLES30.glUniform1i(glProgramEffectVoronoi.getUniformLocation("sTexture"), 0);
+            GLES30.glUniform1i(glProgramEffectVoronoi.getUniformLocation("sTextureNoise"), 1);
 
             glProgramEffectOilPainting = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/camera2/filter/effect_oil_painting_vs.txt"),
@@ -366,6 +400,15 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
                         1f / surfaceSize.getWidth(), 1f / surfaceSize.getHeight());
                 break;
             case 3:
+                float time = SystemClock.uptimeMillis() % 31416 / 1000f;
+                glProgramEffectVoronoi.useProgram();
+                GLES30.glUniform1f(
+                        glProgramEffectVoronoi.getUniformLocation("uGlobalTime"), time);
+                GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
+                glTextureNoise.bind(GLES30.GL_TEXTURE_2D);
+                glSamplerLinear.bind(1);
+                break;
+            case 4:
                 glProgramEffectOilPainting.useProgram();
                 GLES30.glUniform2f(
                         glProgramEffectOilPainting.getUniformLocation("uSampleOffset"),

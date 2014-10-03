@@ -28,4 +28,5 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:+'
     compile 'de.greenrobot:eventbus:2.2.1'
     compile project(':libOpenGL')
+    compile project(':libUtils')
 }

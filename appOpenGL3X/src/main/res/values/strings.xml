@@ -32,6 +32,7 @@
         <item>None</item>
         <item>Radial Dots</item>
         <item>Edge Detection</item>
+        <item>Voronoi</item>
         <item>Oil Painting</item>
     </string-array>
 
