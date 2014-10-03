@@ -7,15 +7,13 @@ in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
-void main() {
-    const int radius = 5;
-    const int radius2 = (radius + 1) * (radius + 1);
-    const float n = float((radius + 1) * (radius + 1));
+const int radius = 5;
+const int radius2 = (radius + 1) * (radius + 1);
+const float n = float(radius2);
 
-    vec3 m[4];
-    vec3 s[4];
-    m[0] = vec3(0.0); m[1] = vec3(0.0); m[2] = vec3(0.0); m[3] = vec3(0.0);
-    s[0] = vec3(0.0); s[1] = vec3(0.0); s[2] = vec3(0.0); s[3] = vec3(0.0);
+void main() {
+    vec3 m[4]; m[0] = vec3(0.0); m[1] = vec3(0.0); m[2] = vec3(0.0); m[3] = vec3(0.0);
+    vec3 s[4]; s[0] = vec3(0.0); s[1] = vec3(0.0); s[2] = vec3(0.0); s[3] = vec3(0.0);
 
     for (int k = 0; k < radius2; ++k)  {
         int i = k / (radius + 1);
