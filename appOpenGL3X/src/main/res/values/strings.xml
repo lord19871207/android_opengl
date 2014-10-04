@@ -2,6 +2,14 @@
     <string name="app_name">OpenGL 3X</string>
     <string name="splash_name">OPENGL ES 3X</string>
 
+    <string name="no_settings">This renderer doesn\'t have settings.</string>
+
+    <string name="red">Red</string>
+    <string name="green">Green</string>
+    <string name="blue">Blue</string>
+
+    <string name="show_outlines">Show polygon outlines</string>
+
     <string name="hue">Hue</string>
     <string name="saturation">Saturation</string>
     <string name="brightness">Brightness</string>

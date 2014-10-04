@@ -12,16 +12,12 @@
         android:weightSum="7">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="2"
-            android:text="Red"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#FFF"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
+            android:text="@string/red"
             android:gravity="right" />
 
         <SeekBar
@@ -41,16 +37,12 @@
         android:weightSum="7">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="2"
-            android:text="Green"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#FFF"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
+            android:text="@string/green"
             android:gravity="right" />
 
         <SeekBar
@@ -70,16 +62,12 @@
         android:weightSum="7">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="2"
-            android:text="Blue"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#FFF"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
+            android:text="@string/blue"
             android:gravity="right" />
 
         <SeekBar

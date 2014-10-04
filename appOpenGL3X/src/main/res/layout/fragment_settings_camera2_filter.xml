@@ -12,16 +12,12 @@
         android:weightSum="3">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:text="@string/hue"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#C8C8C8"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
             android:gravity="right" />
 
         <SeekBar
@@ -41,16 +37,12 @@
         android:weightSum="3">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:text="@string/saturation"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#C8C8C8"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
             android:gravity="right" />
 
         <SeekBar
@@ -70,16 +62,12 @@
         android:weightSum="3">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:text="@string/brightness"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#C8C8C8"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
             android:gravity="right" />
 
         <SeekBar
@@ -99,16 +87,12 @@
         android:weightSum="3">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:text="@string/filter"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#C8C8C8"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
             android:gravity="right" />
 
         <Spinner
@@ -127,16 +111,12 @@
         android:weightSum="3">
 
         <TextView
+            style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:text="@string/effect"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#C8C8C8"
-            android:fontFamily="sans-serif-thin"
-            android:singleLine="true"
             android:gravity="right" />
 
         <Spinner

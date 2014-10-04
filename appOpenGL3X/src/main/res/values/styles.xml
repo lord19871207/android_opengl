@@ -10,4 +10,12 @@
         <item name="android:colorPrimaryDark">@color/primary_dark</item>
     </style>
 
+    <style name="settings_text">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#C8C8C8</item>
+        <item name="android:fontFamily">sans-serif-thin</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
 </resources>
