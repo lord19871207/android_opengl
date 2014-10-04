@@ -58,9 +58,17 @@ public abstract class BasicRendererFragment extends RendererFragment {
         glVertexArrayCube.unbind();
     }
 
-    protected void renderCube() {
+    protected void renderCubeFilled() {
         glVertexArrayCube.bind();
         GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 36);
+        glVertexArrayCube.unbind();
+    }
+
+    protected void renderCubeOutlines() {
+        glVertexArrayCube.bind();
+        for (int i = 0; i < 36; i += 3) {
+            GLES30.glDrawArrays(GLES30.GL_LINE_LOOP, i, 3);
+        }
         glVertexArrayCube.unbind();
     }
 

@@ -7,6 +7,7 @@
 
     <CheckBox
         style="@style/settings_text"
+        android:id="@+id/checkbox_show_outlines"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
