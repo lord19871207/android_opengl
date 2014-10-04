@@ -11,6 +11,8 @@ import android.util.Log;
 public class EglCore {
 
     public static final int FLAG_RECORDABLE = 0x01;
+    public static final int FLAG_DEPTH_BUFFER = 0x02;
+    public static final int FLAG_STENCIL_BUFFER = 0x04;
     public static final int VERSION_GLES2 = 0x00020000;
     public static final int VERSION_GLES3 = 0x00030000;
     public static final int VERSION_GLES31 = 0x00030001;
@@ -111,15 +113,17 @@ public class EglCore {
     }
 
     private EGLConfig getConfig(int version, int flags) {
-        int renderableType = EGL14.EGL_OPENGL_ES2_BIT;
-        if (version >> 16 >= 3) {
-            renderableType |= EGLExt.EGL_OPENGL_ES3_BIT_KHR;
-        }
+        int depthSize = (flags & FLAG_DEPTH_BUFFER) != 0 ? 16 : 0;
+        int stencilSize = (flags & FLAG_STENCIL_BUFFER) != 0 ? 8 : 0;
+        int renderableType = version >> 16 >= 3 ? EGL14.EGL_OPENGL_ES2_BIT :
+                EGL14.EGL_OPENGL_ES2_BIT | EGLExt.EGL_OPENGL_ES3_BIT_KHR;
         int[] attribList = {
                 EGL14.EGL_RED_SIZE, 8,
                 EGL14.EGL_GREEN_SIZE, 8,
                 EGL14.EGL_BLUE_SIZE, 8,
-                EGL14.EGL_ALPHA_SIZE, 8,
+                // EGL14.EGL_ALPHA_SIZE, 8,
+                EGL14.EGL_DEPTH_SIZE, depthSize,
+                EGL14.EGL_STENCIL_SIZE, stencilSize,
                 EGL14.EGL_RENDERABLE_TYPE, renderableType,
                 EGL14.EGL_NONE, 0,
                 EGL14.EGL_NONE
@@ -130,9 +134,10 @@ public class EglCore {
         }
         EGLConfig[] configs = new EGLConfig[1];
         int[] numConfigs = new int[1];
-        if (!EGL14.eglChooseConfig(eglDisplay, attribList, 0, configs, 0, configs.length,
-                numConfigs, 0)) {
-            Log.w(TAG, "unable to find RGB8888 / " + Integer.toHexString(version) + " EGLConfig");
+        if (!EGL14.eglChooseConfig(
+                eglDisplay, attribList, 0, configs, 0, configs.length, numConfigs, 0) ||
+                numConfigs[0] == 0) {
+            Log.w(TAG, "Pnable to find requested / " + Integer.toHexString(version) + " EGLConfig");
             return null;
         }
         return configs[0];
