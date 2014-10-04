@@ -41,11 +41,15 @@ public class GlTextureView extends TextureView {
     }
 
     public void renderFrame() {
-        mGlRenderThread.getGlRenderHandler().postRenderFrame();
+        if (isAvailable()) {
+            mGlRenderThread.getGlRenderHandler().postRenderFrame();
+        }
     }
 
     public void renderFrame(long frameTimeNanos) {
-        mGlRenderThread.getGlRenderHandler().postRenderFrame(frameTimeNanos);
+        if (isAvailable()) {
+            mGlRenderThread.getGlRenderHandler().postRenderFrame(frameTimeNanos);
+        }
     }
 
     public void onDestroy() {
