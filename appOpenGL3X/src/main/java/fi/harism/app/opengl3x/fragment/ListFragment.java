@@ -17,6 +17,7 @@ import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
 import fi.harism.app.opengl3x.event.GetRendererFragmentEvent;
 import fi.harism.app.opengl3x.event.SetRendererFragmentEvent;
+import fi.harism.app.opengl3x.fragment.basic.CubeBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2BasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2FilterRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2RawRendererFragment;
@@ -45,6 +46,8 @@ public class ListFragment extends Fragment {
         rendererFragments = new ArrayList<>();
         ArrayList<SectionedAdapter.Section> sections = new ArrayList<>();
 
+        sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_basic));
+        rendererFragments.add(new CubeBasicRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_camera2));
         rendererFragments.add(new Camera2BasicRendererFragment());
         rendererFragments.add(new Camera2FilterRendererFragment());

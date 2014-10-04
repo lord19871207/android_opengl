@@ -8,6 +8,10 @@
     <string name="filter">Filter</string>
     <string name="effect">Post Fx</string>
 
+    <string name="section_basic">Basic</string>
+    <string name="renderer_basic_cube_title">Cube</string>
+    <string name="renderer_basic_cube_caption">Renders a single cube which has flat lightning on its faces. Light intensity is calculated from face normal z-value.</string>
+
     <string name="section_camera2">Camera2</string>
     <string name="renderer_camera2_basic_title">Basic</string>
     <string name="renderer_camera2_basic_caption">Renders camera preview from surface texture using Camera2 API.</string>

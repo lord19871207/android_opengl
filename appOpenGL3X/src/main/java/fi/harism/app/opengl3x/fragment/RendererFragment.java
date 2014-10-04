@@ -28,6 +28,7 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
     private Choreographer choreographer;
     private GlTextureView glTextureView;
     private boolean manualRendering;
+    private int eglFlags;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -40,7 +41,7 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_renderer, container, false);
         glTextureView = (GlTextureView) view.findViewById(R.id.textureview);
-        glTextureView.setEglContext(EglCore.VERSION_GLES3, 0);
+        glTextureView.setEglContext(EglCore.VERSION_GLES3, eglFlags);
         glTextureView.setGlRenderer(this);
         return view;
     }
@@ -72,6 +73,10 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
 
     public final void setManualRendering(boolean manualRendering) {
         this.manualRendering = manualRendering;
+    }
+
+    public final void setEglFlags(int eglFlags) {
+        this.eglFlags = eglFlags;
     }
 
     public final void requestRender() {
