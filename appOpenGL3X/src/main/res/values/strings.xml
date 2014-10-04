@@ -8,11 +8,11 @@
     <string name="filter">Filter</string>
     <string name="effect">Post Fx</string>
 
-    <string name="section_basic">Basic</string>
+    <string name="section_basic">Basic Rendering</string>
     <string name="renderer_basic_cube_title">Cube</string>
     <string name="renderer_basic_cube_caption">Renders a single cube which has flat lightning on its faces. Light intensity is calculated from face normal z-value.</string>
 
-    <string name="section_camera2">Camera2</string>
+    <string name="section_camera2">Camera2 Rendering</string>
     <string name="renderer_camera2_basic_title">Basic</string>
     <string name="renderer_camera2_basic_caption">Renders camera preview from surface texture using Camera2 API.</string>
     <string name="renderer_camera2_filter_title">Filters</string>
@@ -22,7 +22,7 @@
     <string name="renderer_camera2_raw_title">Raw Input</string>
     <string name="renderer_camera2_raw_caption">Renders camera preview from ImageReader using Camera2 API and GLSL shaders to convert raw images into rgb.</string>
 
-    <string name="section_test">Tests</string>
+    <string name="section_test">Test Renderers</string>
     <string name="renderer_test_clear_title">Random Clear</string>
     <string name="renderer_test_clear_caption">Clears framebuffer with random color.</string>
 
