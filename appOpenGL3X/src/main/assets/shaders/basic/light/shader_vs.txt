@@ -14,5 +14,6 @@ void main() {
     gl_Position = uModelViewProjectionMatrix * inPosition;
     vPosition = vec3(uModelViewMatrix * inPosition);
     vNormal = mat3(uModelViewMatrix) * inNormal;
+    vNormal = normalize(vNormal);
     vColor = vec3(0.3, 0.6, 1.0) * vNormal.z;
 }
