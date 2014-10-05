@@ -29,8 +29,8 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
     private static final String PREFERENCE_ENABLE_LIGHTNING = "renderer.basic.cubemap.enable_lightning";
     private static final boolean DEFAULT_ENABLE_LIGHTNING = true;
 
-    private static final float MATERIAL_LIGHTNING_DISABLED[] = {0f, 0f, 0f, 1f};
-    private static final float MATERIAL_LIGHTNING_ENABLED[] = {0f, 0.3f, 0.3f, 8.0f};
+    private static final float MATERIAL_LIGHTNING_DISABLED[] = {1f, 0f, 0f, 1f};
+    private static final float MATERIAL_LIGHTNING_ENABLED[] = {0.4f, 1.0f, 1.0f, 8.0f};
 
     private GlSampler glSamplerLinear;
     private GlTexture glTextureCubemap;
@@ -125,10 +125,10 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
         glProgram.useProgram();
 
         long time = SystemClock.uptimeMillis();
-        float diff = (time - lastRenderTime) / 10f;
+        float diff = (time - lastRenderTime) / 1000f;
         lastRenderTime = time;
 
-        Matrix.rotateM(rotationMatrix, 0, diff, 1f, 1.5f, 0f);
+        Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
         Matrix.scaleM(modelMatrix, 0, rotationMatrix, 0, 10f, 10f, 10f);
         Matrix.multiplyMM(modelViewMatrix, 0, glCamera.getLookAtM(), 0, modelMatrix, 0);
         Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.getPerspectiveM(), 0, modelViewMatrix, 0);
