@@ -1,11 +1,18 @@
 package fi.harism.app.opengl3x.fragment.basic;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES30;
+import android.opengl.GLUtils;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import fi.harism.app.opengl3x.fragment.RendererFragment;
 import fi.harism.lib.opengl.gl.GlBuffer;
+import fi.harism.lib.opengl.gl.GlTexture;
 import fi.harism.lib.opengl.gl.GlVertexArray;
 
 public abstract class BasicRendererFragment extends RendererFragment {
@@ -70,6 +77,34 @@ public abstract class BasicRendererFragment extends RendererFragment {
             GLES30.glDrawArrays(GLES30.GL_LINE_LOOP, i, 3);
         }
         glVertexArrayCube.unbind();
+    }
+
+    protected GlTexture readCubeMap() throws IOException {
+        GlTexture glTexture = new GlTexture();
+        glTexture.bind(GLES30.GL_TEXTURE_CUBE_MAP);
+
+        readTexture(GLES30.GL_TEXTURE_CUBE_MAP_POSITIVE_X, "images/cubemap/posx.png");
+        readTexture(GLES30.GL_TEXTURE_CUBE_MAP_POSITIVE_Y, "images/cubemap/posy.png");
+        readTexture(GLES30.GL_TEXTURE_CUBE_MAP_POSITIVE_Z, "images/cubemap/posz.png");
+        readTexture(GLES30.GL_TEXTURE_CUBE_MAP_NEGATIVE_X, "images/cubemap/negx.png");
+        readTexture(GLES30.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, "images/cubemap/negy.png");
+        readTexture(GLES30.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, "images/cubemap/negz.png");
+
+        glTexture.unbind(GLES30.GL_TEXTURE_CUBE_MAP);
+        return glTexture;
+    }
+
+    private void readTexture(int target, String path) throws IOException {
+        InputStream is = null;
+        try {
+            is = new BufferedInputStream(getResources().getAssets().open(path));
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            GLUtils.texImage2D(target, 0, bitmap, 0);
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
     }
 
 }

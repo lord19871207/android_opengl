@@ -1,0 +1,22 @@
+#version 300 es
+
+uniform mat4 uModelViewMatrix;
+uniform mat4 uModelViewProjectionMatrix;
+uniform vec3 uCameraPosition;
+
+layout (location = 0) in vec4 inPosition;
+layout (location = 1) in vec3 inNormal;
+
+out vec3 vPosition;
+out vec3 vNormal;
+out vec3 vTexPosition;
+
+void main() {
+    gl_Position = uModelViewProjectionMatrix * inPosition;
+    vPosition = vec3(uModelViewMatrix * inPosition);
+    vNormal = mat3(uModelViewMatrix) * inNormal;
+    vNormal = normalize(vNormal);
+
+    vec3 E = normalize(vPosition - uCameraPosition);
+    vTexPosition = reflect(E, vNormal);
+}
