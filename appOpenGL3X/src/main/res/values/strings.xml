@@ -28,8 +28,8 @@
     <string name="renderer_basic_cube_caption">Renders a single cube which has flat lightning on its faces. Light intensity is calculated from face normal z-value.</string>
     <string name="renderer_basic_light_title">Light</string>
     <string name="renderer_basic_light_caption">Renders a single cube which has per-pixel Blinn-Phong shaded lightning.</string>
-    <string name="renderer_basic_cubemap_title">Cubemap</string>
-    <string name="renderer_basic_cubemap_caption">Renders a single cube with environment mapping. Additionally it has per-pixel Blinn-Phong shaded lightning.</string>
+    <string name="renderer_basic_cubemap_title">Cube mapping</string>
+    <string name="renderer_basic_cubemap_caption">Renders a single cube with environment mapping. Additionally there is per-pixel Blinn-Phong shaded lightning.</string>
 
     <string name="section_camera2">Camera2 Rendering</string>
     <string name="renderer_camera2_basic_title">Basic</string>
