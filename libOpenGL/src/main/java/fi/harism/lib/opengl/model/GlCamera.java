@@ -34,9 +34,9 @@ public class GlCamera {
     }
 
     public void setLookAtM(float posX, float posY, float posZ, float lookAtX, float lookAtY, float lookAtZ, float upX, float upY, float upZ) {
-        lookAtM[0] = posX;
-        lookAtM[1] = posY;
-        lookAtM[2] = posZ;
+        lookAtV[0] = posX;
+        lookAtV[1] = posY;
+        lookAtV[2] = posZ;
         Matrix.setLookAtM(lookAtM, 0, posX, posY, posZ, lookAtX, lookAtY, lookAtZ, upX, upY, upZ);
         needsMultiply = true;
     }
