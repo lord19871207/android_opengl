@@ -1,0 +1,18 @@
+#version 300 es
+
+uniform mat4 uModelViewMatrix;
+uniform mat4 uModelViewProjectionMatrix;
+
+layout (location = 0) in vec4 inPosition;
+layout (location = 1) in vec3 inNormal;
+
+out vec3 vPosition;
+out vec3 vNormal;
+out vec3 vColor;
+
+void main() {
+    gl_Position = uModelViewProjectionMatrix * inPosition;
+    vPosition = vec3(uModelViewMatrix * inPosition);
+    vNormal = mat3(uModelViewMatrix) * inNormal;
+    vColor = vec3(0.3, 0.6, 1.0) * vNormal.z;
+}
