@@ -112,8 +112,8 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
 
     @Override
     public void onSurfaceChanged(int width, int height) {
-        glCamera.setPerspectiveM(width, height, 60.0f, 1f, 100f);
-        glCamera.setLookAtM(0f, 0f, 40f, 0f, 0f, 0f, 0f, 1f, 0f);
+        glCamera.setPerspective(width, height, 60.0f, 1f, 100f);
+        glCamera.setPosition(new float[] {0f, 0f, 40f});
         Matrix.setIdentityM(rotationMatrix, 0);
     }
 
@@ -130,12 +130,12 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
 
         Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
         Matrix.scaleM(modelMatrix, 0, rotationMatrix, 0, 10f, 10f, 10f);
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.getLookAtM(), 0, modelMatrix, 0);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.getPerspectiveM(), 0, modelViewMatrix, 0);
+        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMatrix(), 0, modelMatrix, 0);
+        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMatrix(), 0, modelViewMatrix, 0);
 
         GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewMatrix"), 1, false, modelViewMatrix, 0);
         GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniform3fv(glProgram.getUniformLocation("uCameraPosition"), 1, glCamera.getLookAtV(), 0);
+        GLES30.glUniform3fv(glProgram.getUniformLocation("uCameraPosition"), 1, glCamera.position(), 0);
 
         final float[] material = enableLightning ? MATERIAL_LIGHTNING_ENABLED : MATERIAL_LIGHTNING_DISABLED;
         GLES30.glUniform4fv(glProgram.getUniformLocation("uMaterial"), 1, material, 0);

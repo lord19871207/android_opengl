@@ -312,7 +312,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onSurfaceChanged(int width, int height) {
-            glCamera.setPerspectiveM(resolutionWidth, resolutionHeight, 60f, 1f, 100f);
+            glCamera.setPerspective(resolutionWidth, resolutionHeight, 60f, 1f, 100f);
             glCamera.setApertureDiameter(4.8f);
             glCamera.setPlaneInFocus(10f);
 
@@ -372,7 +372,7 @@ public class MainActivity extends Activity {
             double angle = SystemClock.uptimeMillis() % 10000 / 5000.0 * Math.PI;
             float rx = (float) (Math.sin(angle) * 5);
             float rz = (float) (Math.cos(angle) * 10) + 12;
-            glCamera.setLookAtM(0, 0, rz, 0, 0, 0, 0, 1, 0);
+            glCamera.setPosition(new float[]{0, 0, rz});
 
             rendererScene.onRenderFrame();
             rendererDof.onRenderFrame();

@@ -4,11 +4,15 @@ import android.opengl.Matrix;
 
 public class GlCamera {
 
-    private final float[] perspectiveM = new float[16];
-    private final float[] lookAtM = new float[16];
-    private final float[] multipliedM = new float[16];
-    private final float[] lookAtV = new float[3];
-    private boolean needsMultiply = true;
+    private final float[] position = new float[3];
+    private final float[] direction = new float[3];
+
+    private final float[] viewMatrix = new float[16];
+    private final float[] projMatrix = new float[16];
+    private final float[] viewProjMatrix = new float[16];
+
+    private boolean calcViewMatrix;
+    private boolean calcViewProjMatrix;
 
     private float sensorHeight;
     private float sensorWidth;
@@ -20,42 +24,61 @@ public class GlCamera {
         sensorHeight = 0.024f;
     }
 
-    public void setPerspectiveM(int width, int height, float fov, float zNear, float zFar) {
+    public GlCamera setPerspective(int width, int height, float fov, float zNear, float zFar) {
         float aspect = (float) width / height;
-        Matrix.perspectiveM(perspectiveM, 0, fov, aspect, zNear, zFar);
-        needsMultiply = true;
+        Matrix.perspectiveM(projMatrix, 0, fov, aspect, zNear, zFar);
+        calcViewProjMatrix = true;
 
         sensorWidth = sensorHeight * aspect;
         focalLength = (float) ((0.5f * sensorWidth) / Math.tan(Math.PI * fov / 360));
+
+        return this;
     }
 
-    public float[] getPerspectiveM() {
-        return perspectiveM;
+    public GlCamera setPosition(float position[]) {
+        System.arraycopy(position, 0, this.position, 0, 3);
+        calcViewMatrix = true;
+        return this;
     }
 
-    public void setLookAtM(float posX, float posY, float posZ, float lookAtX, float lookAtY, float lookAtZ, float upX, float upY, float upZ) {
-        lookAtV[0] = posX;
-        lookAtV[1] = posY;
-        lookAtV[2] = posZ;
-        Matrix.setLookAtM(lookAtM, 0, posX, posY, posZ, lookAtX, lookAtY, lookAtZ, upX, upY, upZ);
-        needsMultiply = true;
+    public GlCamera setDirection(float direction[]) {
+        System.arraycopy(direction, 0, this.direction, 0, 3);
+        calcViewMatrix = true;
+        return this;
     }
 
-    public float[] getLookAtM() {
-        return lookAtM;
+    public float[] position() {
+        return position;
     }
 
-    public float[] getLookAtV() {
-        return lookAtV;
+    public float[] direction() {
+        return direction;
     }
 
-    public float[] getMultipliedM() {
-        if (needsMultiply) {
-            needsMultiply = false;
-            Matrix.multiplyMM(multipliedM, 0, perspectiveM, 0, lookAtM, 0);
+    public float[] viewMatrix() {
+        if (calcViewMatrix) {
+            Matrix.setLookAtM(viewMatrix, 0,
+                    position[0], position[1], position[2],
+                    direction[0], direction[1], direction[2],
+                    0f, 1f, 0f);
+            calcViewMatrix = false;
         }
-        return multipliedM;
+        return viewMatrix;
     }
+
+    public float[] projMatrix() {
+        return projMatrix;
+    }
+
+    public float[] viewProjMatrix() {
+        float[] viewMatrix = viewMatrix();
+        if (calcViewProjMatrix) {
+            Matrix.multiplyMM(viewProjMatrix, 0, projMatrix, 0, viewMatrix, 0);
+            calcViewProjMatrix = false;
+        }
+        return viewProjMatrix;
+    }
+
 
     public float getFocalLength() {
         return focalLength;
