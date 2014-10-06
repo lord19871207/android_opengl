@@ -2,50 +2,129 @@ package fi.harism.lib.opengl.model;
 
 import android.opengl.GLES31;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import fi.harism.lib.opengl.gl.GlBuffer;
 
 public class GlObject {
 
-    private final int mVertexCount;
-    private final GlBuffer mVertexBuffer;
-    private final GlBuffer mNormalBuffer;
-    private final GlBuffer mTextureBuffer;
+    private final int vertexCount;
+    private final GlBuffer vertexBuffer;
+    private final GlBuffer normalBuffer;
+    private final GlBuffer textureBuffer;
+    private final GlBuffer bboxBuffer;
+
+    public GlObject(int vertexCount, FloatBuffer vertexBuffer, FloatBuffer normalBuffer) {
+        this.vertexCount = vertexCount;
+
+        this.vertexBuffer = new GlBuffer()
+                .bind(GLES31.GL_ARRAY_BUFFER)
+                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, vertexBuffer.position(0), GLES31.GL_STATIC_DRAW)
+                .unbind(GLES31.GL_ARRAY_BUFFER);
+
+        this.normalBuffer = new GlBuffer()
+                .bind(GLES31.GL_ARRAY_BUFFER)
+                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, normalBuffer.position(0), GLES31.GL_STATIC_DRAW)
+                .unbind(GLES31.GL_ARRAY_BUFFER);
+
+        textureBuffer = new GlBuffer();
+
+        bboxBuffer = createBoundingBox(vertexCount, vertexBuffer);
+    }
 
     public GlObject(int vertexCount, FloatBuffer vertexBuffer, FloatBuffer normalBuffer, FloatBuffer textureBuffer) {
-        mVertexCount = vertexCount;
+        this.vertexCount = vertexCount;
 
-        mVertexBuffer = new GlBuffer()
+        this.vertexBuffer = new GlBuffer()
                 .bind(GLES31.GL_ARRAY_BUFFER)
-                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * mVertexCount, vertexBuffer, GLES31.GL_STATIC_DRAW)
+                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, vertexBuffer.position(0), GLES31.GL_STATIC_DRAW)
                 .unbind(GLES31.GL_ARRAY_BUFFER);
 
-        mNormalBuffer = new GlBuffer()
+        this.normalBuffer = new GlBuffer()
                 .bind(GLES31.GL_ARRAY_BUFFER)
-                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * mVertexCount, normalBuffer, GLES31.GL_STATIC_DRAW)
+                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, normalBuffer.position(0), GLES31.GL_STATIC_DRAW)
                 .unbind(GLES31.GL_ARRAY_BUFFER);
 
-        mTextureBuffer = new GlBuffer()
+        this.textureBuffer = new GlBuffer()
                 .bind(GLES31.GL_ARRAY_BUFFER)
-                .data(GLES31.GL_ARRAY_BUFFER, 4 * 2 * mVertexCount, textureBuffer, GLES31.GL_STATIC_DRAW)
+                .data(GLES31.GL_ARRAY_BUFFER, 4 * 2 * vertexCount, textureBuffer.position(0), GLES31.GL_STATIC_DRAW)
                 .unbind(GLES31.GL_ARRAY_BUFFER);
+
+        bboxBuffer = createBoundingBox(vertexCount, vertexBuffer);
     }
 
-    public int getVertexCount() {
-        return mVertexCount;
+    public int vertexCount() {
+        return vertexCount;
     }
 
-    public GlBuffer getVertexBuffer() {
-        return mVertexBuffer;
+    public GlBuffer vertexBuffer() {
+        return vertexBuffer;
     }
 
-    public GlBuffer getNormalBuffer() {
-        return mNormalBuffer;
+    public GlBuffer normalBuffer() {
+        return normalBuffer;
     }
 
-    public GlBuffer getTextureBuffer() {
-        return mTextureBuffer;
+    public GlBuffer textureBuffer() {
+        return textureBuffer;
+    }
+
+    public GlBuffer bboxBuffer() {
+        return bboxBuffer;
+    }
+
+    private GlBuffer createBoundingBox(int vertexCount, FloatBuffer vertexBuffer) {
+        final float vertex[] = {0, 0, 0};
+        final float vertexMax[] = {Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE};
+        final float vertexMin[] = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};
+        for (int i = 0; i < vertexCount; ++i) {
+            vertexBuffer.get(vertex);
+            for (int j = 0; j < 3; ++j) {
+                if (vertex[j] > vertexMax[j]) {
+                    vertexMax[j] = vertex[j];
+                }
+                if (vertex[j] < vertexMin[j]) {
+                    vertexMin[j] = vertex[j];
+                }
+            }
+        }
+        vertexBuffer.position(0);
+
+        final float[][] CUBEVERTICES = {
+                {vertexMin[0], vertexMax[1], vertexMax[2]},
+                {vertexMin[0], vertexMin[1], vertexMax[2]},
+                {vertexMax[0], vertexMax[1], vertexMax[2]},
+                {vertexMax[0], vertexMin[1], vertexMax[2]},
+                {vertexMin[0], vertexMax[1], vertexMin[2]},
+                {vertexMin[0], vertexMin[1], vertexMin[2]},
+                {vertexMax[0], vertexMax[1], vertexMin[2]},
+                {vertexMax[0], vertexMin[1], vertexMin[2]}};
+        final int[][][] CUBEFILLED = {
+                {{0, 1, 2, 1, 3, 2}},
+                {{6, 7, 4, 7, 5, 4}},
+                {{0, 4, 1, 4, 5, 1}},
+                {{3, 7, 2, 7, 6, 2}},
+                {{4, 0, 6, 0, 2, 6}},
+                {{1, 5, 3, 5, 7, 3}}};
+
+        FloatBuffer bufferVertices =
+                ByteBuffer
+                        .allocateDirect(3 * 4 * 6 * 6)
+                        .order(ByteOrder.nativeOrder())
+                        .asFloatBuffer();
+
+        for (int indices[][] : CUBEFILLED) {
+            for (int j = 0; j < indices[0].length; ++j) {
+                bufferVertices.put(CUBEVERTICES[indices[0][j]]);
+            }
+        }
+
+        return new GlBuffer()
+                .bind(GLES31.GL_ARRAY_BUFFER)
+                .data(GLES31.GL_ARRAY_BUFFER, 3 * 4 * 6 * 6, bufferVertices.position(0), GLES31.GL_STATIC_DRAW)
+                .unbind(GLES31.GL_ARRAY_BUFFER);
     }
 
 }

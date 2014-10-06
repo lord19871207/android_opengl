@@ -9,25 +9,27 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 import fi.harism.app.opengl3x.fragment.RendererFragment;
 import fi.harism.lib.opengl.gl.GlBuffer;
 import fi.harism.lib.opengl.gl.GlTexture;
 import fi.harism.lib.opengl.gl.GlVertexArray;
+import fi.harism.lib.opengl.model.GlObject;
 
 public abstract class BasicRendererFragment extends RendererFragment {
 
-    private GlBuffer glBufferVertices;
-    private GlBuffer glBufferNormals;
+    private GlObject glObjectCube;
     private GlVertexArray glVertexArrayCube;
 
     @Override
     public void onSurfaceCreated() {
         // Vertex and normal data plus indices arrays.
-        final byte[][] CUBEVERTICES = {
+        final float[][] CUBEVERTICES = {
                 {-1, 1, 1}, {-1, -1, 1}, {1, 1, 1}, {1, -1, 1},
                 {-1, 1, -1}, {-1, -1, -1}, {1, 1, -1}, {1, -1, -1}};
-        final byte[][] CUBENORMALS = {
+        final float[][] CUBENORMALS = {
                 {0, 0, 1}, {0, 0, -1}, {-1, 0, 0},
                 {1, 0, 0}, {0, 1, 0}, {0, -1, 0}};
         final int[][][] CUBEFILLED = {
@@ -38,28 +40,30 @@ public abstract class BasicRendererFragment extends RendererFragment {
                 {{4, 0, 6, 0, 2, 6}, {4}},
                 {{1, 5, 3, 5, 7, 3}, {5}}};
 
-        ByteBuffer bufferVertices = ByteBuffer.allocateDirect(3 * 6 * 6);
-        ByteBuffer bufferNormals = ByteBuffer.allocateDirect(3 * 6 * 6);
+        FloatBuffer bufferVertices =
+                ByteBuffer.allocateDirect(3 * 4 * 6 * 6)
+                        .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer bufferNormals =
+                ByteBuffer.allocateDirect(3 * 4 * 6 * 6)
+                        .order(ByteOrder.nativeOrder()).asFloatBuffer();
 
-        for (int i = 0; i < CUBEFILLED.length; ++i) {
-            for (int j = 0; j < CUBEFILLED[i][0].length; ++j) {
-                bufferVertices.put(CUBEVERTICES[CUBEFILLED[i][0][j]]);
-                bufferNormals.put(CUBENORMALS[CUBEFILLED[i][1][0]]);
+        for (int indices[][] : CUBEFILLED) {
+            for (int j = 0; j < indices[0].length; ++j) {
+                bufferVertices.put(CUBEVERTICES[indices[0][j]]);
+                bufferNormals.put(CUBENORMALS[indices[1][0]]);
             }
         }
 
+        glObjectCube = new GlObject(36, bufferVertices, bufferNormals);
+
         glVertexArrayCube = new GlVertexArray().bind();
 
-        glBufferVertices = new GlBuffer()
-                .bind(GLES30.GL_ARRAY_BUFFER)
-                .data(GLES30.GL_ARRAY_BUFFER, 3 * 6 * 6, bufferVertices.position(0), GLES30.GL_STATIC_DRAW);
-        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_BYTE, false, 0, 0);
+        glObjectCube.vertexBuffer().bind(GLES30.GL_ARRAY_BUFFER);
+        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, 0);
         GLES30.glEnableVertexAttribArray(0);
 
-        glBufferNormals = new GlBuffer()
-                .bind(GLES30.GL_ARRAY_BUFFER)
-                .data(GLES30.GL_ARRAY_BUFFER, 3 * 6 * 6, bufferNormals.position(0), GLES30.GL_STATIC_DRAW);
-        GLES30.glVertexAttribPointer(1, 3, GLES30.GL_BYTE, false, 0, 0);
+        glObjectCube.normalBuffer().bind(GLES30.GL_ARRAY_BUFFER);
+        GLES30.glVertexAttribPointer(1, 3, GLES30.GL_FLOAT, false, 0, 0);
         GLES30.glEnableVertexAttribArray(1);
 
         glVertexArrayCube.unbind();

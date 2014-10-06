@@ -104,17 +104,17 @@ public class RendererScene implements GlRenderer {
         GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uModelViewProjM"), 1, false, modelViewProjM, 0);
         GLES30.glUniform3fv(mProgramCube.getUniformLocation("uEyePositionW"), 1, mCamera.position(), 0);
 
-        object.getVertexBuffer().bind(GLES30.GL_ARRAY_BUFFER);
+        object.vertexBuffer().bind(GLES30.GL_ARRAY_BUFFER);
         GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, 0);
-        object.getVertexBuffer().unbind(GLES30.GL_ARRAY_BUFFER);
+        object.vertexBuffer().unbind(GLES30.GL_ARRAY_BUFFER);
         GLES30.glEnableVertexAttribArray(0);
 
-        object.getNormalBuffer().bind(GLES30.GL_ARRAY_BUFFER);
+        object.normalBuffer().bind(GLES30.GL_ARRAY_BUFFER);
         GLES30.glVertexAttribPointer(1, 3, GLES30.GL_FLOAT, false, 0, 0);
-        object.getNormalBuffer().unbind(GLES30.GL_ARRAY_BUFFER);
+        object.normalBuffer().unbind(GLES30.GL_ARRAY_BUFFER);
         GLES30.glEnableVertexAttribArray(1);
 
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, object.getVertexCount());
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, object.vertexCount());
         GLES30.glDisableVertexAttribArray(0);
         GLES30.glDisableVertexAttribArray(1);
     }
