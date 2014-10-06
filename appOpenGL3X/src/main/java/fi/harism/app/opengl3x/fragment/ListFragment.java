@@ -20,6 +20,7 @@ import fi.harism.app.opengl3x.event.SetRendererFragmentEvent;
 import fi.harism.app.opengl3x.fragment.basic.CubeBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.basic.CubemapBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.basic.LightBasicRendererFragment;
+import fi.harism.app.opengl3x.fragment.basic.ShadowBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2BasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2FilterRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2RawRendererFragment;
@@ -52,6 +53,7 @@ public class ListFragment extends Fragment {
         rendererFragments.add(new CubeBasicRendererFragment());
         rendererFragments.add(new LightBasicRendererFragment());
         rendererFragments.add(new CubemapBasicRendererFragment());
+        rendererFragments.add(new ShadowBasicRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_camera2));
         rendererFragments.add(new Camera2BasicRendererFragment());
         rendererFragments.add(new Camera2FilterRendererFragment());

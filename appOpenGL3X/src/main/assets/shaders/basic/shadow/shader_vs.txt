@@ -1,0 +1,21 @@
+#version 300 es
+
+uniform mat4 uModelViewMatrix;
+uniform mat4 uModelViewProjectionMatrix;
+uniform mat4 uShadowMatrix;
+uniform float uNormalFactor;
+
+layout (location = 0) in vec4 inPosition;
+layout (location = 1) in vec3 inNormal;
+
+out vec3 vPosition;
+out vec3 vNormal;
+out vec4 vShadowPosition;
+
+void main() {
+    gl_Position = uModelViewProjectionMatrix * inPosition;
+    vPosition = vec3(uModelViewMatrix * inPosition);
+    vNormal = mat3(uModelViewMatrix) * (inNormal * uNormalFactor);
+    vNormal = normalize(vNormal);
+    vShadowPosition = uShadowMatrix * uModelViewMatrix * inPosition;
+}
