@@ -18,7 +18,7 @@ public class GlVertexArray {
     }
 
     public GlVertexArray unbind() {
-        GLES31.glBindVertexArray(vertexArray[0]);
+        GLES31.glBindVertexArray(0);
         return this;
     }
 
