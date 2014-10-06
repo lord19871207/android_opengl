@@ -11,24 +11,28 @@ public class GlSampler {
         GlUtils.checkGLErrors();
     }
 
-    public void parameter(int pname, float pvalue) {
+    public GlSampler parameter(int pname, float pvalue) {
         GLES31.glSamplerParameterf(sampler[0], pname, pvalue);
         GlUtils.checkGLErrors();
+        return this;
     }
 
-    public void parameter(int pname, int pvalue) {
+    public GlSampler parameter(int pname, int pvalue) {
         GLES31.glSamplerParameteri(sampler[0], pname, pvalue);
         GlUtils.checkGLErrors();
+        return this;
     }
 
-    public void bind(int textureUnit) {
+    public GlSampler bind(int textureUnit) {
         GLES31.glBindSampler(textureUnit, sampler[0]);
         GlUtils.checkGLErrors();
+        return this;
     }
 
-    public void unbind(int textureUnit) {
+    public GlSampler unbind(int textureUnit) {
         GLES31.glBindSampler(textureUnit, 0);
         GlUtils.checkGLErrors();
+        return this;
     }
 
 }
