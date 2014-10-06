@@ -17,9 +17,10 @@ public class GlRenderbuffer {
         return this;
     }
 
-    public void unbind() {
+    public GlRenderbuffer unbind() {
         GLES31.glBindRenderbuffer(GLES31.GL_RENDERBUFFER, 0);
         GlUtils.checkGLErrors();
+        return this;
     }
 
     public GlRenderbuffer storage(int internalFormat, int width, int height) {
