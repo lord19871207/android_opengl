@@ -7,14 +7,10 @@ import android.os.SystemClock;
 import android.util.Size;
 import android.widget.Toast;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 import fi.harism.app.opengl3x.R;
 import fi.harism.lib.opengl.egl.EglCore;
 import fi.harism.lib.opengl.gl.GlFramebuffer;
 import fi.harism.lib.opengl.gl.GlProgram;
-import fi.harism.lib.opengl.gl.GlRenderbuffer;
 import fi.harism.lib.opengl.gl.GlSampler;
 import fi.harism.lib.opengl.gl.GlTexture;
 import fi.harism.lib.opengl.gl.GlUtils;
@@ -26,7 +22,7 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
     private static final String RENDERER_ID = "renderer.basic.shadow";
 
     private static final float CAMERA_POSITION[] = {0f, 0f, 5f};
-    private static final float LIGHT_POSITION[] = {0f, 4f, 2f};
+    private static final float LIGHT_POSITION[] = {4f, 8f, 2f};
     private static final float LIGHT_DIRECTION[] = {0f, 0f, 0f};
 
     private static final float MATERIAL_CUBE[] = {0.3f, 0.8f, 0.4f, 8.0f};
@@ -34,16 +30,21 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
 
     private static final int SHADOWMAP_SIZE = 1024;
 
+    private final static String UNIFORM_NAMES_DEPTH[] = {"uModelViewProjectionMatrix"};
+    private final static String UNIFORM_NAMES_MAIN[] = {"uModelViewMatrix",
+            "uModelViewProjectionMatrix", "uShadowMatrix", "uLightPosition", "uMaterial",
+            "uSampleOffset"};
+
+    private final int uniformsDepth[] = new int[UNIFORM_NAMES_DEPTH.length];
+    private final int uniformsMain[] = new int[UNIFORM_NAMES_MAIN.length];
+
     private GlCamera glCamera;
     private GlLight glLight;
-    private GlTexture glTextureShadow;
-    private GlRenderbuffer glRenderbufferShadow;
-    private GlFramebuffer glFramebufferShadow;
-    private GlSampler glSamplerShadow;
-    private GlProgram glProgram;
-    private GlProgram glProgramShadow;
-
-    private ByteBuffer verticesQuad;
+    private GlTexture glTextureDepth;
+    private GlFramebuffer glFramebufferDepth;
+    private GlSampler glSamplerDepth;
+    private GlProgram glProgramMain;
+    private GlProgram glProgramDepth;
 
     private long lastRenderTime;
     private Size surfaceSize;
@@ -80,7 +81,6 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
 
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
         GLES30.glEnable(GLES30.GL_CULL_FACE);
-        GLES30.glCullFace(GLES30.GL_BACK);
         GLES30.glFrontFace(GLES30.GL_CCW);
 
         glCamera = new GlCamera();
@@ -90,42 +90,39 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
                 .setPosition(LIGHT_POSITION)
                 .setDirection(LIGHT_DIRECTION);
 
-        glTextureShadow = new GlTexture()
+        glTextureDepth = new GlTexture()
                 .bind(GLES30.GL_TEXTURE_2D)
-                .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_R32F, SHADOWMAP_SIZE, SHADOWMAP_SIZE, 0, GLES30.GL_RED, GLES30.GL_FLOAT, null)
+                .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_DEPTH_COMPONENT32F, SHADOWMAP_SIZE, SHADOWMAP_SIZE, 0, GLES30.GL_DEPTH_COMPONENT, GLES30.GL_FLOAT, null)
                 .unbind(GLES30.GL_TEXTURE_2D);
-        glRenderbufferShadow = new GlRenderbuffer()
-                .bind()
-                .storage(GLES30.GL_DEPTH_COMPONENT32F, SHADOWMAP_SIZE, SHADOWMAP_SIZE)
-                .unbind();
-        glFramebufferShadow = new GlFramebuffer()
+        glFramebufferDepth = new GlFramebuffer()
                 .bind(GLES30.GL_DRAW_FRAMEBUFFER)
-                .renderbuffer(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, glRenderbufferShadow.name())
-                .texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, glTextureShadow.name(), 0)
+                .texture2D(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, GLES30.GL_TEXTURE_2D, glTextureDepth.name(), 0)
                 .drawBuffers(GLES30.GL_COLOR_ATTACHMENT0)
+                .drawBuffers(GLES30.GL_NONE)
+                .readBuffer(GLES30.GL_NONE)
                 .unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
-        glSamplerShadow = new GlSampler();
-        glSamplerShadow.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
-        glSamplerShadow.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
-        glSamplerShadow.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
-        glSamplerShadow.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
-
-        final byte[] VERTICES = {-1, 1, -1, -1, 1, 1, 1, -1};
-        verticesQuad = ByteBuffer.allocateDirect(VERTICES.length).order(ByteOrder.nativeOrder());
-        verticesQuad.put(VERTICES).position(0);
+        glSamplerDepth = new GlSampler()
+                .parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST)
+                .parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST)
+                .parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE)
+                .parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE)
+                .parameter(GLES30.GL_TEXTURE_COMPARE_MODE, GLES30.GL_COMPARE_REF_TO_TEXTURE)
+                .parameter(GLES30.GL_TEXTURE_COMPARE_FUNC, GLES30.GL_LESS);
 
         try {
-            glProgram = new GlProgram(
-                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/shader_vs.txt"),
-                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/shader_fs.txt"),
+            glProgramMain = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/main_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/main_fs.txt"),
                     null).useProgram();
-            GLES30.glUniform1i(glProgram.getUniformLocation("sTextureShadow"), 0);
+            GLES30.glUniform1i(glProgramMain.getUniformLocation("sDepth"), 0);
+            glProgramMain.getUniformIndices(UNIFORM_NAMES_MAIN, uniformsMain);
 
-            glProgramShadow = new GlProgram(
-                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/shadow_vs.txt"),
-                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/shadow_fs.txt"),
+            glProgramDepth = new GlProgram(
+                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/depth_vs.txt"),
+                    GlUtils.loadString(getActivity(), "shaders/basic/shadow/depth_fs.txt"),
                     null);
+            glProgramDepth.getUniformIndices(UNIFORM_NAMES_DEPTH, uniformsDepth);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -155,54 +152,55 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
 
         Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
 
-        glFramebufferShadow.bind(GLES30.GL_DRAW_FRAMEBUFFER);
+        glFramebufferDepth.bind(GLES30.GL_DRAW_FRAMEBUFFER);
 
+        GLES30.glCullFace(GLES30.GL_FRONT);
         GLES30.glViewport(0, 0, SHADOWMAP_SIZE, SHADOWMAP_SIZE);
-        GLES30.glClearColor(1f, 1f, 1f, 1f);
-        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
+        GLES30.glClear(GLES30.GL_DEPTH_BUFFER_BIT);
 
-        glProgramShadow.useProgram();
+        glProgramDepth.useProgram();
 
         Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMatrix(), 0, rotationMatrix, 0);
-        GLES30.glUniformMatrix4fv(glProgramShadow.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformsDepth[0], 1, false, modelViewProjectionMatrix, 0);
         renderCubeFilled();
 
         Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMatrix(), 0, modelMatrix, 0);
-        GLES30.glUniformMatrix4fv(glProgramShadow.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformsDepth[0], 1, false, modelViewProjectionMatrix, 0);
         renderCubeFilled();
 
-        glFramebufferShadow.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
+        glFramebufferDepth.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
+        GLES30.glCullFace(GLES30.GL_BACK);
         GLES30.glViewport(0, 0, surfaceSize.getWidth(), surfaceSize.getHeight());
         GLES30.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
 
-        glProgram.useProgram();
+        glProgramMain.useProgram();
 
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-        glTextureShadow.bind(GLES30.GL_TEXTURE_2D);
-        glSamplerShadow.bind(0);
+        glTextureDepth.bind(GLES30.GL_TEXTURE_2D);
+        glSamplerDepth.bind(0);
 
         Matrix.multiplyMM(modelViewMatrix, 0, glCamera.getLookAtM(), 0, rotationMatrix, 0);
         Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.getPerspectiveM(), 0, modelViewMatrix, 0);
 
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewMatrix"), 1, false, modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uShadowMatrix"), 1, false, glLight.shadowMatrix(glCamera.getLookAtM()), 0);
-        GLES30.glUniform1f(glProgram.getUniformLocation("uNormalFactor"), 1f);
-        GLES30.glUniform4fv(glProgram.getUniformLocation("uMaterial"), 1, MATERIAL_CUBE, 0);
-        GLES30.glUniform3fv(glProgram.getUniformLocation("uLightPosition"), 1, LIGHT_POSITION, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[0], 1, false, modelViewMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[1], 1, false, modelViewProjectionMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMatrix(glCamera.getLookAtM()), 0);
+        GLES30.glUniform3fv(uniformsMain[3], 1, LIGHT_POSITION, 0);
+        GLES30.glUniform4fv(uniformsMain[4], 1, MATERIAL_CUBE, 0);
+        GLES30.glUniform2f(uniformsMain[5], 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);
         renderCubeFilled();
 
         Matrix.multiplyMM(modelViewMatrix, 0, glCamera.getLookAtM(), 0, modelMatrix, 0);
         Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.getPerspectiveM(), 0, modelViewMatrix, 0);
 
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewMatrix"), 1, false, modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uShadowMatrix"), 1, false, glLight.shadowMatrix(glCamera.getLookAtM()), 0);
-        GLES30.glUniform1f(glProgram.getUniformLocation("uNormalFactor"), 1f);
-        GLES30.glUniform4fv(glProgram.getUniformLocation("uMaterial"), 1, MATERIAL_CUBE_ENV, 0);
-        GLES30.glUniform3fv(glProgram.getUniformLocation("uLightPosition"), 1, LIGHT_POSITION, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[0], 1, false, modelViewMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[1], 1, false, modelViewProjectionMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMatrix(glCamera.getLookAtM()), 0);
+        GLES30.glUniform3fv(uniformsMain[3], 1, LIGHT_POSITION, 0);
+        GLES30.glUniform4fv(uniformsMain[4], 1, MATERIAL_CUBE_ENV, 0);
+        GLES30.glUniform2f(uniformsMain[5], 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);
         renderCubeFilled();
     }
 
