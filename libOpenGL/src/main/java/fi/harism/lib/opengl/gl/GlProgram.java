@@ -1,6 +1,7 @@
 package fi.harism.lib.opengl.gl;
 
 import android.opengl.GLES31;
+import android.util.Log;
 
 public class GlProgram {
 
@@ -56,7 +57,20 @@ public class GlProgram {
     public int getUniformLocation(String name) {
         int location = GLES31.glGetUniformLocation(program, name);
         GlUtils.checkGLErrors();
+        if (location == -1) {
+            Log.d("GlProgram", "Uniform '" + name + "' not found.");
+        }
         return location;
+    }
+
+    public void getUniformIndices(String names[], int indices[]) {
+        GLES31.glGetUniformIndices(program, names, indices, 0);
+        GlUtils.checkGLErrors();
+        for (int i = 0; i < names.length; ++i) {
+            if (indices[i] == -1) {
+                Log.d("GlProgram", "Uniform '" + names[i] + "' not found.");
+            }
+        }
     }
 
     private int compileShader(String shaderSource, int shaderType) throws Exception {
