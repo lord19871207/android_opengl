@@ -107,10 +107,10 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
         glProgram.useProgram();
 
         long time = SystemClock.uptimeMillis();
-        float diff = (time - lastRenderTime) / 10f;
+        float diff = (time - lastRenderTime) / 1000f;
         lastRenderTime = time;
 
-        Matrix.rotateM(rotationMatrix, 0, diff, 1f, 1.5f, 0f);
+        Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
         Matrix.multiplyMM(modelViewProjectionMatrix, 0, lookAtMatrix, 0, rotationMatrix, 0);
 
         GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewMatrix"), 1, false, modelViewProjectionMatrix, 0);
