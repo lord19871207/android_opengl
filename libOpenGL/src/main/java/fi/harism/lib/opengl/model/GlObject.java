@@ -15,6 +15,7 @@ public class GlObject {
     private final GlBuffer normalBuffer;
     private final GlBuffer textureBuffer;
     private final GlBuffer bboxBuffer;
+    private final float bsphere[] = new float[4];
 
     public GlObject(int vertexCount, FloatBuffer vertexBuffer, FloatBuffer normalBuffer) {
         this.vertexCount = vertexCount;
@@ -75,6 +76,10 @@ public class GlObject {
         return bboxBuffer;
     }
 
+    public float[] bsphere() {
+        return bsphere;
+    }
+
     private GlBuffer createBoundingBox(int vertexCount, FloatBuffer vertexBuffer) {
         final float vertex[] = {0, 0, 0};
         final float vertexMax[] = {Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE};
@@ -91,6 +96,14 @@ public class GlObject {
             }
         }
         vertexBuffer.position(0);
+
+        float dx = (vertexMax[0] - vertexMin[0]) * 0.5f;
+        float dy = (vertexMax[1] - vertexMin[1]) * 0.5f;
+        float dz = (vertexMax[2] - vertexMin[2]) * 0.5f;
+        bsphere[0] = vertexMin[0] + dx;
+        bsphere[1] = vertexMin[1] + dy;
+        bsphere[2] = vertexMin[2] + dz;
+        bsphere[3] = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
 
         final float[][] CUBEVERTICES = {
                 {vertexMin[0], vertexMax[1], vertexMax[2]},
