@@ -66,7 +66,6 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
         cameraHandlerThread.start();
         cameraHandler = new Handler(cameraHandlerThread.getLooper());
         frameAvailable = false;
-        setManualRendering(true);
     }
 
     @Override

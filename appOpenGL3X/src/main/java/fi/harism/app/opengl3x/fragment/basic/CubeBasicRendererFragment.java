@@ -19,6 +19,7 @@ import fi.harism.app.opengl3x.R;
 import fi.harism.lib.opengl.egl.EglCore;
 import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlUtils;
+import fi.harism.lib.opengl.model.GlCamera;
 
 public class CubeBasicRendererFragment extends BasicRendererFragment {
 
@@ -26,16 +27,19 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
     private static final String PREFERENCE_DRAW_OUTLINES = "renderer.basic.cube.draw_outlines";
     private static final boolean DEFAULT_DRAW_OUTLINES = false;
 
+    private static final String UNIFORM_NAMES[] = {"uModelViewMatrix", "uModelViewProjMatrix"};
+    private final int uniformLocations[] = new int[UNIFORM_NAMES.length];
+
+    private GlCamera glCamera;
     private GlProgram glProgram;
 
     private long lastRenderTime;
 
     private boolean showOutlines;
 
-    private final float projectionMatrix[] = new float[16];
-    private final float lookAtMatrix[] = new float[16];
     private final float rotationMatrix[] = new float[16];
-    private final float modelViewProjectionMatrix[] = new float[16];
+    private final float modelViewMatrix[] = new float[16];
+    private final float modelViewProjMatrix[] = new float[16];
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -76,11 +80,15 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
         GLES30.glCullFace(GLES30.GL_BACK);
         GLES30.glFrontFace(GLES30.GL_CCW);
 
+        glCamera = new GlCamera();
+
         try {
             glProgram = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/basic/cube/shader_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/cube/shader_fs.txt"),
-                    null);
+                    null).useProgram();
+            glProgram.getUniformIndices(UNIFORM_NAMES, uniformLocations);
+            setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -93,9 +101,8 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
 
     @Override
     public void onSurfaceChanged(int width, int height) {
-        float aspect = (float) width / height;
-        Matrix.perspectiveM(projectionMatrix, 0, 60.0f, aspect, 1f, 100f);
-        Matrix.setLookAtM(lookAtMatrix, 0, 0f, 0f, 4f, 0f, 0f, 0f, 0f, 1f, 0f);
+        glCamera.setPerspective(width, height, 60.0f, 1f, 100f);
+        glCamera.setPosition(new float[]{0f, 0f, 4f});
         Matrix.setIdentityM(rotationMatrix, 0);
     }
 
@@ -111,13 +118,11 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
         lastRenderTime = time;
 
         Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, lookAtMatrix, 0, rotationMatrix, 0);
+        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMatrix(), 0, rotationMatrix, 0);
+        Matrix.multiplyMM(modelViewProjMatrix, 0, glCamera.projMatrix(), 0, modelViewMatrix, 0);
 
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewMatrix"), 1, false, modelViewProjectionMatrix, 0);
-
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewProjectionMatrix, 0);
-
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformLocations[0], 1, false, modelViewMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniformLocations[1], 1, false, modelViewProjMatrix, 0);
 
         GLES30.glEnable(GLES30.GL_POLYGON_OFFSET_FILL);
         GLES30.glPolygonOffset(1f, 1f);

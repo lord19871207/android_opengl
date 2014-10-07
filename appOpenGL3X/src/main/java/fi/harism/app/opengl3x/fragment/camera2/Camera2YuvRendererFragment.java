@@ -78,7 +78,6 @@ public class Camera2YuvRendererFragment extends RendererFragment {
         cameraHandlerThread = new HandlerThread("CameraHandler");
         cameraHandlerThread.start();
         cameraHandler = new Handler(cameraHandlerThread.getLooper());
-        setManualRendering(true);
     }
 
     @Override

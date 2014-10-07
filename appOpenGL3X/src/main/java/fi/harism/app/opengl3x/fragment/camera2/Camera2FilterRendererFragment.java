@@ -113,7 +113,6 @@ public class Camera2FilterRendererFragment extends RendererFragment implements S
         cameraHandlerThread.start();
         cameraHandler = new Handler(cameraHandlerThread.getLooper());
         frameAvailable = false;
-        setManualRendering(true);
 
         SharedPreferences prefs =
                 getActivity().getPreferences(Context.MODE_PRIVATE);

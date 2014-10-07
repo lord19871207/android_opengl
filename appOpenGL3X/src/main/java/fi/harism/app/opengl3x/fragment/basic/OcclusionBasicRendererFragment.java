@@ -31,9 +31,6 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
     private Model modelStaticCube;
     private Model modelMovingCube;
 
-    private final float modelViewMatrix[] = new float[16];
-    private final float modelViewProjMatrix[] = new float[16];
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +77,7 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
                     GlUtils.loadString(getActivity(), "shaders/basic/occlusion/shader_fs.txt"),
                     null).useProgram();
             glProgram.getUniformIndices(UNIFORM_NAMES, uniformLocations);
+            setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -103,16 +101,14 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
         Matrix.translateM(modelStaticCube.modelMatrix, 0, 0f, -1f, 0f);
         Matrix.rotateM(modelStaticCube.modelMatrix, 0, rotation * 360, 1f, 0f, 0f);
         Matrix.rotateM(modelStaticCube.modelMatrix, 0, rotation * 360, 0f, 2f, 0f);
-        Matrix.multiplyMM(modelStaticCube.modelViewMatrix, 0, glCamera.viewMatrix(), 0, modelStaticCube.modelMatrix, 0);
-        Matrix.multiplyMM(modelStaticCube.modelViewProjMatrix, 0, glCamera.projMatrix(), 0, modelStaticCube.modelViewMatrix, 0);
+        modelStaticCube.multiplyMVP(glCamera.viewMatrix(), glCamera.projMatrix());
 
         Matrix.setIdentityM(modelMovingCube.modelMatrix, 0);
         Matrix.translateM(modelMovingCube.modelMatrix, 0, (float) Math.sin(rotation * Math.PI * 2) * 5f, (float) Math.cos(rotation * Math.PI * 2), 0f);
         Matrix.rotateM(modelMovingCube.modelMatrix, 0, rotation * 360, 0f, 2f, 0f);
         Matrix.rotateM(modelMovingCube.modelMatrix, 0, rotation * 360, 0f, 0f, 1f);
         Matrix.scaleM(modelMovingCube.modelMatrix, 0, 0.3f, 0.3f, 0.3f);
-        Matrix.multiplyMM(modelMovingCube.modelViewMatrix, 0, glCamera.viewMatrix(), 0, modelMovingCube.modelMatrix, 0);
-        Matrix.multiplyMM(modelMovingCube.modelViewProjMatrix, 0, glCamera.projMatrix(), 0, modelMovingCube.modelViewMatrix, 0);
+        modelMovingCube.multiplyMVP(glCamera.viewMatrix(), glCamera.projMatrix());
 
         boolean movingCubeCulled = modelMovingCube.isCulled();
         boolean movingCubeOccluded = modelMovingCube.isOccluded();
@@ -176,6 +172,12 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
             glQuery.getObjectuiv(GLES30.GL_QUERY_RESULT, queryResult);
             return queryResult[0] == 0;
         }
+
+        public void multiplyMVP(float viewMatrix[], float projMatrix[]) {
+            Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0);
+            Matrix.multiplyMM(modelViewProjMatrix, 0, projMatrix, 0, modelViewMatrix, 0);
+        }
+
     }
 
     public static class SettingsFragment extends Fragment {

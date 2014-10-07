@@ -123,6 +123,7 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
                     GlUtils.loadString(getActivity(), "shaders/basic/shadow/depth_fs.txt"),
                     null);
             glProgramDepth.getUniformIndices(UNIFORM_NAMES_DEPTH, uniformsDepth);
+            setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override

@@ -58,6 +58,7 @@ public class ClearRendererFragment extends RendererFragment {
 
     @Override
     public void onSurfaceCreated() {
+        setContinuousRendering(true);
     }
 
     @Override

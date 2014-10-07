@@ -27,7 +27,7 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
 
     private Choreographer choreographer;
     private GlTextureView glTextureView;
-    private boolean manualRendering;
+    private boolean continuousRendering;
     private int eglFlags;
 
     @Override
@@ -49,7 +49,7 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
     @Override
     public void onResume() {
         super.onResume();
-        if (!manualRendering) {
+        if (continuousRendering) {
             choreographer.postFrameCallback(frameCallback);
         }
     }
@@ -71,8 +71,13 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
         EventBus.getDefault().post(new SetSettingsFragmentEvent(getSettingsFragment()));
     }
 
-    public final void setManualRendering(boolean manualRendering) {
-        this.manualRendering = manualRendering;
+    public final void setContinuousRendering(boolean continuousRendering) {
+        this.continuousRendering = continuousRendering;
+        if (continuousRendering) {
+            choreographer.postFrameCallback(frameCallback);
+        } else {
+            choreographer.removeFrameCallback(frameCallback);
+        }
     }
 
     public final void setEglFlags(int eglFlags) {

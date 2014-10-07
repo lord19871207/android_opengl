@@ -88,6 +88,7 @@ public class LightBasicRendererFragment extends BasicRendererFragment {
                     GlUtils.loadString(getActivity(), "shaders/basic/light/shader_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/light/shader_fs.txt"),
                     null);
+            setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override

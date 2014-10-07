@@ -100,6 +100,7 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
                     GlUtils.loadString(getActivity(), "shaders/basic/cubemap/shader_fs.txt"),
                     null).useProgram();
             GLES30.glUniform1i(glProgram.getUniformLocation("uTextureCube"), 0);
+            setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
