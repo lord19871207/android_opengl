@@ -17,6 +17,8 @@
 
     <string name="enable_lightning">Enable Blinn-Phong lightning</string>
 
+    <string name="occlusion_info">Background is cleared with green color when smaller cube\'s OpenGL occlusion query returns true. With red when smaller cube bounding sphere is outside of visible bounds.</string>
+
     <string name="hue">Hue</string>
     <string name="saturation">Saturation</string>
     <string name="brightness">Brightness</string>
@@ -32,6 +34,8 @@
     <string name="renderer_basic_cubemap_caption">Renders a single cube with environment mapping. Additionally there is per-pixel Blinn-Phong shaded lightning.</string>
     <string name="renderer_basic_shadow_title">Shadow mapping</string>
     <string name="renderer_basic_shadow_caption">Renders a cube with shadow mapping. Additionally there is per-pixel Blinn-Phong shaded lightning.</string>
+    <string name="renderer_basic_occlusion_title">Occlusion query</string>
+    <string name="renderer_basic_occlusion_caption">Renders two cubes and uses OpenGL occlusion queries for checking visibility.</string>
 
     <string name="section_camera2">Camera2 Rendering</string>
     <string name="renderer_camera2_basic_title">Basic</string>
