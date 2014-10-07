@@ -37,6 +37,10 @@
     <string name="renderer_basic_occlusion_title">Occlusion query</string>
     <string name="renderer_basic_occlusion_caption">Renders two cubes and uses OpenGL occlusion queries for checking visibility.</string>
 
+    <string name="section_deferred">Deferred Rendering</string>
+    <string name="renderer_deferred_basic_title">Basic Renderer</string>
+    <string name="renderer_deferred_basic_caption">Renders a scene which has flat lightning on its faces. Light intensity is calculated from pixel normal z-value.</string>
+
     <string name="section_camera2">Camera2 Rendering</string>
     <string name="renderer_camera2_basic_title">Basic</string>
     <string name="renderer_camera2_basic_caption">Renders camera preview from surface texture using Camera2 API.</string>

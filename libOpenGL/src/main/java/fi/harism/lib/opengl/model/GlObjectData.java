@@ -15,9 +15,37 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class GlObjectLoader {
+public class GlObjectData {
 
-    public static GlObject loadObj(Context context, String path) throws IOException {
+    private final int vertexCount;
+    private final FloatBuffer vertexBuffer;
+    private final FloatBuffer normalBuffer;
+    private final FloatBuffer textureBuffer;
+
+    private GlObjectData(int vertexCount, FloatBuffer vertexBuffer, FloatBuffer normalBuffer, FloatBuffer textureBuffer) {
+        this.vertexCount = vertexCount;
+        this.vertexBuffer = vertexBuffer;
+        this.normalBuffer = normalBuffer;
+        this.textureBuffer = textureBuffer;
+    }
+
+    public int vertexCount() {
+        return vertexCount;
+    }
+
+    public FloatBuffer vertexBuffer() {
+        return vertexBuffer;
+    }
+
+    public FloatBuffer normalBuffer() {
+        return normalBuffer;
+    }
+
+    public FloatBuffer textureBuffer() {
+        return textureBuffer;
+    }
+
+    public static GlObjectData loadObj(Context context, String path) throws IOException {
         Matcher matcher, matcherIndex;
         Pattern patternEmpty = Pattern.compile("^\\s*$");
         Pattern patternComment = Pattern.compile("^#.*");
@@ -97,14 +125,15 @@ public class GlObjectLoader {
                 textureBuffer.put(arrayTextures.get(face[i * 3 + 1]));
             }
         }
+
         vertexBuffer.position(0);
         normalBuffer.position(0);
         textureBuffer.position(0);
 
-        return new GlObject(vertexCount, vertexBuffer, normalBuffer, textureBuffer);
+        return new GlObjectData(vertexCount, vertexBuffer, normalBuffer, textureBuffer);
     }
 
-    public static GlObject loadDat(Context context, String path) throws IOException {
+    public static GlObjectData loadDat(Context context, String path) throws IOException {
         DataInputStream inputStream = new DataInputStream(new BufferedInputStream(context.getAssets().open(path)));
 
         int vertexCount = inputStream.readInt();
@@ -115,19 +144,18 @@ public class GlObjectLoader {
         for (int i = 0; i < vertexCount * 3; ++i) {
             vertexBuffer.put(inputStream.readFloat());
         }
-        vertexBuffer.position(0);
-
         for (int i = 0; i < vertexCount * 3; ++i) {
             normalBuffer.put(inputStream.readFloat());
         }
-        normalBuffer.position(0);
-
         for (int i = 0; i < vertexCount * 2; ++i) {
             textureBuffer.put(inputStream.readFloat());
         }
+
+        vertexBuffer.position(0);
+        normalBuffer.position(0);
         textureBuffer.position(0);
 
-        return new GlObject(vertexCount, vertexBuffer, normalBuffer, textureBuffer);
+        return new GlObjectData(vertexCount, vertexBuffer, normalBuffer, textureBuffer);
     }
 
 }

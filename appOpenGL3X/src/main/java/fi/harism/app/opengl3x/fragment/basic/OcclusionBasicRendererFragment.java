@@ -111,7 +111,7 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
         modelMovingCube.multiplyMVP(glCamera.viewMatrix(), glCamera.projMatrix());
 
         boolean movingCubeCulled = modelMovingCube.isCulled();
-        boolean movingCubeOccluded = modelMovingCube.isOccluded();
+        boolean movingCubeOccluded = movingCubeCulled ? false : modelMovingCube.isOccluded();
 
         if (movingCubeCulled) {
             GLES30.glClearColor(0.3f, 0.1f, 0.1f, 1.0f);

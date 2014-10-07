@@ -17,24 +17,6 @@ public class GlObject {
     private final GlBuffer bboxBuffer;
     private final float bsphere[] = new float[4];
 
-    public GlObject(int vertexCount, FloatBuffer vertexBuffer, FloatBuffer normalBuffer) {
-        this.vertexCount = vertexCount;
-
-        this.vertexBuffer = new GlBuffer()
-                .bind(GLES31.GL_ARRAY_BUFFER)
-                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, vertexBuffer.position(0), GLES31.GL_STATIC_DRAW)
-                .unbind(GLES31.GL_ARRAY_BUFFER);
-
-        this.normalBuffer = new GlBuffer()
-                .bind(GLES31.GL_ARRAY_BUFFER)
-                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, normalBuffer.position(0), GLES31.GL_STATIC_DRAW)
-                .unbind(GLES31.GL_ARRAY_BUFFER);
-
-        textureBuffer = new GlBuffer();
-
-        bboxBuffer = createBoundingBox(vertexCount, vertexBuffer);
-    }
-
     public GlObject(int vertexCount, FloatBuffer vertexBuffer, FloatBuffer normalBuffer, FloatBuffer textureBuffer) {
         this.vertexCount = vertexCount;
 
@@ -43,15 +25,23 @@ public class GlObject {
                 .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, vertexBuffer.position(0), GLES31.GL_STATIC_DRAW)
                 .unbind(GLES31.GL_ARRAY_BUFFER);
 
-        this.normalBuffer = new GlBuffer()
-                .bind(GLES31.GL_ARRAY_BUFFER)
-                .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, normalBuffer.position(0), GLES31.GL_STATIC_DRAW)
-                .unbind(GLES31.GL_ARRAY_BUFFER);
+        if (normalBuffer != null) {
+            this.normalBuffer = new GlBuffer()
+                    .bind(GLES31.GL_ARRAY_BUFFER)
+                    .data(GLES31.GL_ARRAY_BUFFER, 4 * 3 * vertexCount, normalBuffer.position(0), GLES31.GL_STATIC_DRAW)
+                    .unbind(GLES31.GL_ARRAY_BUFFER);
+        } else {
+            this.normalBuffer = null;
+        }
 
-        this.textureBuffer = new GlBuffer()
-                .bind(GLES31.GL_ARRAY_BUFFER)
-                .data(GLES31.GL_ARRAY_BUFFER, 4 * 2 * vertexCount, textureBuffer.position(0), GLES31.GL_STATIC_DRAW)
-                .unbind(GLES31.GL_ARRAY_BUFFER);
+        if (textureBuffer != null) {
+            this.textureBuffer = new GlBuffer()
+                    .bind(GLES31.GL_ARRAY_BUFFER)
+                    .data(GLES31.GL_ARRAY_BUFFER, 4 * 2 * vertexCount, textureBuffer.position(0), GLES31.GL_STATIC_DRAW)
+                    .unbind(GLES31.GL_ARRAY_BUFFER);
+        } else {
+            this.textureBuffer = null;
+        }
 
         bboxBuffer = createBoundingBox(vertexCount, vertexBuffer);
     }

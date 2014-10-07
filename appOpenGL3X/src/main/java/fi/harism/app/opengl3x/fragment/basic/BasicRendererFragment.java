@@ -54,7 +54,10 @@ public abstract class BasicRendererFragment extends RendererFragment {
             }
         }
 
-        glObjectCube = new GlObject(36, bufferVertices, bufferNormals);
+        bufferVertices.position(0);
+        bufferNormals.position(0);
+
+        glObjectCube = new GlObject(36, bufferVertices, bufferNormals, null);
 
         glVertexArrayCube = new GlVertexArray().bind();
 
