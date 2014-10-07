@@ -27,7 +27,7 @@ import fi.harism.lib.opengl.gl.GlTexture;
 import fi.harism.lib.opengl.model.GlCamera;
 import fi.harism.lib.opengl.model.GlCameraAnimator;
 import fi.harism.lib.opengl.model.GlObject;
-import fi.harism.lib.opengl.model.GlObjectLoader;
+import fi.harism.lib.opengl.model.GlObjectData;
 import fi.harism.lib.opengl.util.GlRenderer;
 import fi.harism.lib.opengl.view.GlTextureView;
 import fi.harism.lib.utils.MersenneTwisterFast;
@@ -271,21 +271,21 @@ public class MainActivity extends Activity {
                 rendererOut = new RendererOut(MainActivity.this, mBufferQuad, glTextureOut, glTextureRand);
 
                 setProgress(9, 1);
-                glObjectAnd = GlObjectLoader.loadDat(MainActivity.this, "models/and.dat");
+                glObjectAnd = GlObjectData.loadDat(MainActivity.this, "models/and.dat");
                 setProgress(9, 2);
-                glObjectBy = GlObjectLoader.loadDat(MainActivity.this, "models/by.dat");
+                glObjectBy = GlObjectData.loadDat(MainActivity.this, "models/by.dat");
                 setProgress(9, 3);
-                glObjectCoding = GlObjectLoader.loadDat(MainActivity.this, "models/coding.dat");
+                glObjectCoding = GlObjectData.loadDat(MainActivity.this, "models/coding.dat");
                 setProgress(9, 4);
-                glObjectDoctrnal = GlObjectLoader.loadDat(MainActivity.this, "models/doctrnal.dat");
+                glObjectDoctrnal = GlObjectData.loadDat(MainActivity.this, "models/doctrnal.dat");
                 setProgress(9, 5);
-                glObjectGrind = GlObjectLoader.loadDat(MainActivity.this, "models/grind.dat");
+                glObjectGrind = GlObjectData.loadDat(MainActivity.this, "models/grind.dat");
                 setProgress(9, 6);
-                glObjectHarism = GlObjectLoader.loadDat(MainActivity.this, "models/harism.dat");
+                glObjectHarism = GlObjectData.loadDat(MainActivity.this, "models/harism.dat");
                 setProgress(9, 7);
-                glObjectMusic = GlObjectLoader.loadDat(MainActivity.this, "models/music.dat");
+                glObjectMusic = GlObjectData.loadDat(MainActivity.this, "models/music.dat");
                 setProgress(9, 8);
-                glObjectScottXylo = GlObjectLoader.loadDat(MainActivity.this, "models/scott_xylo.dat");
+                glObjectScottXylo = GlObjectData.loadDat(MainActivity.this, "models/scott_xylo.dat");
                 setProgress(9, 9);
 
                 rendererScene.setObject(glObjectScottXylo);
