@@ -5,6 +5,9 @@ import android.opengl.Matrix;
 import android.opengl.Visibility;
 import android.os.SystemClock;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 import fi.harism.app.opengl3x.MainApplication;
@@ -16,6 +19,7 @@ import fi.harism.lib.opengl.model.GlObjectData;
 abstract class DeferredRendererFragment extends RendererFragment {
 
     private ArrayList<Model> modelArray;
+    private GlObject glObjectQuad;
     private GlCamera glCamera;
 
     private float modelMatrix[] = new float[16];
@@ -35,36 +39,54 @@ abstract class DeferredRendererFragment extends RendererFragment {
         GlObject obj3 = createGlObject("letter_3");
         GlObject objX = createGlObject("letter_x");
 
+        FloatBuffer verticesBack = ByteBuffer.allocateDirect(4 * 3 * 6)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        verticesBack.put(new float[]{-2, 2, -2, -2, -2, -2, 21, 2, -2,
+                -2, -2, -2, 21, -2, -2, 21, 2, -2});
+        FloatBuffer normalsBack = ByteBuffer.allocateDirect(4 * 3 * 6)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        normalsBack.put(new float[]{1, 0, 0, 1, 0, 0, 1, 0, 0,
+                1, 0, 0, 1, 0, 0, 1, 0, 0});
+        GlObject objBack = new GlObject(6, verticesBack, normalsBack, null);
+
         modelArray = new ArrayList<>();
-        modelArray.add(new Model(0.0f, 0, 0, objO));
-        modelArray.add(new Model(2.0f, 0, 0, objP));
-        modelArray.add(new Model(4.0f, 0, 0, objE));
-        modelArray.add(new Model(6.0f, 0, 0, objN));
-        modelArray.add(new Model(8.0f, 0, 0, objG));
-        modelArray.add(new Model(9.5f, 0, 0, objL));
-        modelArray.add(new Model(11.8f, 0, 0, objE));
-        modelArray.add(new Model(13.8f, 0, 0, objS));
-        modelArray.add(new Model(17.0f, 0, 0, obj3));
-        modelArray.add(new Model(19.0f, 0, 0, objX));
+        modelArray.add(new Model(0.0f, 0f, 0f, objO, 3f));
+        modelArray.add(new Model(2.0f, 0f, 0f, objP, 3f));
+        modelArray.add(new Model(4.0f, 0f, 0f, objE, 3f));
+        modelArray.add(new Model(6.0f, 0f, 0f, objN, 3f));
+        modelArray.add(new Model(8.0f, 0f, 0f, objG, 3f));
+        modelArray.add(new Model(9.5f, 0f, 0f, objL, 3f));
+        modelArray.add(new Model(11.8f, 0f, 0f, objE, 3f));
+        modelArray.add(new Model(13.8f, 0f, 0f, objS, 3f));
+        modelArray.add(new Model(17.0f, 0f, 0f, obj3, 3f));
+        modelArray.add(new Model(19.0f, 0f, 0f, objX, 3f));
+        modelArray.add(new Model(0.0f, 0f, 0f, objBack, 1f));
+
+
+        FloatBuffer verticesQuad = ByteBuffer.allocateDirect(4 * 3 * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        verticesQuad.put(new float[]{-1, 1, 0, -1, -1, 0, 1, 1, 0, 1, -1, 0});
+        glObjectQuad = new GlObject(4, verticesQuad, null, null);
+
+        glCamera = new GlCamera();
     }
 
     protected void prepareCamera(int width, int height) {
-        glCamera = new GlCamera().setPerspective(width, height, 60f, 1f, 100f);
+        glCamera.setPerspective(width, height, 60f, 1f, 100f);
     }
 
     protected void renderScene(int uModelView, int uModelViewProj) {
         float t = SystemClock.uptimeMillis() % 20000 / 20000f;
-        float x = (float) (Math.sin(t * Math.PI * 2.0) * 7.0) + 7.0f;
-        float z = (float) (Math.cos(t * Math.PI * 2.0) * 2.0) + 3f;
+        float x = (float) (Math.sin(t * Math.PI * 2.0) * 8.0) + 8.0f;
+        float z = (float) (Math.cos(t * Math.PI * 2.0) * 2.0) + 5f;
         glCamera.setPosition(new float[]{x, 0f, z});
-        glCamera.setDirection(new float[]{x, 0f, 0f});
+        glCamera.setDirection(new float[]{x + 1f, 0f, 0});
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glEnableVertexAttribArray(1);
         for (Model model : modelArray) {
             Matrix.setIdentityM(modelMatrix, 0);
-            Matrix.rotateM(modelMatrix, 0, 30f, 0, 1, 0);
             Matrix.translateM(modelMatrix, 0, model.x(), model.y(), model.z());
-            Matrix.scaleM(modelMatrix, 0, 3f, 3f, 3f);
+            Matrix.scaleM(modelMatrix, 0, model.scale(), model.scale(), model.scale());
             Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMatrix(), 0, modelMatrix, 0);
             Matrix.multiplyMM(modelViewProjMatrix, 0, glCamera.projMatrix(), 0, modelViewMatrix, 0);
 
@@ -91,6 +113,15 @@ abstract class DeferredRendererFragment extends RendererFragment {
         GLES30.glDisableVertexAttribArray(1);
     }
 
+    protected void renderQuad() {
+        glObjectQuad.vertexBuffer().bind(GLES30.GL_ARRAY_BUFFER);
+        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, 0);
+        glObjectQuad.vertexBuffer().unbind(GLES30.GL_ARRAY_BUFFER);
+        GLES30.glEnableVertexAttribArray(0);
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
+        GLES30.glDisableVertexAttribArray(0);
+    }
+
     private GlObject createGlObject(String key) {
         MainApplication app = (MainApplication) getActivity().getApplication();
         GlObjectData objData = app.getObjectData(key);
@@ -103,12 +134,14 @@ abstract class DeferredRendererFragment extends RendererFragment {
         private final float y;
         private final float z;
         private final GlObject glObject;
+        private final float scale;
 
-        public Model(float x, float y, float z, GlObject glObject) {
+        public Model(float x, float y, float z, GlObject glObject, float scale) {
             this.x = x;
             this.y = y;
             this.z = z;
             this.glObject = glObject;
+            this.scale = scale;
         }
 
         public float x() {
@@ -125,6 +158,10 @@ abstract class DeferredRendererFragment extends RendererFragment {
 
         public GlObject glObject() {
             return glObject;
+        }
+
+        public float scale() {
+            return scale;
         }
 
     }

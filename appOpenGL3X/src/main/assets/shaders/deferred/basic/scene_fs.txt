@@ -1,0 +1,15 @@
+#version 300 es
+
+in vec3 vTexPosition;
+in vec3 vTexNormal;
+in vec3 vTexColor;
+
+layout (location = 0) out vec4 outFragPosition;
+layout (location = 1) out vec4 outFragNormal;
+layout (location = 2) out vec4 outFragColor;
+
+void main() {
+    outFragPosition = vec4(vTexPosition, 1.0);
+    outFragNormal = vec4(normalize(vTexNormal), 0.0);
+    outFragColor = vec4(vTexColor, 1.0);
+}

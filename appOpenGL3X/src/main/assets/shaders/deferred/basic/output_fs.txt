@@ -1,0 +1,36 @@
+#version 300 es
+
+uniform sampler2D sTexturePosition;
+uniform sampler2D sTextureNormal;
+uniform sampler2D sTextureColor;
+
+in vec2 vTexPosition;
+
+out vec4 outFragColor;
+
+void main() {
+    vec3 position = texture(sTexturePosition, vTexPosition).xyz;
+    vec3 normal = texture(sTextureNormal, vTexPosition).xyz;
+    vec4 color = texture(sTextureColor, vTexPosition);
+
+    vec3 L = normalize(vec3(0.0) - position);
+    vec3 E = normalize(-position);
+    vec3 R = normalize(-reflect(L, normal));
+
+    float Iamb = 0.6;
+
+    float Idiff = 0.4 * max(dot(normal, L), 0.0);
+    Idiff = clamp(Idiff, 0.0, 1.0);
+
+    float Ispec = 0.4 * pow(max(dot(R, E), 0.0), 0.3 * 8.0);
+    Ispec = clamp(Ispec, 0.0, 1.0);
+
+    color.rgb *= Iamb + Idiff + Ispec;
+
+    color = mix(vec4(0.72, 0.70, 0.60, 1.0), color, color.a);
+
+	color.rgb *= 0.9 + 0.1 * sin(gl_FragCoord.y * 0.75);
+	color.rgb *= 0.5 + 0.5 * pow(16.0 * vTexPosition.x * (1.0 - vTexPosition.x) * vTexPosition.y * (1.0 - vTexPosition.y ), 0.75);
+
+    outFragColor = color;
+}

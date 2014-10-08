@@ -11,20 +11,20 @@ public class GlRenderbuffer {
         GlUtils.checkGLErrors();
     }
 
-    public GlRenderbuffer bind() {
-        GLES31.glBindRenderbuffer(GLES31.GL_RENDERBUFFER, renderbuffer[0]);
+    public GlRenderbuffer bind(int target) {
+        GLES31.glBindRenderbuffer(target, renderbuffer[0]);
         GlUtils.checkGLErrors();
         return this;
     }
 
-    public GlRenderbuffer unbind() {
-        GLES31.glBindRenderbuffer(GLES31.GL_RENDERBUFFER, 0);
+    public GlRenderbuffer unbind(int target) {
+        GLES31.glBindRenderbuffer(target, 0);
         GlUtils.checkGLErrors();
         return this;
     }
 
-    public GlRenderbuffer storage(int internalFormat, int width, int height) {
-        GLES31.glRenderbufferStorage(GLES31.GL_RENDERBUFFER, internalFormat, width, height);
+    public GlRenderbuffer storage(int target, int internalFormat, int width, int height) {
+        GLES31.glRenderbufferStorage(target, internalFormat, width, height);
         GlUtils.checkGLErrors();
         return this;
     }

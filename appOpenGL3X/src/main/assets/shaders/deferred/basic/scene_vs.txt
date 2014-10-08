@@ -6,10 +6,13 @@ uniform mat4 uModelViewProjMatrix;
 layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec3 inNormal;
 
+out vec3 vTexPosition;
+out vec3 vTexNormal;
 out vec3 vTexColor;
 
 void main() {
     gl_Position = uModelViewProjMatrix * inPosition;
-    vec3 normal = mat3(uModelViewMatrix) * inNormal;
-    vTexColor = vec3(1.0) * normalize(normal).z;
+    vTexPosition = vec3(uModelViewMatrix * inPosition);
+    vTexNormal = mat3(uModelViewMatrix) * inNormal;
+    vTexColor = vec3(1.00, 0.80, 0.45);
 }
