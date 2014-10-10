@@ -87,8 +87,8 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
 
         glLight = new GlLight()
                 .setPerspective(SHADOWMAP_SIZE, SHADOWMAP_SIZE, 60f, 1f, 100f)
-                .setPosition(LIGHT_POSITION)
-                .setDirection(LIGHT_DIRECTION);
+                .setPos(LIGHT_POSITION)
+                .setDir(LIGHT_DIRECTION);
 
         glTextureDepth = new GlTexture()
                 .bind(GLES30.GL_TEXTURE_2D)
@@ -138,7 +138,7 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
     public void onSurfaceChanged(int width, int height) {
         surfaceSize = new Size(width, height);
         glCamera.setPerspective(width, height, 60f, 1f, 100f);
-        glCamera.setPosition(CAMERA_POSITION);
+        glCamera.setPos(CAMERA_POSITION);
         Matrix.setIdentityM(rotationMatrix, 0);
         Matrix.setIdentityM(modelMatrix, 0);
         Matrix.translateM(modelMatrix, 0, 0f, -6f, 0f);
@@ -161,11 +161,11 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
 
         glProgramDepth.useProgram();
 
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMatrix(), 0, rotationMatrix, 0);
+        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMat(), 0, rotationMatrix, 0);
         GLES30.glUniformMatrix4fv(uniformsDepth[0], 1, false, modelViewProjectionMatrix, 0);
         renderCubeFilled();
 
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMatrix(), 0, modelMatrix, 0);
+        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMat(), 0, modelMatrix, 0);
         GLES30.glUniformMatrix4fv(uniformsDepth[0], 1, false, modelViewProjectionMatrix, 0);
         renderCubeFilled();
 
@@ -182,23 +182,23 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
         glTextureDepth.bind(GLES30.GL_TEXTURE_2D);
         glSamplerDepth.bind(0);
 
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMatrix(), 0, rotationMatrix, 0);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMatrix(), 0, modelViewMatrix, 0);
+        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, rotationMatrix, 0);
+        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
 
         GLES30.glUniformMatrix4fv(uniformsMain[0], 1, false, modelViewMatrix, 0);
         GLES30.glUniformMatrix4fv(uniformsMain[1], 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMatrix(glCamera.viewMatrix()), 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMat(glCamera.viewMat()), 0);
         GLES30.glUniform3fv(uniformsMain[3], 1, LIGHT_POSITION, 0);
         GLES30.glUniform4fv(uniformsMain[4], 1, MATERIAL_CUBE, 0);
         GLES30.glUniform2f(uniformsMain[5], 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);
         renderCubeFilled();
 
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMatrix(), 0, modelMatrix, 0);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMatrix(), 0, modelViewMatrix, 0);
+        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, modelMatrix, 0);
+        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
 
         GLES30.glUniformMatrix4fv(uniformsMain[0], 1, false, modelViewMatrix, 0);
         GLES30.glUniformMatrix4fv(uniformsMain[1], 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMatrix(glCamera.viewMatrix()), 0);
+        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMat(glCamera.viewMat()), 0);
         GLES30.glUniform3fv(uniformsMain[3], 1, LIGHT_POSITION, 0);
         GLES30.glUniform4fv(uniformsMain[4], 1, MATERIAL_CUBE_ENV, 0);
         GLES30.glUniform2f(uniformsMain[5], 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);

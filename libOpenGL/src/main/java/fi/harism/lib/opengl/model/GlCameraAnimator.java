@@ -71,8 +71,8 @@ public class GlCameraAnimator {
         //Log.d("ERR", "posDist2=" + p2.mPositionDist);
         //Log.d("POS", "x=" + posX + " y=" + posY + " z=" + posZ);
 
-        camera.setPosition(new float[]{posX, posY, posZ});
-        camera.setDirection(new float[]{lookAtX, lookAtY, lookAtZ});
+        camera.setPos(new float[]{posX, posY, posZ});
+        camera.setDir(new float[]{lookAtX, lookAtY, lookAtZ});
     }
 
     private final float distanceSqrt(float[] p1, float[] p2) {

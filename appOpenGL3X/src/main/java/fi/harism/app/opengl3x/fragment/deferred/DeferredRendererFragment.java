@@ -79,16 +79,16 @@ abstract class DeferredRendererFragment extends RendererFragment {
         float t = SystemClock.uptimeMillis() % 20000 / 20000f;
         float x = (float) (Math.sin(t * Math.PI * 2.0) * 8.0) + 8.0f;
         float z = (float) (Math.cos(t * Math.PI * 2.0) * 2.0) + 5f;
-        glCamera.setPosition(new float[]{x, 0f, z});
-        glCamera.setDirection(new float[]{x + 1f, 0f, 0});
+        glCamera.setPos(new float[]{x, 0f, z});
+        glCamera.setDir(new float[]{x + 1f, 0f, 0});
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glEnableVertexAttribArray(1);
         for (Model model : modelArray) {
             Matrix.setIdentityM(modelMatrix, 0);
             Matrix.translateM(modelMatrix, 0, model.x(), model.y(), model.z());
             Matrix.scaleM(modelMatrix, 0, model.scale(), model.scale(), model.scale());
-            Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMatrix(), 0, modelMatrix, 0);
-            Matrix.multiplyMM(modelViewProjMatrix, 0, glCamera.projMatrix(), 0, modelViewMatrix, 0);
+            Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, modelMatrix, 0);
+            Matrix.multiplyMM(modelViewProjMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
 
             if (Visibility.frustumCullSpheres(modelViewProjMatrix, 0,
                     model.glObject().bsphere(), 0, 1,

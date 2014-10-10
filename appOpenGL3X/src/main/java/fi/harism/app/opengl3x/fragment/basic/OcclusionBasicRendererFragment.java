@@ -91,7 +91,7 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
     @Override
     public void onSurfaceChanged(int width, int height) {
         glCamera.setPerspective(width, height, 60.0f, 1f, 100f);
-        glCamera.setPosition(new float[]{0f, 0f, 4f});
+        glCamera.setPos(new float[]{0f, 0f, 4f});
     }
 
     @Override
@@ -101,14 +101,14 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
         Matrix.translateM(modelStaticCube.modelMatrix, 0, 0f, -1f, 0f);
         Matrix.rotateM(modelStaticCube.modelMatrix, 0, rotation * 360, 1f, 0f, 0f);
         Matrix.rotateM(modelStaticCube.modelMatrix, 0, rotation * 360, 0f, 2f, 0f);
-        modelStaticCube.multiplyMVP(glCamera.viewMatrix(), glCamera.projMatrix());
+        modelStaticCube.multiplyMVP(glCamera.viewMat(), glCamera.projMat());
 
         Matrix.setIdentityM(modelMovingCube.modelMatrix, 0);
         Matrix.translateM(modelMovingCube.modelMatrix, 0, (float) Math.sin(rotation * Math.PI * 2) * 5f, (float) Math.cos(rotation * Math.PI * 2), 0f);
         Matrix.rotateM(modelMovingCube.modelMatrix, 0, rotation * 360, 0f, 2f, 0f);
         Matrix.rotateM(modelMovingCube.modelMatrix, 0, rotation * 360, 0f, 0f, 1f);
         Matrix.scaleM(modelMovingCube.modelMatrix, 0, 0.3f, 0.3f, 0.3f);
-        modelMovingCube.multiplyMVP(glCamera.viewMatrix(), glCamera.projMatrix());
+        modelMovingCube.multiplyMVP(glCamera.viewMat(), glCamera.projMat());
 
         boolean movingCubeCulled = modelMovingCube.isCulled();
         boolean movingCubeOccluded = movingCubeCulled ? false : modelMovingCube.isOccluded();

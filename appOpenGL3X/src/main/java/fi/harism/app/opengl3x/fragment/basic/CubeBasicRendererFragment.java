@@ -102,7 +102,7 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
     @Override
     public void onSurfaceChanged(int width, int height) {
         glCamera.setPerspective(width, height, 60.0f, 1f, 100f);
-        glCamera.setPosition(new float[]{0f, 0f, 4f});
+        glCamera.setPos(new float[]{0f, 0f, 4f});
         Matrix.setIdentityM(rotationMatrix, 0);
     }
 
@@ -118,8 +118,8 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
         lastRenderTime = time;
 
         Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMatrix(), 0, rotationMatrix, 0);
-        Matrix.multiplyMM(modelViewProjMatrix, 0, glCamera.projMatrix(), 0, modelViewMatrix, 0);
+        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, rotationMatrix, 0);
+        Matrix.multiplyMM(modelViewProjMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
 
         GLES30.glUniformMatrix4fv(uniformLocations[0], 1, false, modelViewMatrix, 0);
         GLES30.glUniformMatrix4fv(uniformLocations[1], 1, false, modelViewProjMatrix, 0);
