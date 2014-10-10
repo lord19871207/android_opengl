@@ -17,6 +17,11 @@ public class GlObject {
     private final GlBuffer bboxBuffer;
     private final float bsphere[] = new float[4];
 
+    public GlObject(GlObjectData objectData) {
+        this(objectData.vertexCount(),
+                objectData.vertexBuffer(), objectData.normalBuffer(), objectData.textureBuffer());
+    }
+
     public GlObject(int vertexCount, FloatBuffer vertexBuffer, FloatBuffer normalBuffer, FloatBuffer textureBuffer) {
         this.vertexCount = vertexCount;
 

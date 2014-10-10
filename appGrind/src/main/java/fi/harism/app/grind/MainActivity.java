@@ -271,21 +271,21 @@ public class MainActivity extends Activity {
                 rendererOut = new RendererOut(MainActivity.this, mBufferQuad, glTextureOut, glTextureRand);
 
                 setProgress(9, 1);
-                glObjectAnd = GlObjectData.loadDat(MainActivity.this, "models/and.dat");
+                glObjectAnd = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/and.dat"));
                 setProgress(9, 2);
-                glObjectBy = GlObjectData.loadDat(MainActivity.this, "models/by.dat");
+                glObjectBy = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/by.dat"));
                 setProgress(9, 3);
-                glObjectCoding = GlObjectData.loadDat(MainActivity.this, "models/coding.dat");
+                glObjectCoding = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/coding.dat"));
                 setProgress(9, 4);
-                glObjectDoctrnal = GlObjectData.loadDat(MainActivity.this, "models/doctrnal.dat");
+                glObjectDoctrnal = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/doctrnal.dat"));
                 setProgress(9, 5);
-                glObjectGrind = GlObjectData.loadDat(MainActivity.this, "models/grind.dat");
+                glObjectGrind = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/grind.dat"));
                 setProgress(9, 6);
-                glObjectHarism = GlObjectData.loadDat(MainActivity.this, "models/harism.dat");
+                glObjectHarism = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/harism.dat"));
                 setProgress(9, 7);
-                glObjectMusic = GlObjectData.loadDat(MainActivity.this, "models/music.dat");
+                glObjectMusic = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/music.dat"));
                 setProgress(9, 8);
-                glObjectScottXylo = GlObjectData.loadDat(MainActivity.this, "models/scott_xylo.dat");
+                glObjectScottXylo = new GlObject(GlObjectData.loadDat(MainActivity.this, "models/scott_xylo.dat"));
                 setProgress(9, 9);
 
                 rendererScene.setObject(glObjectScottXylo);
@@ -320,9 +320,9 @@ public class MainActivity extends Activity {
                     .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth, resolutionHeight, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
                     .unbind(GLES30.GL_TEXTURE_2D);
 
-            glRenderbufferDepth.bind()
-                    .storage(GLES30.GL_DEPTH_COMPONENT32F, resolutionWidth, resolutionHeight)
-                    .unbind();
+            glRenderbufferDepth.bind(GLES30.GL_RENDERBUFFER)
+                    .storage(GLES30.GL_RENDERBUFFER, GLES30.GL_DEPTH_COMPONENT32F, resolutionWidth, resolutionHeight)
+                    .unbind(GLES30.GL_RENDERBUFFER);
 
             glFramebufferOut.bind(GLES30.GL_DRAW_FRAMEBUFFER)
                     .renderbuffer(GLES30.GL_DRAW_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, glRenderbufferDepth.name())
@@ -372,7 +372,7 @@ public class MainActivity extends Activity {
             double angle = SystemClock.uptimeMillis() % 10000 / 5000.0 * Math.PI;
             float rx = (float) (Math.sin(angle) * 5);
             float rz = (float) (Math.cos(angle) * 10) + 12;
-            glCamera.setPosition(new float[]{0, 0, rz});
+            glCamera.setPos(new float[]{0, 0, rz});
 
             rendererScene.onRenderFrame();
             rendererDof.onRenderFrame();

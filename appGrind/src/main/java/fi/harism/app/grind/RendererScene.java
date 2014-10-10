@@ -97,12 +97,12 @@ public class RendererScene implements GlRenderer {
         final float[] modelViewProjM = new float[16];
         Matrix.setIdentityM(modelViewProjM, 0);
         Matrix.rotateM(modelViewProjM, 0, angle, 0, 1, 0);
-        GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uViewM"), 1, false, mCamera.viewMatrix(), 0);
-        Matrix.multiplyMM(modelViewProjM, 0, mCamera.viewMatrix(), 0, modelViewProjM, 0);
+        GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uViewM"), 1, false, mCamera.viewMat(), 0);
+        Matrix.multiplyMM(modelViewProjM, 0, mCamera.viewMat(), 0, modelViewProjM, 0);
         GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uModelViewM"), 1, false, modelViewProjM, 0);
-        Matrix.multiplyMM(modelViewProjM, 0, mCamera.projMatrix(), 0, modelViewProjM, 0);
+        Matrix.multiplyMM(modelViewProjM, 0, mCamera.projMat(), 0, modelViewProjM, 0);
         GLES30.glUniformMatrix4fv(mProgramCube.getUniformLocation("uModelViewProjM"), 1, false, modelViewProjM, 0);
-        GLES30.glUniform3fv(mProgramCube.getUniformLocation("uEyePositionW"), 1, mCamera.position(), 0);
+        GLES30.glUniform3fv(mProgramCube.getUniformLocation("uEyePositionW"), 1, mCamera.pos(), 0);
 
         object.vertexBuffer().bind(GLES30.GL_ARRAY_BUFFER);
         GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 0, 0);
@@ -121,8 +121,8 @@ public class RendererScene implements GlRenderer {
 
     private void renderDots() {
         mProgramDots.useProgram();
-        GLES30.glUniformMatrix4fv(mProgramDots.getUniformLocation("uProjM"), 1, false, mCamera.projMatrix(), 0);
-        GLES30.glUniformMatrix4fv(mProgramDots.getUniformLocation("uViewM"), 1, false, mCamera.viewMatrix(), 0);
+        GLES30.glUniformMatrix4fv(mProgramDots.getUniformLocation("uProjM"), 1, false, mCamera.projMat(), 0);
+        GLES30.glUniformMatrix4fv(mProgramDots.getUniformLocation("uViewM"), 1, false, mCamera.viewMat(), 0);
         //GLES30.glDepthMask(false);
         //GLES30.glEnable(GLES30.GL_BLEND);
         //GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA);

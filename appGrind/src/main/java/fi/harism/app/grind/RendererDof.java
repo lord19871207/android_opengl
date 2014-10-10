@@ -131,10 +131,10 @@ public class RendererDof implements GlRenderer {
         //
         // (k4 / x) -  k3
 
-        float k1 = glCamera.getApertureDiameter() * glCamera.getFocalLength();
-        float k2 = glCamera.getPlaneInFocus() - glCamera.getFocalLength();
-        float k3 = k1 / (k2 * glCamera.getSensorHeight());
-        float k4 = k3 * glCamera.getPlaneInFocus();
+        float k1 = glCamera.apertureDiameter() * glCamera.focalLength();
+        float k2 = glCamera.planeInFocus() - glCamera.focalLength();
+        float k3 = k1 / (k2 * glCamera.sensorHeight());
+        float k4 = k3 * glCamera.planeInFocus();
 
         glFramebufferCoC.bind(GLES30.GL_DRAW_FRAMEBUFFER);
         glProgramDofCoc.useProgram();
