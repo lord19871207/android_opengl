@@ -1,9 +1,9 @@
 #version 300 es
 
-uniform mat4 uModelViewProjectionMatrix;
+uniform mat4 uModelViewProjMat;
 
 layout (location = 0) in vec4 inPosition;
 
 void main() {
-    gl_Position = uModelViewProjectionMatrix * inPosition;
+    gl_Position = uModelViewProjMat * inPosition;
 }

@@ -30,14 +30,6 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
 
     private static final int SHADOWMAP_SIZE = 1024;
 
-    private final static String UNIFORM_NAMES_DEPTH[] = {"uModelViewProjectionMatrix"};
-    private final static String UNIFORM_NAMES_MAIN[] = {"uModelViewMatrix",
-            "uModelViewProjectionMatrix", "uShadowMatrix", "uLightPosition", "uMaterial",
-            "uSampleOffset"};
-
-    private final int uniformsDepth[] = new int[UNIFORM_NAMES_DEPTH.length];
-    private final int uniformsMain[] = new int[UNIFORM_NAMES_MAIN.length];
-
     private GlCamera glCamera;
     private GlLight glLight;
     private GlTexture glTextureDepth;
@@ -49,10 +41,27 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
     private long lastRenderTime;
     private Size surfaceSize;
 
-    private final float rotationMatrix[] = new float[16];
-    private final float modelMatrix[] = new float[16];
-    private final float modelViewMatrix[] = new float[16];
-    private final float modelViewProjectionMatrix[] = new float[16];
+    private final float rotationMat[] = new float[16];
+    private final float modelMat[] = new float[16];
+    private final float modelViewMat[] = new float[16];
+    private final float modelViewProjMat[] = new float[16];
+
+    private final UniformsDepth uniformsDepth = new UniformsDepth();
+    private final UniformsMain uniformsMain = new UniformsMain();
+
+    private final class UniformsDepth {
+        public int uModelViewProjMat;
+    }
+
+    private final class UniformsMain {
+        public int sDepth;
+        public int uModelViewMat;
+        public int uModelViewProjMat;
+        public int uShadowMat;
+        public int uLightPos;
+        public int uMaterial;
+        public int uSampleOffset;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -114,15 +123,12 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
             glProgramMain = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/basic/shadow/main_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/shadow/main_fs.txt"),
-                    null).useProgram();
-            GLES30.glUniform1i(glProgramMain.getUniformLocation("sDepth"), 0);
-            glProgramMain.getUniformIndices(UNIFORM_NAMES_MAIN, uniformsMain);
-
+                    null).useProgram().getUniformIndices(uniformsMain);
+            GLES30.glUniform1i(uniformsMain.sDepth, 0);
             glProgramDepth = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/basic/shadow/depth_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/shadow/depth_fs.txt"),
-                    null);
-            glProgramDepth.getUniformIndices(UNIFORM_NAMES_DEPTH, uniformsDepth);
+                    null).useProgram().getUniformIndices(uniformsDepth);
             setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
@@ -139,10 +145,10 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
         surfaceSize = new Size(width, height);
         glCamera.setPerspective(width, height, 60f, 1f, 100f);
         glCamera.setPos(CAMERA_POSITION);
-        Matrix.setIdentityM(rotationMatrix, 0);
-        Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, 0f, -6f, 0f);
-        Matrix.scaleM(modelMatrix, 0, 4f, 4f, 4f);
+        Matrix.setIdentityM(rotationMat, 0);
+        Matrix.setIdentityM(modelMat, 0);
+        Matrix.translateM(modelMat, 0, 0f, -6f, 0f);
+        Matrix.scaleM(modelMat, 0, 4f, 4f, 4f);
     }
 
     @Override
@@ -151,7 +157,7 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
         float diff = (time - lastRenderTime) / 1000f;
         lastRenderTime = time;
 
-        Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
+        Matrix.rotateM(rotationMat, 0, diff * 45f, 1f, 1.5f, 0f);
 
         glFramebufferDepth.bind(GLES30.GL_DRAW_FRAMEBUFFER);
 
@@ -161,12 +167,12 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
 
         glProgramDepth.useProgram();
 
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMat(), 0, rotationMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsDepth[0], 1, false, modelViewProjectionMatrix, 0);
+        Matrix.multiplyMM(modelViewProjMat, 0, glLight.viewProjMat(), 0, rotationMat, 0);
+        GLES30.glUniformMatrix4fv(uniformsDepth.uModelViewProjMat, 1, false, modelViewProjMat, 0);
         renderCubeFilled();
 
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glLight.viewProjMat(), 0, modelMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsDepth[0], 1, false, modelViewProjectionMatrix, 0);
+        Matrix.multiplyMM(modelViewProjMat, 0, glLight.viewProjMat(), 0, modelMat, 0);
+        GLES30.glUniformMatrix4fv(uniformsDepth.uModelViewProjMat, 1, false, modelViewProjMat, 0);
         renderCubeFilled();
 
         glFramebufferDepth.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
@@ -182,26 +188,26 @@ public class ShadowBasicRendererFragment extends BasicRendererFragment {
         glTextureDepth.bind(GLES30.GL_TEXTURE_2D);
         glSamplerDepth.bind(0);
 
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, rotationMatrix, 0);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
+        Matrix.multiplyMM(modelViewMat, 0, glCamera.viewMat(), 0, rotationMat, 0);
+        Matrix.multiplyMM(modelViewProjMat, 0, glCamera.projMat(), 0, modelViewMat, 0);
 
-        GLES30.glUniformMatrix4fv(uniformsMain[0], 1, false, modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsMain[1], 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMat(glCamera.viewMat()), 0);
-        GLES30.glUniform3fv(uniformsMain[3], 1, LIGHT_POSITION, 0);
-        GLES30.glUniform4fv(uniformsMain[4], 1, MATERIAL_CUBE, 0);
-        GLES30.glUniform2f(uniformsMain[5], 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);
+        GLES30.glUniformMatrix4fv(uniformsMain.uModelViewMat, 1, false, modelViewMat, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain.uModelViewProjMat, 1, false, modelViewProjMat, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain.uShadowMat, 1, false, glLight.shadowMat(glCamera.viewMat()), 0);
+        GLES30.glUniform3fv(uniformsMain.uLightPos, 1, LIGHT_POSITION, 0);
+        GLES30.glUniform4fv(uniformsMain.uMaterial, 1, MATERIAL_CUBE, 0);
+        GLES30.glUniform2f(uniformsMain.uSampleOffset, 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);
         renderCubeFilled();
 
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, modelMatrix, 0);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
+        Matrix.multiplyMM(modelViewMat, 0, glCamera.viewMat(), 0, modelMat, 0);
+        Matrix.multiplyMM(modelViewProjMat, 0, glCamera.projMat(), 0, modelViewMat, 0);
 
-        GLES30.glUniformMatrix4fv(uniformsMain[0], 1, false, modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsMain[1], 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformsMain[2], 1, false, glLight.shadowMat(glCamera.viewMat()), 0);
-        GLES30.glUniform3fv(uniformsMain[3], 1, LIGHT_POSITION, 0);
-        GLES30.glUniform4fv(uniformsMain[4], 1, MATERIAL_CUBE_ENV, 0);
-        GLES30.glUniform2f(uniformsMain[5], 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);
+        GLES30.glUniformMatrix4fv(uniformsMain.uModelViewMat, 1, false, modelViewMat, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain.uModelViewProjMat, 1, false, modelViewProjMat, 0);
+        GLES30.glUniformMatrix4fv(uniformsMain.uShadowMat, 1, false, glLight.shadowMat(glCamera.viewMat()), 0);
+        GLES30.glUniform3fv(uniformsMain.uLightPos, 1, LIGHT_POSITION, 0);
+        GLES30.glUniform4fv(uniformsMain.uMaterial, 1, MATERIAL_CUBE_ENV, 0);
+        GLES30.glUniform2f(uniformsMain.uSampleOffset, 1f / SHADOWMAP_SIZE, 1f / SHADOWMAP_SIZE);
         renderCubeFilled();
     }
 

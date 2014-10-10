@@ -41,10 +41,20 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
 
     private boolean enableLightning;
 
-    private final float rotationMatrix[] = new float[16];
-    private final float modelMatrix[] = new float[16];
-    private final float modelViewMatrix[] = new float[16];
-    private final float modelViewProjectionMatrix[] = new float[16];
+    private final float rotationMat[] = new float[16];
+    private final float modelMat[] = new float[16];
+    private final float modelViewMat[] = new float[16];
+    private final float modelViewProjMat[] = new float[16];
+
+    private final Uniforms uniforms = new Uniforms();
+
+    private final class Uniforms {
+        public int sTextureCube;
+        public int uModelViewMat;
+        public int uModelViewProjMat;
+        public int uCameraPosition;
+        public int uMaterial;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,8 +108,8 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
             glProgram = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/basic/cubemap/shader_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/cubemap/shader_fs.txt"),
-                    null).useProgram();
-            GLES30.glUniform1i(glProgram.getUniformLocation("uTextureCube"), 0);
+                    null).useProgram().getUniformIndices(uniforms);
+            GLES30.glUniform1i(uniforms.sTextureCube, 0);
             setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
@@ -114,8 +124,8 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
     @Override
     public void onSurfaceChanged(int width, int height) {
         glCamera.setPerspective(width, height, 60.0f, 1f, 100f);
-        glCamera.setPos(new float[] {0f, 0f, 40f});
-        Matrix.setIdentityM(rotationMatrix, 0);
+        glCamera.setPos(new float[]{0f, 0f, 40f});
+        Matrix.setIdentityM(rotationMat, 0);
     }
 
     @Override
@@ -129,17 +139,17 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
         float diff = (time - lastRenderTime) / 1000f;
         lastRenderTime = time;
 
-        Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
-        Matrix.scaleM(modelMatrix, 0, rotationMatrix, 0, 10f, 10f, 10f);
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, modelMatrix, 0);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
+        Matrix.rotateM(rotationMat, 0, diff * 45f, 1f, 1.5f, 0f);
+        Matrix.scaleM(modelMat, 0, rotationMat, 0, 10f, 10f, 10f);
+        Matrix.multiplyMM(modelViewMat, 0, glCamera.viewMat(), 0, modelMat, 0);
+        Matrix.multiplyMM(modelViewProjMat, 0, glCamera.projMat(), 0, modelViewMat, 0);
 
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewMatrix"), 1, false, modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
-        GLES30.glUniform3fv(glProgram.getUniformLocation("uCameraPosition"), 1, glCamera.pos(), 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewMat, 1, false, modelViewMat, 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewProjMat, 1, false, modelViewProjMat, 0);
+        GLES30.glUniform3fv(uniforms.uCameraPosition, 1, glCamera.pos(), 0);
 
         final float[] material = enableLightning ? MATERIAL_LIGHTNING_ENABLED : MATERIAL_LIGHTNING_DISABLED;
-        GLES30.glUniform4fv(glProgram.getUniformLocation("uMaterial"), 1, material, 0);
+        GLES30.glUniform4fv(uniforms.uMaterial, 1, material, 0);
 
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         glTextureCubemap.bind(GLES30.GL_TEXTURE_CUBE_MAP);

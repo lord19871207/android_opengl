@@ -3,6 +3,8 @@ package fi.harism.lib.opengl.gl;
 import android.opengl.GLES31;
 import android.util.Log;
 
+import java.lang.reflect.Field;
+
 public class GlProgram {
 
     private int program;
@@ -63,7 +65,7 @@ public class GlProgram {
         return location;
     }
 
-    public void getUniformIndices(String names[], int indices[]) {
+    public GlProgram getUniformIndices(String names[], int indices[]) {
         GLES31.glGetUniformIndices(program, names, indices, 0);
         GlUtils.checkGLErrors();
         for (int i = 0; i < names.length; ++i) {
@@ -71,6 +73,14 @@ public class GlProgram {
                 Log.d("GlProgram", "Uniform '" + names[i] + "' not found.");
             }
         }
+        return this;
+    }
+
+    public GlProgram getUniformIndices(Object obj) throws Exception {
+        for (Field field : obj.getClass().getFields()) {
+            field.setInt(obj, getUniformLocation(field.getName()));
+        }
+        return this;
     }
 
     private int compileShader(String shaderSource, int shaderType) throws Exception {

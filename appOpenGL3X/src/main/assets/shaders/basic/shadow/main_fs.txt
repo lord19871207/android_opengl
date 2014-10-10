@@ -2,7 +2,7 @@
 
 uniform sampler2DShadow sDepth;
 uniform vec4 uMaterial;
-uniform vec3 uLightPosition;
+uniform vec3 uLightPos;
 uniform vec2 uSampleOffset;
 
 in vec3 vPosition;
@@ -12,7 +12,7 @@ in vec4 vShadowPos;
 out vec4 outFragColor;
 
 void main() {
-    vec3 L = normalize(uLightPosition - vPosition);
+    vec3 L = normalize(uLightPos - vPosition);
     vec3 E = normalize(-vPosition);
     vec3 R = normalize(-reflect(L, vNormal));
 

@@ -18,6 +18,7 @@ import fi.harism.app.opengl3x.R;
 import fi.harism.lib.opengl.egl.EglCore;
 import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlUtils;
+import fi.harism.lib.opengl.model.GlCamera;
 
 public class LightBasicRendererFragment extends BasicRendererFragment {
 
@@ -31,16 +32,24 @@ public class LightBasicRendererFragment extends BasicRendererFragment {
     private static final int DEFAULT_SPECULAR = 4;
     private static final int DEFAULT_SHININESS = 8;
 
+    private GlCamera glCamera;
     private GlProgram glProgram;
 
     private long lastRenderTime;
 
     private final float material[] = new float[4];
 
-    private final float projectionMatrix[] = new float[16];
-    private final float lookAtMatrix[] = new float[16];
-    private final float rotationMatrix[] = new float[16];
-    private final float modelViewProjectionMatrix[] = new float[16];
+    private final float rotationMat[] = new float[16];
+    private final float modelViewMat[] = new float[16];
+    private final float modelViewProjMat[] = new float[16];
+
+    private final Uniforms uniforms = new Uniforms();
+
+    private final class Uniforms {
+        public int uModelViewMat;
+        public int uModelViewProjMat;
+        public int uMaterial;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,11 +92,13 @@ public class LightBasicRendererFragment extends BasicRendererFragment {
         GLES30.glCullFace(GLES30.GL_BACK);
         GLES30.glFrontFace(GLES30.GL_CCW);
 
+        glCamera = new GlCamera();
+
         try {
             glProgram = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/basic/light/shader_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/light/shader_fs.txt"),
-                    null);
+                    null).useProgram().getUniformIndices(uniforms);
             setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
@@ -101,10 +112,9 @@ public class LightBasicRendererFragment extends BasicRendererFragment {
 
     @Override
     public void onSurfaceChanged(int width, int height) {
-        float aspect = (float) width / height;
-        Matrix.perspectiveM(projectionMatrix, 0, 60.0f, aspect, 1f, 100f);
-        Matrix.setLookAtM(lookAtMatrix, 0, 0f, 0f, 4f, 0f, 0f, 0f, 0f, 1f, 0f);
-        Matrix.setIdentityM(rotationMatrix, 0);
+        glCamera.setPerspective(width, height, 60.0f, 1f, 100f);
+        glCamera.setPos(new float[]{0f, 0f, 4f});
+        Matrix.setIdentityM(rotationMat, 0);
     }
 
     @Override
@@ -118,16 +128,14 @@ public class LightBasicRendererFragment extends BasicRendererFragment {
         float diff = (time - lastRenderTime) / 1000f;
         lastRenderTime = time;
 
-        Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, lookAtMatrix, 0, rotationMatrix, 0);
+        Matrix.rotateM(rotationMat, 0, diff * 45f, 1f, 1.5f, 0f);
+        Matrix.multiplyMM(modelViewMat, 0, glCamera.viewMat(), 0, rotationMat, 0);
+        Matrix.multiplyMM(modelViewProjMat, 0, glCamera.projMat(), 0, modelViewMat, 0);
 
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewMatrix"), 1, false, modelViewProjectionMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewMat, 1, false, modelViewMat, 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewProjMat, 1, false, modelViewProjMat, 0);
 
-        Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewProjectionMatrix, 0);
-
-        GLES30.glUniformMatrix4fv(glProgram.getUniformLocation("uModelViewProjectionMatrix"), 1, false, modelViewProjectionMatrix, 0);
-
-        GLES30.glUniform4fv(glProgram.getUniformLocation("uMaterial"), 1, material, 0);
+        GLES30.glUniform4fv(uniforms.uMaterial, 1, material, 0);
         renderCubeFilled();
     }
 

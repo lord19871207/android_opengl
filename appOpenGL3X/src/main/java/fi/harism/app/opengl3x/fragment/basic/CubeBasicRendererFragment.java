@@ -27,9 +27,6 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
     private static final String PREFERENCE_DRAW_OUTLINES = "renderer.basic.cube.draw_outlines";
     private static final boolean DEFAULT_DRAW_OUTLINES = false;
 
-    private static final String UNIFORM_NAMES[] = {"uModelViewMatrix", "uModelViewProjMatrix"};
-    private final int uniformLocations[] = new int[UNIFORM_NAMES.length];
-
     private GlCamera glCamera;
     private GlProgram glProgram;
 
@@ -37,9 +34,17 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
 
     private boolean showOutlines;
 
-    private final float rotationMatrix[] = new float[16];
-    private final float modelViewMatrix[] = new float[16];
-    private final float modelViewProjMatrix[] = new float[16];
+    private final float rotationMat[] = new float[16];
+    private final float modelViewMat[] = new float[16];
+    private final float modelViewProjMat[] = new float[16];
+
+    private final Uniforms uniforms = new Uniforms();
+
+    private final class Uniforms {
+        public int uModelViewMat;
+        public int uModelViewProjMat;
+        public int uColor;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,8 +91,7 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
             glProgram = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/basic/cube/shader_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/cube/shader_fs.txt"),
-                    null).useProgram();
-            glProgram.getUniformIndices(UNIFORM_NAMES, uniformLocations);
+                    null).useProgram().getUniformIndices(uniforms);
             setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
@@ -103,7 +107,7 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
     public void onSurfaceChanged(int width, int height) {
         glCamera.setPerspective(width, height, 60.0f, 1f, 100f);
         glCamera.setPos(new float[]{0f, 0f, 4f});
-        Matrix.setIdentityM(rotationMatrix, 0);
+        Matrix.setIdentityM(rotationMat, 0);
     }
 
     @Override
@@ -117,22 +121,22 @@ public class CubeBasicRendererFragment extends BasicRendererFragment {
         float diff = (time - lastRenderTime) / 1000f;
         lastRenderTime = time;
 
-        Matrix.rotateM(rotationMatrix, 0, diff * 45f, 1f, 1.5f, 0f);
-        Matrix.multiplyMM(modelViewMatrix, 0, glCamera.viewMat(), 0, rotationMatrix, 0);
-        Matrix.multiplyMM(modelViewProjMatrix, 0, glCamera.projMat(), 0, modelViewMatrix, 0);
+        Matrix.rotateM(rotationMat, 0, diff * 45f, 1f, 1.5f, 0f);
+        Matrix.multiplyMM(modelViewMat, 0, glCamera.viewMat(), 0, rotationMat, 0);
+        Matrix.multiplyMM(modelViewProjMat, 0, glCamera.projMat(), 0, modelViewMat, 0);
 
-        GLES30.glUniformMatrix4fv(uniformLocations[0], 1, false, modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformLocations[1], 1, false, modelViewProjMatrix, 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewMat, 1, false, modelViewMat, 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewProjMat, 1, false, modelViewProjMat, 0);
 
         GLES30.glEnable(GLES30.GL_POLYGON_OFFSET_FILL);
         GLES30.glPolygonOffset(1f, 1f);
-        GLES30.glUniform3f(glProgram.getUniformLocation("uColor"), 1f, 1f, 1f);
+        GLES30.glUniform3f(uniforms.uColor, 1f, 1f, 1f);
         renderCubeFilled();
         GLES30.glDisable(GLES30.GL_POLYGON_OFFSET_FILL);
 
         if (showOutlines) {
             GLES30.glLineWidth(4f);
-            GLES30.glUniform3f(glProgram.getUniformLocation("uColor"), .4f, .6f, 1f);
+            GLES30.glUniform3f(uniforms.uColor, .4f, .6f, 1f);
             renderCubeOutlines();
         }
     }

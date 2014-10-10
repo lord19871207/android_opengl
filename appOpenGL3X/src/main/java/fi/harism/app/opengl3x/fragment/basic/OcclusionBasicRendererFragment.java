@@ -22,14 +22,19 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
 
     private static final String RENDERER_ID = "renderer.basic.occlusion";
 
-    private static final String UNIFORM_NAMES[] = {"uModelViewMatrix", "uModelViewProjMatrix"};
-    private final int uniformLocations[] = new int[UNIFORM_NAMES.length];
-
     private GlCamera glCamera;
     private GlProgram glProgram;
 
     private Model modelStaticCube;
     private Model modelMovingCube;
+
+    private final Uniforms uniforms = new Uniforms();
+
+    private final class Uniforms {
+        public int uModelViewMat;
+        public int uModelViewProjMat;
+        public int uColor;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,8 +80,7 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
             glProgram = new GlProgram(
                     GlUtils.loadString(getActivity(), "shaders/basic/occlusion/shader_vs.txt"),
                     GlUtils.loadString(getActivity(), "shaders/basic/occlusion/shader_fs.txt"),
-                    null).useProgram();
-            glProgram.getUniformIndices(UNIFORM_NAMES, uniformLocations);
+                    null).useProgram().getUniformIndices(uniforms);
             setContinuousRendering(true);
         } catch (final Exception ex) {
             getActivity().runOnUiThread(new Runnable() {
@@ -97,17 +101,17 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
     @Override
     public void onRenderFrame() {
         float rotation = (SystemClock.uptimeMillis() % 7000) / 7000f;
-        Matrix.setIdentityM(modelStaticCube.modelMatrix, 0);
-        Matrix.translateM(modelStaticCube.modelMatrix, 0, 0f, -1f, 0f);
-        Matrix.rotateM(modelStaticCube.modelMatrix, 0, rotation * 360, 1f, 0f, 0f);
-        Matrix.rotateM(modelStaticCube.modelMatrix, 0, rotation * 360, 0f, 2f, 0f);
+        Matrix.setIdentityM(modelStaticCube.modelMat, 0);
+        Matrix.translateM(modelStaticCube.modelMat, 0, 0f, -1f, 0f);
+        Matrix.rotateM(modelStaticCube.modelMat, 0, rotation * 360, 1f, 0f, 0f);
+        Matrix.rotateM(modelStaticCube.modelMat, 0, rotation * 360, 0f, 2f, 0f);
         modelStaticCube.multiplyMVP(glCamera.viewMat(), glCamera.projMat());
 
-        Matrix.setIdentityM(modelMovingCube.modelMatrix, 0);
-        Matrix.translateM(modelMovingCube.modelMatrix, 0, (float) Math.sin(rotation * Math.PI * 2) * 5f, (float) Math.cos(rotation * Math.PI * 2), 0f);
-        Matrix.rotateM(modelMovingCube.modelMatrix, 0, rotation * 360, 0f, 2f, 0f);
-        Matrix.rotateM(modelMovingCube.modelMatrix, 0, rotation * 360, 0f, 0f, 1f);
-        Matrix.scaleM(modelMovingCube.modelMatrix, 0, 0.3f, 0.3f, 0.3f);
+        Matrix.setIdentityM(modelMovingCube.modelMat, 0);
+        Matrix.translateM(modelMovingCube.modelMat, 0, (float) Math.sin(rotation * Math.PI * 2) * 5f, (float) Math.cos(rotation * Math.PI * 2), 0f);
+        Matrix.rotateM(modelMovingCube.modelMat, 0, rotation * 360, 0f, 2f, 0f);
+        Matrix.rotateM(modelMovingCube.modelMat, 0, rotation * 360, 0f, 0f, 1f);
+        Matrix.scaleM(modelMovingCube.modelMat, 0, 0.3f, 0.3f, 0.3f);
         modelMovingCube.multiplyMVP(glCamera.viewMat(), glCamera.projMat());
 
         boolean movingCubeCulled = modelMovingCube.isCulled();
@@ -124,14 +128,14 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
 
         glProgram.useProgram();
 
-        GLES30.glUniformMatrix4fv(uniformLocations[0], 1, false, modelStaticCube.modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformLocations[1], 1, false, modelStaticCube.modelViewProjMatrix, 0);
-        GLES30.glUniform3f(glProgram.getUniformLocation("uColor"), 1f, 1f, 1f);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewMat, 1, false, modelStaticCube.modelViewMat, 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewProjMat, 1, false, modelStaticCube.modelViewProjMat, 0);
+        GLES30.glUniform3f(uniforms.uColor, 1f, 1f, 1f);
         renderCubeFilled();
 
-        GLES30.glUniformMatrix4fv(uniformLocations[0], 1, false, modelMovingCube.modelViewMatrix, 0);
-        GLES30.glUniformMatrix4fv(uniformLocations[1], 1, false, modelMovingCube.modelViewProjMatrix, 0);
-        GLES30.glUniform3f(glProgram.getUniformLocation("uColor"), 1f, 1f, 1f);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewMat, 1, false, modelMovingCube.modelViewMat, 0);
+        GLES30.glUniformMatrix4fv(uniforms.uModelViewProjMat, 1, false, modelMovingCube.modelViewProjMat, 0);
+        GLES30.glUniform3f(uniforms.uColor, 1f, 1f, 1f);
 
         if (!movingCubeCulled) {
             modelMovingCube.glQuery.begin(GLES30.GL_ANY_SAMPLES_PASSED);
@@ -153,9 +157,9 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
     }
 
     private class Model {
-        public final float modelMatrix[] = new float[16];
-        public final float modelViewMatrix[] = new float[16];
-        public final float modelViewProjMatrix[] = new float[16];
+        public final float modelMat[] = new float[16];
+        public final float modelViewMat[] = new float[16];
+        public final float modelViewProjMat[] = new float[16];
 
         private final int cullResult[] = {0};
 
@@ -163,7 +167,7 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
         private final int queryResult[] = {0};
 
         public boolean isCulled() {
-            return Visibility.frustumCullSpheres(modelViewProjMatrix, 0,
+            return Visibility.frustumCullSpheres(modelViewProjMat, 0,
                     getObjectCube().bsphere(), 0, 1,
                     cullResult, 0, 1) == 0;
         }
@@ -174,8 +178,8 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
         }
 
         public void multiplyMVP(float viewMatrix[], float projMatrix[]) {
-            Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0);
-            Matrix.multiplyMM(modelViewProjMatrix, 0, projMatrix, 0, modelViewMatrix, 0);
+            Matrix.multiplyMM(modelViewMat, 0, viewMatrix, 0, modelMat, 0);
+            Matrix.multiplyMM(modelViewProjMat, 0, projMatrix, 0, modelViewMat, 0);
         }
 
     }
