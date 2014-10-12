@@ -1,0 +1,16 @@
+#version 300 es
+
+uniform sampler2D sTexture;
+uniform sampler2D sDepth;
+uniform vec2 uParams;
+
+in vec2 vTexPosition;
+
+out vec4 outFragColor;
+
+void main() {
+    outFragColor = texture(sTexture, vTexPosition);
+    float depth = texture(sDepth, vTexPosition).r;
+    outFragColor.a = (uParams.x / outFragColor.a + 0.001) - uParams.y;
+    outFragColor.a = clamp(abs(outFragColor.a), 0.0, 1.0);
+}

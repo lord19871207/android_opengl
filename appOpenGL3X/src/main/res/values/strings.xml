@@ -24,6 +24,9 @@
     <string name="material_settings">Material settings</string>
     <string name="roughness">Roughness</string>
 
+    <string name="aperture_diameter">Aperture diameter</string>
+    <string name="plane_in_focus">Plane in focus</string>
+
     <string name="hue">Hue</string>
     <string name="saturation">Saturation</string>
     <string name="brightness">Brightness</string>
@@ -45,6 +48,8 @@
     <string name="section_advanced">Advanced Rendering</string>
     <string name="renderer_advanced_deferred_title">Deferred Lightning</string>
     <string name="renderer_advanced_deferred_caption">Renders a scene with deferred lightning technique.</string>
+    <string name="renderer_advanced_dof_title">Depth of field</string>
+    <string name="renderer_advanced_dof_caption">Renders a scene with depth of field and Blinn-Phong shading.</string>
 
     <string name="section_camera2">Camera2 Rendering</string>
     <string name="renderer_camera2_basic_title">Basic</string>
