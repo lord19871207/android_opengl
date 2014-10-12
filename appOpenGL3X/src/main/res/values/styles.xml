@@ -10,6 +10,10 @@
         <item name="android:colorPrimaryDark">@color/primary_dark</item>
     </style>
 
+    <style name="settings_container">
+        <item name="android:padding">5dp</item>
+    </style>
+
     <style name="settings_text">
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">18sp</item>

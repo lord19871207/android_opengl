@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/settings_container"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -186,14 +187,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:weightSum="7">
+        android:weightSum="3">
 
         <TextView
             style="@style/settings_text"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:text="@string/roughness"
             android:gravity="right" />
 
@@ -202,7 +203,7 @@
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_weight="5"
+            android:layout_weight="2"
             android:max="255"
             android:progress="100" />
     </LinearLayout>
