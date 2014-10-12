@@ -25,7 +25,8 @@ public class MainApplication extends Application {
             "letter_l", "models/letter_l.obj",
             "letter_s", "models/letter_s.obj",
             "letter_3", "models/letter_3.obj",
-            "letter_x", "models/letter_x.obj"
+            "letter_x", "models/letter_x.obj",
+            "mountain", "models/mountain.obj"
     };
 
     private RenderScript renderScript;

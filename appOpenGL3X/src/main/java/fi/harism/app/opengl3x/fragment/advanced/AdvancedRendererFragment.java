@@ -1,4 +1,4 @@
-package fi.harism.app.opengl3x.fragment.deferred;
+package fi.harism.app.opengl3x.fragment.advanced;
 
 import android.opengl.GLES30;
 import android.opengl.Matrix;
@@ -16,7 +16,7 @@ import fi.harism.lib.opengl.model.GlCamera;
 import fi.harism.lib.opengl.model.GlObject;
 import fi.harism.lib.opengl.model.GlObjectData;
 
-abstract class DeferredRendererFragment extends RendererFragment {
+abstract class AdvancedRendererFragment extends RendererFragment {
 
     private ArrayList<Model> modelArray;
     private GlObject glObjectQuad;
@@ -28,6 +28,10 @@ abstract class DeferredRendererFragment extends RendererFragment {
 
     private int cullResult[] = new int[1];
 
+    protected GlCamera getCamera() {
+        return glCamera;
+    }
+
     protected void prepareScene() {
         GlObject objO = createGlObject("letter_o");
         GlObject objP = createGlObject("letter_p");
@@ -38,16 +42,7 @@ abstract class DeferredRendererFragment extends RendererFragment {
         GlObject objS = createGlObject("letter_s");
         GlObject obj3 = createGlObject("letter_3");
         GlObject objX = createGlObject("letter_x");
-
-        FloatBuffer verticesBack = ByteBuffer.allocateDirect(4 * 3 * 6)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        verticesBack.put(new float[]{-2, 2, -2, -2, -2, -2, 21, 2, -2,
-                -2, -2, -2, 21, -2, -2, 21, 2, -2});
-        FloatBuffer normalsBack = ByteBuffer.allocateDirect(4 * 3 * 6)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        normalsBack.put(new float[]{1, 0, 0, 1, 0, 0, 1, 0, 0,
-                1, 0, 0, 1, 0, 0, 1, 0, 0});
-        GlObject objBack = new GlObject(6, verticesBack, normalsBack, null);
+        GlObject objMountain = createGlObject("mountain");
 
         modelArray = new ArrayList<>();
         modelArray.add(new Model(0.0f, 0f, 0f, objO, 3f));
@@ -60,8 +55,7 @@ abstract class DeferredRendererFragment extends RendererFragment {
         modelArray.add(new Model(13.8f, 0f, 0f, objS, 3f));
         modelArray.add(new Model(17.0f, 0f, 0f, obj3, 3f));
         modelArray.add(new Model(19.0f, 0f, 0f, objX, 3f));
-        modelArray.add(new Model(0.0f, 0f, 0f, objBack, 1f));
-
+        modelArray.add(new Model(14.0f, -2f, -3f, objMountain, 1f));
 
         FloatBuffer verticesQuad = ByteBuffer.allocateDirect(4 * 3 * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -72,7 +66,7 @@ abstract class DeferredRendererFragment extends RendererFragment {
     }
 
     protected void prepareCamera(int width, int height) {
-        glCamera.setPerspective(width, height, 60f, 1f, 100f);
+        glCamera.setPerspective(width, height, 45f, 1f, 100f);
     }
 
     protected void renderScene(int uModelView, int uModelViewProj) {

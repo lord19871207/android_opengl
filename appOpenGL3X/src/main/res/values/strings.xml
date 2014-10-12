@@ -19,6 +19,11 @@
 
     <string name="occlusion_info">Background is cleared with green color when smaller cube\'s OpenGL occlusion query returns true. With red when smaller cube bounding sphere is outside of visible bounds.</string>
 
+    <string name="light_diffuse_color">Light diffuse color</string>
+    <string name="light_specular_color">Light specular color</string>
+    <string name="material_settings">Material settings</string>
+    <string name="roughness">Roughness</string>
+
     <string name="hue">Hue</string>
     <string name="saturation">Saturation</string>
     <string name="brightness">Brightness</string>
@@ -37,9 +42,9 @@
     <string name="renderer_basic_occlusion_title">Occlusion query</string>
     <string name="renderer_basic_occlusion_caption">Renders two cubes and uses OpenGL occlusion queries for checking visibility.</string>
 
-    <string name="section_deferred">Deferred Rendering</string>
-    <string name="renderer_deferred_basic_title">Basic Renderer</string>
-    <string name="renderer_deferred_basic_caption">Renders a scene which has flat lightning on its faces. Light intensity is calculated from pixel normal z-value.</string>
+    <string name="section_advanced">Advanced Rendering</string>
+    <string name="renderer_advanced_deferred_title">Deferred Lightning</string>
+    <string name="renderer_advanced_deferred_caption">Renders a scene with deferred lightning technique.</string>
 
     <string name="section_camera2">Camera2 Rendering</string>
     <string name="renderer_camera2_basic_title">Basic</string>

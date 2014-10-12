@@ -79,8 +79,8 @@ public class ClearRendererFragment extends RendererFragment {
     public void onSurfaceReleased() {
     }
 
-    public void onEvent(SetColorEvent event) {
-        clearColor = event.getColor();
+    public void onEvent(SettingsEvent event) {
+        clearColor = event.color;
     }
 
     public static class SettingsFragment extends Fragment {
@@ -89,11 +89,12 @@ public class ClearRendererFragment extends RendererFragment {
                 seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                int color = Color.rgb(
-                        seekBarRed.getProgress(),
-                        seekBarGreen.getProgress(),
-                        seekBarBlue.getProgress());
-                EventBus.getDefault().post(new SetColorEvent(color));
+                SettingsEvent event = new SettingsEvent();
+                event.color = Color.rgb(
+                        seekBarR.getProgress(),
+                        seekBarG.getProgress(),
+                        seekBarB.getProgress());
+                EventBus.getDefault().post(event);
             }
 
             @Override
@@ -103,19 +104,19 @@ public class ClearRendererFragment extends RendererFragment {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int color = Color.rgb(
-                        seekBarRed.getProgress(),
-                        seekBarGreen.getProgress(),
-                        seekBarBlue.getProgress());
+                        seekBarR.getProgress(),
+                        seekBarG.getProgress(),
+                        seekBarB.getProgress());
                 SharedPreferences.Editor editor =
                         getActivity().getPreferences(Context.MODE_PRIVATE).edit();
                 editor.putInt(PREFERENCE_COLOR, color);
-                editor.commit();
+                editor.apply();
             }
         };
 
-        private SeekBar seekBarRed;
-        private SeekBar seekBarGreen;
-        private SeekBar seekBarBlue;
+        private SeekBar seekBarR;
+        private SeekBar seekBarG;
+        private SeekBar seekBarB;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -126,36 +127,27 @@ public class ClearRendererFragment extends RendererFragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.fragment_settings_test_clear, container, false);
 
-            seekBarRed = (SeekBar) view.findViewById(R.id.seekbar_red);
-            seekBarGreen = (SeekBar) view.findViewById(R.id.seekbar_green);
-            seekBarBlue = (SeekBar) view.findViewById(R.id.seekbar_blue);
-            seekBarRed.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarGreen.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarBlue.setOnSeekBarChangeListener(seekBarChangeListener);
+            seekBarR = (SeekBar) view.findViewById(R.id.seekbar_red);
+            seekBarG = (SeekBar) view.findViewById(R.id.seekbar_green);
+            seekBarB = (SeekBar) view.findViewById(R.id.seekbar_blue);
 
             int color = getActivity().getPreferences(Context.MODE_PRIVATE)
                     .getInt(PREFERENCE_COLOR, DEFAULT_COLOR);
-            seekBarRed.setProgress(Color.red(color));
-            seekBarGreen.setProgress(Color.green(color));
-            seekBarBlue.setProgress(Color.blue(color));
+            seekBarR.setProgress(Color.red(color));
+            seekBarG.setProgress(Color.green(color));
+            seekBarB.setProgress(Color.blue(color));
+
+            seekBarR.setOnSeekBarChangeListener(seekBarChangeListener);
+            seekBarG.setOnSeekBarChangeListener(seekBarChangeListener);
+            seekBarB.setOnSeekBarChangeListener(seekBarChangeListener);
 
             return view;
         }
 
     }
 
-    public static class SetColorEvent {
-
-        private int color;
-
-        public SetColorEvent(int color) {
-            this.color = color;
-        }
-
-        public int getColor() {
-            return color;
-        }
-
+    public static class SettingsEvent {
+        public int color;
     }
 
 }
