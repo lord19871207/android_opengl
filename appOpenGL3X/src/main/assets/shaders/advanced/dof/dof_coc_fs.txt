@@ -1,16 +1,16 @@
 #version 300 es
 
 uniform sampler2D sTexture;
-uniform sampler2D sDepth;
 uniform vec2 uParams;
 
 in vec2 vTexPosition;
 
-out vec4 outFragColor;
+layout (location = 0) out vec3 outFragColor;
+layout (location = 1) out vec2 outFragCoc;
 
 void main() {
-    outFragColor = texture(sTexture, vTexPosition);
-    float depth = texture(sDepth, vTexPosition).r;
-    outFragColor.a = (uParams.x / outFragColor.a + 0.001) - uParams.y;
-    outFragColor.a = clamp(abs(outFragColor.a), 0.0, 1.0);
+    vec4 sample = texture(sTexture, vTexPosition);
+    float coc = (uParams.x / sample.a) - uParams.y;
+    outFragCoc = sample.a <= 0.0 ? vec2(1.0, 0.0) : clamp(vec2(-coc, coc), 0.0, 1.0);
+    outFragColor = sample.rgb;
 }
