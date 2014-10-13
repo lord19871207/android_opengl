@@ -1,55 +1,40 @@
 #version 300 es
 
 uniform sampler2D sTexture;
-uniform sampler2D sTextureCoC;
+uniform sampler2D sTextureCoc;
 uniform vec2 uSampleOffset;
-uniform int uCount;
+uniform int uSampleCount;
 
 in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
-void sampleFar(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in int w) {
+void sample(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in vec2 coc) {
     vec4 sample = texture(sTexture, texPos);
-    float weight = texture(sTextureCoC, texPos).r * float(w);
-    sampleSum += sample * weight;
-    weightSum += weight;
-}
+    vec2 sampleCoc = texture(sTextureCoc, texPos).rg;
 
-void sampleNear(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in int w) {
-    vec4 sample = texture(sTexture, texPos);
-    float weight = /* texture(sTextureCoC, texPos).g */ float(w);
-    sampleSum += sample * weight;
-    weightSum += weight;
+    vec2 weight = sampleCoc * coc;
+
+    sampleSum += sample * weight.r;
+    weightSum += weight.r;
+
+    sampleSum += sample * weight.g;
+    weightSum += weight.g;
 }
 
 void main() {
     vec4 sampleCenter = texture(sTexture, vTexPosition);
-    vec2 coc = texture(sTextureCoC, vTexPosition).rg;
-    // outFragColor = sampleCenter;
-    // return;
+    vec2 coc = texture(sTextureCoc, vTexPosition).rg;
 
     vec4 sampleSum = sampleCenter;
     float weightSum = 1.0;
-    vec2 texOffset;
 
-    if (coc.r > 0.0) {
-        texOffset = uSampleOffset * coc.r * 0.5;
-        for (int i = 0; i < uCount; ++i) {
-            sampleFar(sampleSum, weightSum, vTexPosition + texOffset, uCount - i);
-            sampleFar(sampleSum, weightSum, vTexPosition - texOffset, uCount - i);
-            texOffset += uSampleOffset * coc.r;
-        }
-        outFragColor = sampleSum / weightSum;
-        //outFragColor.gb *= 0.0;
-    } else {
-        texOffset = uSampleOffset * coc.g; // * 0.5;
-        for (int i = 0; i < uCount; ++i) {
-            sampleNear(sampleSum, weightSum, vTexPosition + texOffset, uCount - i);
-            sampleNear(sampleSum, weightSum, vTexPosition - texOffset, uCount - i);
-            texOffset += uSampleOffset * coc.g * 2.0;
-        }
-        outFragColor = sampleSum / weightSum;
-        //outFragColor.rb *= 0.0;
+    vec2 texOffset = uSampleOffset * max(coc.r, coc.g) * 0.5;
+    for (int i = 0; i < uSampleCount; ++i) {
+        vec2 cocW = vec2(coc.r, 1.0) * float(uSampleCount - i);
+        sample(sampleSum, weightSum, vTexPosition + texOffset, cocW);
+        sample(sampleSum, weightSum, vTexPosition - texOffset, cocW);
+        texOffset += uSampleOffset * max(coc.r, coc.g);
     }
+    outFragColor = sampleSum / weightSum;
 }

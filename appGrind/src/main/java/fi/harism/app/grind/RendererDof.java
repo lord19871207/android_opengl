@@ -80,13 +80,13 @@ public class RendererDof implements GlRenderer {
         final String DOF_VERT_FS = GlUtils.loadString(context, "shaders/dof_vert_fs.txt");
         glProgramDofVert = new GlProgram(DOF_VERT_VS, DOF_VERT_FS, null).useProgram();
         GLES30.glUniform1i(glProgramDofVert.getUniformLocation("sTexture"), 0);
-        GLES30.glUniform1i(glProgramDofVert.getUniformLocation("sTextureCoC"), 1);
+        GLES30.glUniform1i(glProgramDofVert.getUniformLocation("sTextureCoc"), 1);
 
         final String DOF_DIAG_VS = GlUtils.loadString(context, "shaders/dof_diag_vs.txt");
         final String DOF_DIAG_FS = GlUtils.loadString(context, "shaders/dof_diag_fs.txt");
         glProgramDofDiag = new GlProgram(DOF_DIAG_VS, DOF_DIAG_FS, null).useProgram();
         GLES30.glUniform1i(glProgramDofDiag.getUniformLocation("sTexture"), 0);
-        GLES30.glUniform1i(glProgramDofDiag.getUniformLocation("sTextureCoC"), 1);
+        GLES30.glUniform1i(glProgramDofDiag.getUniformLocation("sTextureCoc"), 1);
     }
 
     @Override
@@ -181,7 +181,7 @@ public class RendererDof implements GlRenderer {
         glProgramDofVert.useProgram();
         GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
         GLES30.glUniform2f(glProgramDofVert.getUniformLocation("uSampleOffset"), pixelDx, 0f);
-        GLES30.glUniform1i(glProgramDofVert.getUniformLocation("uCount"), pixelCount);
+        GLES30.glUniform1i(glProgramDofVert.getUniformLocation("uSampleCount"), pixelCount);
         GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
@@ -199,7 +199,7 @@ public class RendererDof implements GlRenderer {
         glFramebufferDofDiag.bind(GLES30.GL_DRAW_FRAMEBUFFER);
         GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
         GLES30.glUniform2f(glProgramDofVert.getUniformLocation("uSampleOffset"), 0.0f * pixelDx, pixelDy);
-        GLES30.glUniform1i(glProgramDofVert.getUniformLocation("uCount"), pixelCount);
+        GLES30.glUniform1i(glProgramDofVert.getUniformLocation("uSampleCount"), pixelCount);
         GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
