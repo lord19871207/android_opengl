@@ -28,7 +28,8 @@ public class RendererDof implements GlRenderer {
     private final GlFramebuffer glFramebufferDofVert;
     private final GlFramebuffer glFramebufferDofDiag;
 
-    private final GlSampler glSampler;
+    private final GlSampler glSamplerNearest;
+    private final GlSampler glSamplerLinear;
     private final GlProgram glProgramDofCoc;
     private final GlProgram glProgramDofOut;
     private final GlProgram glProgramDofVert;
@@ -39,25 +40,31 @@ public class RendererDof implements GlRenderer {
     public RendererDof(Context context, ByteBuffer bufferQuad, GlCamera camera,
                        GlFramebuffer framebufferOut,
                        GlTexture textureIn,
-                       GlTexture textureHalf1, GlTexture textureHalf2, GlTexture textureHalf3
-    ) throws Exception {
+                       GlTexture textureHalfRgba1, GlTexture textureHalfRgba2,
+                       GlTexture textureHalfRg) throws Exception {
         this.bufferQuad = bufferQuad;
         glCamera = camera;
         glFramebufferOut = framebufferOut;
         glTextureIn = textureIn;
-        glTextureDofCoC = textureHalf1;
-        glTextureDofVert = textureHalf2;
-        glTextureDofDiag = textureHalf3;
+        glTextureDofVert = textureHalfRgba1;
+        glTextureDofDiag = textureHalfRgba2;
+        glTextureDofCoC = textureHalfRg;
 
         glFramebufferCoC = new GlFramebuffer();
         glFramebufferDofVert = new GlFramebuffer();
         glFramebufferDofDiag = new GlFramebuffer();
 
-        glSampler = new GlSampler();
-        glSampler.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
-        glSampler.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
-        glSampler.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
-        glSampler.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
+        glSamplerNearest = new GlSampler();
+        glSamplerNearest.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
+        glSamplerNearest.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
+        glSamplerNearest.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+        glSamplerNearest.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
+
+        glSamplerLinear = new GlSampler();
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+        glSamplerLinear.parameter(GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
 
         final String DOF_COC_VS = GlUtils.loadString(context, "shaders/dof_coc_vs.txt");
         final String DOF_COC_FS = GlUtils.loadString(context, "shaders/dof_coc_fs.txt");
@@ -113,8 +120,8 @@ public class RendererDof implements GlRenderer {
     public void onRenderFrame() {
         float aspectRatio = (float) surfaceSize.x / surfaceSize.y;
         renderDofCoc();
-        renderDofBokeh(0.008f, aspectRatio * 0.008f, 4);
-        renderDofBokeh(0.004f, aspectRatio * 0.004f, 2);
+        renderDofBokeh(0.004f, aspectRatio * 0.004f, 3);
+        renderDofBokeh(0.002f, aspectRatio * 0.002f, 2);
         renderDofOut();
     }
 
@@ -147,11 +154,11 @@ public class RendererDof implements GlRenderer {
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         glTextureIn.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
+        glSamplerNearest.bind(0);
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
         GLES30.glDisableVertexAttribArray(0);
-        glTextureIn.unbind(GLES30.GL_TEXTURE_2D);
-        glFramebufferCoC.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
+        //glTextureIn.unbind(GLES30.GL_TEXTURE_2D);
+        //glFramebufferCoC.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
     }
 
     private void renderDofOut() {
@@ -162,7 +169,7 @@ public class RendererDof implements GlRenderer {
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         glTextureDofDiag.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
+        glSamplerLinear.bind(0);
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
         GLES30.glDisableVertexAttribArray(0);
         glTextureDofDiag.unbind(GLES30.GL_TEXTURE_2D);
@@ -179,35 +186,33 @@ public class RendererDof implements GlRenderer {
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         glTextureDofDiag.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
+        glSamplerNearest.bind(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
         glTextureDofCoC.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
+        glSamplerNearest.bind(1);
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
         GLES30.glDisableVertexAttribArray(0);
-        glTextureDofDiag.unbind(GLES30.GL_TEXTURE_2D);
-        glTextureDofCoC.unbind(GLES30.GL_TEXTURE_2D);
-        glFramebufferDofVert.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
+        //glTextureDofDiag.unbind(GLES30.GL_TEXTURE_2D);
+        //glTextureDofCoC.unbind(GLES30.GL_TEXTURE_2D);
+        //glFramebufferDofVert.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
         glFramebufferDofDiag.bind(GLES30.GL_DRAW_FRAMEBUFFER);
-        glProgramDofDiag.useProgram();
         GLES30.glViewport(0, 0, surfaceSize.x / 2, surfaceSize.y / 2);
-        GLES30.glUniform2f(glProgramDofDiag.getUniformLocation("uSampleOffset1"), 0.53f * pixelDx, pixelDy);
-        GLES30.glUniform2f(glProgramDofDiag.getUniformLocation("uSampleOffset2"), -0.53f * pixelDx, pixelDy);
-        GLES30.glUniform1i(glProgramDofDiag.getUniformLocation("uCount"), pixelCount);
+        GLES30.glUniform2f(glProgramDofVert.getUniformLocation("uSampleOffset"), 0.0f * pixelDx, pixelDy);
+        GLES30.glUniform1i(glProgramDofVert.getUniformLocation("uCount"), pixelCount);
         GLES30.glVertexAttribPointer(0, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
         GLES30.glEnableVertexAttribArray(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         glTextureDofVert.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
+        glSamplerNearest.bind(0);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
         glTextureDofCoC.bind(GLES30.GL_TEXTURE_2D);
-        glSampler.bind(0);
+        glSamplerNearest.bind(1);
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
         GLES30.glDisableVertexAttribArray(0);
-        glTextureDofVert.unbind(GLES30.GL_TEXTURE_2D);
-        glTextureDofCoC.unbind(GLES30.GL_TEXTURE_2D);
-        glFramebufferDofDiag.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
+        //glTextureDofVert.unbind(GLES30.GL_TEXTURE_2D);
+        //glTextureDofCoC.unbind(GLES30.GL_TEXTURE_2D);
+        //glFramebufferDofDiag.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
     }
 
 }

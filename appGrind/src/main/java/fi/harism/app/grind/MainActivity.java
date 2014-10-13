@@ -202,9 +202,9 @@ public class MainActivity extends Activity {
     private class MainRenderer implements GlRenderer {
         private GlFramebuffer glFramebufferOut;
         private GlTexture glTextureOut;
-        private GlTexture glTextureHalf1;
-        private GlTexture glTextureHalf2;
-        private GlTexture glTextureHalf3;
+        private GlTexture glTextureHalfRgba1;
+        private GlTexture glTextureHalfRgba2;
+        private GlTexture glTextureHalfRg;
         private GlTexture glTextureRand;
         private ByteBuffer mBufferQuad;
         private GlRenderbuffer glRenderbufferDepth;
@@ -244,9 +244,9 @@ public class MainActivity extends Activity {
 
             glFramebufferOut = new GlFramebuffer();
             glTextureOut = new GlTexture();
-            glTextureHalf1 = new GlTexture();
-            glTextureHalf2 = new GlTexture();
-            glTextureHalf3 = new GlTexture();
+            glTextureHalfRgba1 = new GlTexture();
+            glTextureHalfRgba2 = new GlTexture();
+            glTextureHalfRg = new GlTexture();
 
             MersenneTwisterFast rand = new MersenneTwisterFast(8347);
             glTextureRand = new GlTexture().bind(GLES30.GL_TEXTURE_2D);
@@ -267,7 +267,7 @@ public class MainActivity extends Activity {
             try {
                 rendererScene = new RendererScene(MainActivity.this, mBufferQuad, glCamera, glFramebufferOut);
                 rendererDof = new RendererDof(MainActivity.this, mBufferQuad, glCamera,
-                        glFramebufferOut, glTextureOut, glTextureHalf1, glTextureHalf2, glTextureHalf3);
+                        glFramebufferOut, glTextureOut, glTextureHalfRgba1, glTextureHalfRgba2, glTextureHalfRg);
                 rendererOut = new RendererOut(MainActivity.this, mBufferQuad, glTextureOut, glTextureRand);
 
                 setProgress(9, 1);
@@ -313,7 +313,7 @@ public class MainActivity extends Activity {
         @Override
         public void onSurfaceChanged(int width, int height) {
             glCamera.setPerspective(resolutionWidth, resolutionHeight, 60f, 1f, 100f);
-            glCamera.setApertureDiameter(4.8f);
+            glCamera.setApertureDiameter(0.5f * 8);
             glCamera.setPlaneInFocus(10f);
 
             glTextureOut.bind(GLES30.GL_TEXTURE_2D)
@@ -330,16 +330,16 @@ public class MainActivity extends Activity {
             GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
             glFramebufferOut.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
 
-            glTextureHalf1.bind(GLES30.GL_TEXTURE_2D)
+            glTextureHalfRgba1.bind(GLES30.GL_TEXTURE_2D)
                     .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth / 2, resolutionHeight / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
                     .unbind(GLES30.GL_TEXTURE_2D);
 
-            glTextureHalf2.bind(GLES30.GL_TEXTURE_2D)
+            glTextureHalfRgba2.bind(GLES30.GL_TEXTURE_2D)
                     .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth / 2, resolutionHeight / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
                     .unbind(GLES30.GL_TEXTURE_2D);
 
-            glTextureHalf3.bind(GLES30.GL_TEXTURE_2D)
-                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA16F, resolutionWidth / 2, resolutionHeight / 2, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, null)
+            glTextureHalfRg.bind(GLES30.GL_TEXTURE_2D)
+                    .texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RG8, resolutionWidth / 2, resolutionHeight / 2, 0, GLES30.GL_RG, GLES30.GL_UNSIGNED_BYTE, null)
                     .unbind(GLES30.GL_TEXTURE_2D);
 
             rendererScene.onSurfaceChanged(resolutionWidth, resolutionHeight);

@@ -12,8 +12,8 @@ uniform float uCamera2;
 
 in vec2 vTexPosition;
 
-layout (location = 0) out vec4 outFragColor;
-layout (location = 1) out vec4 outCoC;
+layout (location = 0) out vec3 outFragColor;
+layout (location = 1) out vec2 outFragCoC;
 
 void main() {
     vec4 color = texture(sTexture, vTexPosition);
@@ -22,6 +22,6 @@ void main() {
     vec2 coc2 = vec2(-coc, coc);
     coc2 = clamp(coc2, 0.0, 1.0);
 
-    outFragColor = vec4(color.rgb, coc2.x);
-    outCoC = vec4(coc2, 0.0, 0.0);
+    outFragColor = color.rgb;
+    outFragCoC = coc2;
 }

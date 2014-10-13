@@ -9,15 +9,16 @@ in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
-void sample(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in float centerCoC, in float centerDepth) {
-    const float bleedingMult = 1.5;
-    const float bleedingBias = 0.0;
-
+void sampleFar(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in int w) {
     vec4 sample = texture(sTexture, texPos);
-    vec2 coc = texture(sTextureCoC, texPos).rg;
-    float weight = coc.r < centerDepth ? sample.a * bleedingMult : 1.0;
-    weight = (centerCoC > sample.a + bleedingBias) ? weight : 1.0;
-    weight = clamp(weight, 0.0, 1.0);
+    float weight = texture(sTextureCoC, texPos).r * float(w);
+    sampleSum += sample * weight;
+    weightSum += weight;
+}
+
+void sampleNear(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in int w) {
+    vec4 sample = texture(sTexture, texPos);
+    float weight = /* texture(sTextureCoC, texPos).g */ float(w);
     sampleSum += sample * weight;
     weightSum += weight;
 }
@@ -25,23 +26,30 @@ void sample(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in floa
 void main() {
     vec4 sampleCenter = texture(sTexture, vTexPosition);
     vec2 coc = texture(sTextureCoC, vTexPosition).rg;
-    //outFragColor = sampleCenter;
-    //return;
+    // outFragColor = sampleCenter;
+    // return;
+
+    vec4 sampleSum = sampleCenter;
+    float weightSum = 1.0;
+    vec2 texOffset;
 
     if (coc.r > 0.0) {
-        vec4 sampleSum = vec4(0.0, 0.0, 0.0, coc.r);
-        float weightSum = 0.0;
-
-        vec2 texOffset = uSampleOffset * coc.r * 0.5;
-
+        texOffset = uSampleOffset * coc.r * 0.5;
         for (int i = 0; i < uCount; ++i) {
-            sample(sampleSum, weightSum, vTexPosition + texOffset, sampleCenter.a, coc.x);
-            sample(sampleSum, weightSum, vTexPosition - texOffset, sampleCenter.a, coc.x);
+            sampleFar(sampleSum, weightSum, vTexPosition + texOffset, uCount - i);
+            sampleFar(sampleSum, weightSum, vTexPosition - texOffset, uCount - i);
             texOffset += uSampleOffset * coc.r;
         }
-
-        outFragColor = weightSum >= 0.0 ? sampleSum / weightSum : sampleCenter;
+        outFragColor = sampleSum / weightSum;
+        //outFragColor.gb *= 0.0;
     } else {
-        outFragColor = sampleCenter;
+        texOffset = uSampleOffset * coc.g; // * 0.5;
+        for (int i = 0; i < uCount; ++i) {
+            sampleNear(sampleSum, weightSum, vTexPosition + texOffset, uCount - i);
+            sampleNear(sampleSum, weightSum, vTexPosition - texOffset, uCount - i);
+            texOffset += uSampleOffset * coc.g * 2.0;
+        }
+        outFragColor = sampleSum / weightSum;
+        //outFragColor.rb *= 0.0;
     }
 }
