@@ -1,16 +1,14 @@
 package fi.harism.app.opengl3x.fragment;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.graphics.Outline;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 
 import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
@@ -49,10 +47,12 @@ public class ActionButtonFragment extends Fragment {
         actionButtonOverlay = view.findViewById(R.id.action_button_overlay);
         containerSettings = view.findViewById(R.id.container_settings);
 
-        int w = actionButton.getLayoutParams().width;
-        Outline outline = new Outline();
-        outline.setOval(0, 0, w, w);
-        actionButton.setOutline(outline);
+        actionButton.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                outline.setOval(0, 0, view.getWidth(), view.getHeight());
+            }
+        });
         actionButton.setClipToOutline(true);
         actionButton.setOnClickListener(onClickListener);
 
@@ -61,17 +61,13 @@ public class ActionButtonFragment extends Fragment {
         actionButtonOverlay.setAlpha(0f);
 
         containerSettings.setVisibility(View.GONE);
-        containerSettings.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+        containerSettings.setOutlineProvider(new ViewOutlineProvider() {
             @Override
-            public void onLayoutChange(View v,
-                                       int left, int top, int right, int bottom,
-                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                Outline outline = new Outline();
-                outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), getResources().getDimension(R.dimen.settings_round_radius));
-                v.setOutline(outline);
-                v.setClipToOutline(true);
+            public void getOutline(View view, Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), getResources().getDimension(R.dimen.settings_round_radius));
             }
         });
+        containerSettings.setClipToOutline(true);
 
         getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override

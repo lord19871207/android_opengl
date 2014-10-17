@@ -282,7 +282,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
                 CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
                 int lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
                 if (lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
-                    cameraManager.openCamera(cameraId, new CameraDevice.StateListener() {
+                    cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
                         @Override
                         public void onOpened(CameraDevice device) {
                             cameraDevice = device;
@@ -322,7 +322,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
             setTonemapCurveMax(cameraCharacteristics.get(CameraCharacteristics.TONEMAP_MAX_CURVE_POINTS));
             setPreviewSize(previewSizes[0]);
             cameraDevice.createCaptureSession(Arrays.asList(imageReader.getSurface()),
-                    new CameraCaptureSession.StateListener() {
+                    new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                             try {
@@ -336,7 +336,7 @@ public class Camera2YuvRendererFragment extends RendererFragment {
                                 captureRequestBuilder.set(CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE, CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE_OFF);
                                 captureRequestBuilder.addTarget(imageReader.getSurface());
 
-                                cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), new CameraCaptureSession.CaptureListener() {
+                                cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), new CameraCaptureSession.CaptureCallback() {
                                     @Override
                                     public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                                         setTonemapCurve(result.get(CaptureResult.TONEMAP_CURVE));

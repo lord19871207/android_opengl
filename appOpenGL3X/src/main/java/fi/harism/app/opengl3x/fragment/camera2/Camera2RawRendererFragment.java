@@ -11,6 +11,7 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.BlackLevelPattern;
 import android.hardware.camera2.params.LensShadingMap;
 import android.hardware.camera2.params.RggbChannelVector;
 import android.hardware.camera2.params.StreamConfigurationMap;
@@ -65,7 +66,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
     private ByteBuffer verticesQuad;
 
     private int whiteLevel;
-    private int[] blackLevel;
+    private int blackLevelPattern[] = new int[4];
     private int cameraOrientation;
     private Size surfaceSize;
     private Size previewSize;
@@ -226,7 +227,9 @@ public class Camera2RawRendererFragment extends RendererFragment {
                 GLES30.glUniform2f(glProgramConvert.getUniformLocation("uTextureRawSize"), imageWidth, imageHeight);
                 GLES30.glUniform4fv(glProgramConvert.getUniformLocation("uColorCorrectionGains"), 1, colorCorrectionGains, 0);
                 GLES30.glUniform1f(glProgramConvert.getUniformLocation("uWhiteLevel"), whiteLevel);
-                GLES30.glUniform4f(glProgramConvert.getUniformLocation("uBlackLevel"), blackLevel[0], blackLevel[1], blackLevel[2], blackLevel[3]);
+                GLES30.glUniform4f(glProgramConvert.getUniformLocation("uBlackLevel"),
+                        blackLevelPattern[0], blackLevelPattern[1],
+                        blackLevelPattern[2], blackLevelPattern[3]);
                 GLES30.glVertexAttribPointer(IN_POSITION, 2, GLES30.GL_BYTE, false, 0, verticesQuad);
                 GLES30.glEnableVertexAttribArray(IN_POSITION);
                 GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
@@ -300,8 +303,8 @@ public class Camera2RawRendererFragment extends RendererFragment {
         this.whiteLevel = whiteLevel;
     }
 
-    private void setBlackLevel(int[] blackLevel) {
-        this.blackLevel = blackLevel;
+    private void setBlackLevel(BlackLevelPattern blackLevelPattern) {
+        blackLevelPattern.copyTo(this.blackLevelPattern, 0);
     }
 
 
@@ -322,7 +325,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
                 CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
                 int lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
                 if (lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
-                    cameraManager.openCamera(cameraId, new CameraDevice.StateListener() {
+                    cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
                         @Override
                         public void onOpened(CameraDevice device) {
                             cameraDevice = device;
@@ -359,7 +362,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
             setTonemapCurveMax(cameraCharacteristics.get(CameraCharacteristics.TONEMAP_MAX_CURVE_POINTS));
             setWhiteLevel(cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL));
             setBlackLevel(cameraCharacteristics.get(CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN));
-            cameraDevice.createCaptureSession(Arrays.asList(imageReader.getSurface()), new CameraCaptureSession.StateListener() {
+            cameraDevice.createCaptureSession(Arrays.asList(imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                     try {
@@ -373,7 +376,7 @@ public class Camera2RawRendererFragment extends RendererFragment {
                         captureRequestBuilder.set(CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE, CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE_ON);
                         captureRequestBuilder.addTarget(imageReader.getSurface());
 
-                        cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), new CameraCaptureSession.CaptureListener() {
+                        cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), new CameraCaptureSession.CaptureCallback() {
                             @Override
                             public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                                 setLensShadingMap(result.get(CaptureResult.STATISTICS_LENS_SHADING_CORRECTION_MAP));

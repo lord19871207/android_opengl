@@ -7,17 +7,18 @@ in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
+const float[25] sobel5x5 = float[]( -5.0,  -4.0,   0.0,   4.0,   5.0,
+                                    -8.0, -10.0,   0.0,  10.0,   8.0,
+                                   -10.0, -20.0,   0.0,  20.0,  10.0,
+                                    -8.0, -10.0,   0.0,  10.0,   8.0,
+                                    -5.0,  -4.0,   0.0,   4.0,   5.0);
+
 float intensity(int dx, int dy) {
     vec3 c = texture(sTexture, vTexPosition + uPixelSize * vec2(dx, dy)).rgb;
     return length(c);
 }
 
 void main() {
-    float[25] sobel5x5 = float[]( -5.0,  -4.0,   0.0,   4.0,   5.0,
-                                  -8.0, -10.0,   0.0,  10.0,   8.0,
-                                 -10.0, -20.0,   0.0,  20.0,  10.0,
-                                  -8.0, -10.0,   0.0,  10.0,   8.0,
-                                  -5.0,  -4.0,   0.0,   4.0,   5.0);
     float sx = 0.0;
     float sy = 0.0;
     for (int idx = 0; idx < 25; ++idx) {

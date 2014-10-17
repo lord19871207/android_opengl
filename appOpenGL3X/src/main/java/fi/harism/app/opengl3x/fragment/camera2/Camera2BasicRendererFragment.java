@@ -209,7 +209,7 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
                 CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
                 int lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
                 if (lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
-                    cameraManager.openCamera(cameraId, new CameraDevice.StateListener() {
+                    cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
                         @Override
                         public void onOpened(CameraDevice device) {
                             cameraDevice = device;
@@ -242,7 +242,7 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
             Size previewSizes[] = streamConfigurationMap.getOutputSizes(SurfaceTexture.class);
             setOrientation(cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION));
             setSurfaceTextureSize(previewSizes[0]);
-            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateListener() {
+            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                     try {
@@ -253,7 +253,6 @@ public class Camera2BasicRendererFragment extends RendererFragment implements Su
                     } catch (CameraAccessException ex) {
                         ex.printStackTrace();
                     }
-
                 }
 
                 @Override
