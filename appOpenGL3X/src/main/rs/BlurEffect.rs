@@ -16,7 +16,7 @@
 
 #pragma version(1)
 #pragma rs java_package_name(fi.harism.app.opengl3x)
-#pragma rs_fp_imprecise
+#pragma rs_fp_relaxed
 
 #include "rs_types.rsh"
 
