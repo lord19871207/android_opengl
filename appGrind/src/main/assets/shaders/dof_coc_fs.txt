@@ -16,8 +16,8 @@ layout (location = 0) out vec3 outFragColor;
 layout (location = 1) out vec2 outFragCoC;
 
 void main() {
-    vec4 sample = texture(sTexture, vTexPosition);
-    float coc = (uCamera1 / sample.a) - uCamera2;
-    outFragCoC = sample.a <= 0.0 ? vec2(1.0, 0.0) : clamp(vec2(-coc, coc), 0.0, 1.0);
-    outFragColor = sample.rgb;
+    vec4 color = texture(sTexture, vTexPosition);
+    float coc = (uCamera1 / color.a) - uCamera2;
+    outFragCoC = color.a <= 0.0 ? vec2(1.0, 0.0) : clamp(vec2(-coc, coc), 0.0, 1.0);
+    outFragColor = color.rgb;
 }

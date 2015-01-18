@@ -10,10 +10,10 @@ in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
-void sample(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in int w) {
-    vec4 sample = texture(sTexture, texPos);
+void readSample(inout vec4 sampleSum, inout float weightSum, in vec2 texPos, in int w) {
+    vec4 sampleColor = texture(sTexture, texPos);
     float weight = texture(sTextureCoC, texPos).r * float(w);
-    sampleSum += sample * weight;
+    sampleSum += sampleColor * weight;
     weightSum += weight;
 }
 
@@ -33,8 +33,8 @@ void main() {
         vec2 texOffset2 = uSampleOffset2 * coc.r * 0.5;
 
         for (int i = 0; i < uCount; ++i) {
-            sample(sampleSum1, weightSum1, vTexPosition + texOffset1, uCount - i);
-            sample(sampleSum1, weightSum1, vTexPosition - texOffset1, uCount - i);
+            readSample(sampleSum1, weightSum1, vTexPosition + texOffset1, uCount - i);
+            readSample(sampleSum1, weightSum1, vTexPosition - texOffset1, uCount - i);
             //sample(sampleSum2, weightSum2, vTexPosition + texOffset2);
             //sample(sampleSum2, weightSum2, vTexPosition - texOffset2);
 
