@@ -1,5 +1,5 @@
 /*
-   Copyright 2014 Harri Smatt
+   Copyright 2015 Harri Smatt
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,21 +14,18 @@
    limitations under the License.
  */
 
-package fi.harism.app.opengl3x;
+package fi.harism.app.opengl3x.view;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.renderscript.Allocation;
-import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-import fi.harism.app.opengl3x.ScriptC_BlurEffect;
-import fi.harism.app.opengl3x.ScriptField_FadeStruct;
-import fi.harism.app.opengl3x.ScriptField_SizeStruct;
+import fi.harism.app.opengl3x.MainApplication;
 
 public class FadeImageView extends ImageView {
 
@@ -40,7 +37,6 @@ public class FadeImageView extends ImageView {
     private Canvas offscreenCanvas;
     private Bitmap offscreenBitmap;
     private Allocation allocationBitmap;
-    private Allocation allocationInOut;
     private Allocation allocationTemp;
 
     public FadeImageView(Context context) {
@@ -68,8 +64,6 @@ public class FadeImageView extends ImageView {
     public void onSizeChanged(int w, int h, int oldW, int oldH) {
         super.onSizeChanged(w, h, oldW, oldH);
 
-        w = (w + 3) & ~3;
-
         sizeStruct.width = w;
         sizeStruct.height = h;
         sizeStruct.widthInv = 1f / w;
@@ -79,8 +73,7 @@ public class FadeImageView extends ImageView {
         offscreenCanvas = new Canvas(offscreenBitmap);
 
         allocationBitmap = Allocation.createFromBitmap(renderScript, offscreenBitmap);
-        allocationInOut = Allocation.createSized(renderScript, Element.RGBA_8888(renderScript), w * h, Allocation.USAGE_SCRIPT);
-        allocationTemp = Allocation.createSized(renderScript, Element.RGBA_8888(renderScript), w * h, Allocation.USAGE_SCRIPT);
+        allocationTemp = Allocation.createFromBitmap(renderScript, offscreenBitmap);
     }
 
     @Override
@@ -91,16 +84,15 @@ public class FadeImageView extends ImageView {
         // do filter..
         scriptBlurEffect.set_sizeStruct(sizeStruct);
         scriptBlurEffect.set_fadeStruct(fadeStruct);
-        scriptBlurEffect.bind_allocationInOut(allocationInOut);
-        scriptBlurEffect.bind_allocationTemp(allocationTemp);
 
         allocationBitmap.copyFrom(offscreenBitmap);
-        scriptBlurEffect.forEach_copyFromBitmap(allocationBitmap);
-        scriptBlurEffect.forEach_blurBoxH(allocationBitmap);
-        scriptBlurEffect.forEach_blurBoxV(allocationBitmap);
-        scriptBlurEffect.forEach_copyToBitmap(allocationBitmap);
-        allocationBitmap.copyTo(offscreenBitmap);
+        scriptBlurEffect.set_allocationBitmap(allocationBitmap);
+        scriptBlurEffect.set_allocationTemp(allocationTemp);
 
+        scriptBlurEffect.forEach_blurBoxH(allocationTemp);
+        scriptBlurEffect.forEach_blurBoxV(allocationBitmap);
+
+        allocationBitmap.copyTo(offscreenBitmap);
         canvas.drawBitmap(offscreenBitmap, 0, 0, null);
     }
 

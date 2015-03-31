@@ -2,7 +2,6 @@ package fi.harism.app.opengl3x;
 
 import android.app.Application;
 import android.os.AsyncTask;
-import android.os.CountDownTimer;
 import android.renderscript.RenderScript;
 import android.widget.Toast;
 
@@ -12,6 +11,7 @@ import java.util.HashMap;
 import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.event.GetProgressEvent;
 import fi.harism.app.opengl3x.event.SetProgressEvent;
+import fi.harism.app.opengl3x.view.ScriptC_BlurEffect;
 import fi.harism.lib.opengl.model.GlObjectData;
 
 public class MainApplication extends Application {

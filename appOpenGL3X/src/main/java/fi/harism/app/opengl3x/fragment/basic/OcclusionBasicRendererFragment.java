@@ -1,14 +1,10 @@
 package fi.harism.app.opengl3x.fragment.basic;
 
-import android.app.Fragment;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
 import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 import fi.harism.app.opengl3x.R;
@@ -40,11 +36,6 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setEglFlags(EglCore.FLAG_DEPTH_BUFFER);
-    }
-
-    @Override
-    public Fragment getSettingsFragment() {
-        return new SettingsFragment();
     }
 
     @Override
@@ -180,16 +171,6 @@ public class OcclusionBasicRendererFragment extends BasicRendererFragment {
         public void multiplyMVP(float viewMatrix[], float projMatrix[]) {
             Matrix.multiplyMM(modelViewMat, 0, viewMatrix, 0, modelMat, 0);
             Matrix.multiplyMM(modelViewProjMat, 0, projMatrix, 0, modelViewMat, 0);
-        }
-
-    }
-
-    public static class SettingsFragment extends Fragment {
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.fragment_settings_basic_occlusion, container, false);
-            return view;
         }
 
     }

@@ -7,8 +7,10 @@ in vec2 vTexPosition;
 
 out vec4 outFragColor;
 
-const int radius = 5;
-const float n = 1.0 / float((radius + 1) * (radius + 1));
+const int radius = 4;
+const int radius_plus_1 = radius + 1;
+const int radius_times_2 = (radius_plus_1) * (radius_plus_1);
+const float n = 1.0 / float(radius_times_2);
 
 void read(in int i, in int j, inout vec3 m, inout vec3 s) {
     vec3 c = texture(sTexture, vTexPosition + vec2(i, j) * uSampleOffset).rgb;
@@ -19,8 +21,11 @@ void main() {
     vec3 m[4]; m[0] = vec3(0.0); m[1] = vec3(0.0); m[2] = vec3(0.0); m[3] = vec3(0.0);
     vec3 s[4]; s[0] = vec3(0.0); s[1] = vec3(0.0); s[2] = vec3(0.0); s[3] = vec3(0.0);
 
-    for (int j = 0; j <= radius; ++j)
-    for (int i = 0; i <= radius; ++i) {
+    for (int idx = 0; idx < radius_times_2; ++idx) {
+        int j = idx / radius_plus_1;
+        int i = idx - j * radius_plus_1;
+    //for (int j = 0; j <= radius; ++j)
+    //for (int i = 0; i <= radius; ++i) {
         read(i, j, m[0], s[0]);
         read(i - radius, j, m[1], s[1]);
         read(i, j - radius, m[2], s[2]);

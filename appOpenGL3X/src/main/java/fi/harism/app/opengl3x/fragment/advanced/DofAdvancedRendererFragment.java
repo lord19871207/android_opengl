@@ -1,18 +1,9 @@
 package fi.harism.app.opengl3x.fragment.advanced;
 
-import android.app.Fragment;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.opengl.GLES30;
-import android.os.Bundle;
 import android.util.Size;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
-import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
 import fi.harism.lib.opengl.gl.GlFramebuffer;
 import fi.harism.lib.opengl.gl.GlProgram;
@@ -23,13 +14,9 @@ import fi.harism.lib.opengl.gl.GlUtils;
 public class DofAdvancedRendererFragment extends AdvancedRendererFragment {
 
     private static final String RENDERER_ID = "renderer.advanced.dof";
-    private static final String PREFERENCE_APERTURE_DIAMETER = RENDERER_ID + ".aperture_diameter";
-    private static final String PREFERENCE_PLANE_IN_FOCUS = RENDERER_ID + ".plane_in_focus";
-    private static final int DEFAULT_APERTURE_DIAMETER = 8;
-    private static final int DEFAULT_PLANE_IN_FOCUS = 7;
 
-    private float apertureDiameter = 0.5f * 32;
-    private float planeInFocus = 5.0f;
+    private static final float apertureDiameter = 0.5f * 8;
+    private static final float planeInFocus = 2.5f;
 
     private GlTexture glTextureScene;
     private GlTexture glTextureDepth;
@@ -73,20 +60,6 @@ public class DofAdvancedRendererFragment extends AdvancedRendererFragment {
 
     private final class UniformsDofOut {
         public int sTexture;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        SharedPreferences prefs =
-                getActivity().getPreferences(Context.MODE_PRIVATE);
-        apertureDiameter = prefs.getInt(PREFERENCE_APERTURE_DIAMETER, DEFAULT_APERTURE_DIAMETER) * 0.5f;
-        planeInFocus = prefs.getInt(PREFERENCE_PLANE_IN_FOCUS, DEFAULT_PLANE_IN_FOCUS);
-    }
-
-    @Override
-    public Fragment getSettingsFragment() {
-        return new SettingsFragment();
     }
 
     @Override
@@ -283,68 +256,6 @@ public class DofAdvancedRendererFragment extends AdvancedRendererFragment {
         glSamplerNearest.bind(1);
         renderQuad();
         //glFramebufferDofDiag.unbind(GLES30.GL_DRAW_FRAMEBUFFER);
-    }
-
-    public void onEvent(SettingsEvent event) {
-        apertureDiameter = event.apertureDiameter * 0.5f;
-        planeInFocus = event.planeInFocus;
-    }
-
-    public static class SettingsFragment extends Fragment {
-
-        private final SeekBar.OnSeekBarChangeListener
-                seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                SettingsEvent event = new SettingsEvent();
-                event.apertureDiameter = seekBarApertureDiameter.getProgress();
-                event.planeInFocus = seekBarPlaneInFocus.getProgress();
-                EventBus.getDefault().post(event);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int apertureDiameter = seekBarApertureDiameter.getProgress();
-                int planeInFocus = seekBarPlaneInFocus.getProgress();
-                SharedPreferences.Editor editor =
-                        getActivity().getPreferences(Context.MODE_PRIVATE).edit();
-                editor.putInt(PREFERENCE_APERTURE_DIAMETER, apertureDiameter);
-                editor.putInt(PREFERENCE_PLANE_IN_FOCUS, planeInFocus);
-                editor.apply();
-            }
-        };
-
-        private SeekBar seekBarApertureDiameter;
-        private SeekBar seekBarPlaneInFocus;
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.fragment_settings_advanced_dof, container, false);
-
-            seekBarApertureDiameter = (SeekBar) view.findViewById(R.id.seekbar_aperture_diameter);
-            seekBarPlaneInFocus = (SeekBar) view.findViewById(R.id.seekbar_plane_in_focus);
-
-            SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
-            int apertureDiameter = prefs.getInt(PREFERENCE_APERTURE_DIAMETER, DEFAULT_APERTURE_DIAMETER);
-            int planeInFocus = prefs.getInt(PREFERENCE_PLANE_IN_FOCUS, DEFAULT_PLANE_IN_FOCUS);
-
-            seekBarApertureDiameter.setProgress(apertureDiameter);
-            seekBarPlaneInFocus.setProgress(planeInFocus);
-
-            seekBarApertureDiameter.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarPlaneInFocus.setOnSeekBarChangeListener(seekBarChangeListener);
-
-            return view;
-        }
-    }
-
-    public static class SettingsEvent {
-        private int apertureDiameter;
-        private int planeInFocus;
     }
 
 }

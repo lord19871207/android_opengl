@@ -1,20 +1,11 @@
 package fi.harism.app.opengl3x.fragment.basic;
 
-import android.app.Fragment;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.Toast;
 
-import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
 import fi.harism.lib.opengl.egl.EglCore;
 import fi.harism.lib.opengl.gl.GlProgram;
@@ -26,9 +17,8 @@ import fi.harism.lib.opengl.model.GlCamera;
 public class CubemapBasicRendererFragment extends BasicRendererFragment {
 
     private static final String RENDERER_ID = "renderer.basic.cubemap";
-    private static final String PREFERENCE_ENABLE_LIGHTNING = "renderer.basic.cubemap.enable_lightning";
-    private static final boolean DEFAULT_ENABLE_LIGHTNING = true;
 
+    private static final boolean enableLightning = true;
     private static final float MATERIAL_LIGHTNING_DISABLED[] = {1f, 0f, 0f, 1f};
     private static final float MATERIAL_LIGHTNING_ENABLED[] = {0.4f, 1.0f, 1.0f, 8.0f};
 
@@ -38,8 +28,6 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
     private GlCamera glCamera;
 
     private long lastRenderTime;
-
-    private boolean enableLightning;
 
     private final float rotationMat[] = new float[16];
     private final float modelMat[] = new float[16];
@@ -60,15 +48,6 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setEglFlags(EglCore.FLAG_DEPTH_BUFFER);
-
-        enableLightning = getActivity()
-                .getPreferences(Context.MODE_PRIVATE)
-                .getBoolean(PREFERENCE_ENABLE_LIGHTNING, DEFAULT_ENABLE_LIGHTNING);
-    }
-
-    @Override
-    public Fragment getSettingsFragment() {
-        return new SettingsFragment();
     }
 
     @Override
@@ -161,54 +140,4 @@ public class CubemapBasicRendererFragment extends BasicRendererFragment {
     public void onSurfaceReleased() {
     }
 
-    public void onEvent(SettingsEvent event) {
-        enableLightning = event.getEnableLightning();
-    }
-
-    public static class SettingsFragment extends Fragment {
-
-        private final CheckBox.OnCheckedChangeListener onCheckedListener =
-                new CheckBox.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                        SharedPreferences.Editor editor =
-                                getActivity().getPreferences(Context.MODE_PRIVATE).edit();
-                        editor.putBoolean(PREFERENCE_ENABLE_LIGHTNING, checked);
-                        editor.commit();
-
-                        EventBus.getDefault().post(new SettingsEvent(checked));
-                    }
-                };
-
-        private CheckBox checkBoxEnableLightning;
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.fragment_settings_basic_cubemap, container, false);
-
-            checkBoxEnableLightning = (CheckBox) view.findViewById(R.id.checkbox_enable_lightning);
-            checkBoxEnableLightning.setChecked(
-                    getActivity()
-                            .getPreferences(Context.MODE_PRIVATE)
-                            .getBoolean(PREFERENCE_ENABLE_LIGHTNING, DEFAULT_ENABLE_LIGHTNING)
-            );
-            checkBoxEnableLightning.setOnCheckedChangeListener(onCheckedListener);
-
-            return view;
-        }
-    }
-
-    public static class SettingsEvent {
-
-        private boolean enableLightning;
-
-        public SettingsEvent(boolean enableLightning) {
-            this.enableLightning = enableLightning;
-        }
-
-        public boolean getEnableLightning() {
-            return enableLightning;
-        }
-
-    }
 }

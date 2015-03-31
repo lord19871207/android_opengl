@@ -54,12 +54,20 @@
     <string name="section_camera2">Camera2 Rendering</string>
     <string name="renderer_camera2_basic_title">Basic</string>
     <string name="renderer_camera2_basic_caption">Renders camera preview from surface texture using Camera2 API.</string>
-    <string name="renderer_camera2_filter_title">Filters</string>
-    <string name="renderer_camera2_filter_caption">Renders camera preview from surface texture using Camera2 API and applies filters to it.</string>
     <string name="renderer_camera2_yuv_title">Yuv Input</string>
     <string name="renderer_camera2_yuv_caption">Renders camera preview from ImageReader using Camera2 API and GLSL shaders to convert yuv images into rgb.</string>
     <string name="renderer_camera2_raw_title">Raw Input</string>
     <string name="renderer_camera2_raw_caption">Renders camera preview from ImageReader using Camera2 API and GLSL shaders to convert raw images into rgb.</string>
+
+    <string name="section_camera2effect">Camera2 Effect Rendering</string>
+    <string name="renderer_camera2effect_radial_dots_title">Radial Dots</string>
+    <string name="renderer_camera2effect_radial_dots_caption">Renders radial dots effect using Camera2 API and OpenGL ES 3.0.</string>
+    <string name="renderer_camera2effect_voronoi_title">Voronoi</string>
+    <string name="renderer_camera2effect_voronoi_caption">Renders voronoi effect using Camera2 API and OpenGL ES 3.0.</string>
+    <string name="renderer_camera2effect_edge_detection_title">Edge Detection</string>
+    <string name="renderer_camera2effect_edge_detection_caption">Renders edge detection effect using Camera2 API and OpenGL ES 3.0.</string>
+    <string name="renderer_camera2effect_oil_painting_title">Oil Painting</string>
+    <string name="renderer_camera2effect_oil_painting_caption">Renders oil painting effect using Camera2 API and OpenGL ES 3.0.</string>
 
     <string name="section_test">Test Renderers</string>
     <string name="renderer_test_clear_title">Random Clear</string>

@@ -4,18 +4,15 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Fragment;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.SeekBar;
 
 import de.greenrobot.event.EventBus;
-import fi.harism.app.opengl3x.FadeImageView;
-import fi.harism.app.opengl3x.FadeTextView;
+import fi.harism.app.opengl3x.view.FadeImageView;
+import fi.harism.app.opengl3x.view.FadeTextView;
 import fi.harism.app.opengl3x.R;
-import fi.harism.app.opengl3x.event.GetProgressEvent;
 import fi.harism.app.opengl3x.event.SetProgressEvent;
 
 public class SplashFragment extends Fragment {

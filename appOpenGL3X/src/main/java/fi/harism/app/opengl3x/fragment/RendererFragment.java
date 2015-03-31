@@ -7,10 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
-import fi.harism.app.opengl3x.event.GetSettingsFragmentEvent;
-import fi.harism.app.opengl3x.event.SetSettingsFragmentEvent;
 import fi.harism.lib.opengl.egl.EglCore;
 import fi.harism.lib.opengl.util.GlRenderer;
 import fi.harism.lib.opengl.view.GlTextureView;
@@ -34,7 +31,6 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         choreographer = Choreographer.getInstance();
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -64,11 +60,6 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
     public void onDestroy() {
         super.onDestroy();
         glTextureView.onDestroy();
-        EventBus.getDefault().unregister(this);
-    }
-
-    public final void onEvent(GetSettingsFragmentEvent event) {
-        EventBus.getDefault().post(new SetSettingsFragmentEvent(getSettingsFragment()));
     }
 
     public final void setContinuousRendering(boolean continuousRendering) {
@@ -88,22 +79,10 @@ public abstract class RendererFragment extends Fragment implements GlRenderer {
         glTextureView.renderFrame();
     }
 
-    public Fragment getSettingsFragment() {
-        return new SettingsFragment();
-    }
-
     public abstract String getRendererId();
 
     public abstract int getTitleStringId();
 
     public abstract int getCaptionStringId();
-
-    public static class SettingsFragment extends Fragment {
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.fragment_settings_default, container, false);
-            return view;
-        }
-    }
 
 }

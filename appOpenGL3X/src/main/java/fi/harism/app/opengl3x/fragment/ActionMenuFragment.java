@@ -12,31 +12,47 @@ import android.view.ViewOutlineProvider;
 
 import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
-import fi.harism.app.opengl3x.event.GetSettingsFragmentEvent;
-import fi.harism.app.opengl3x.event.SetSettingsFragmentEvent;
 
-public class ActionButtonFragment extends Fragment {
+public class ActionMenuFragment extends Fragment {
+
+    private static final String TAG_LIST_FRAGMENT = "tag.list_fragment";
 
     private final View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            if (!isSelected) {
-                EventBus.getDefault().post(new GetSettingsFragmentEvent());
-            } else {
-                getFragmentManager().popBackStack();
+            setActionMenuVisible(!isMenuVisible);
+        }
+    };
+
+    private final FragmentManager.OnBackStackChangedListener onBackStackChangedListener = new FragmentManager.OnBackStackChangedListener() {
+        @Override
+        public void onBackStackChanged() {
+            FragmentManager fm = getFragmentManager();
+            setActionButtonRotated(isMenuVisible = !isMenuVisible);
+            if (fm.findFragmentByTag(TAG_LIST_FRAGMENT) == null) {
+                fm.beginTransaction().remove(listFragment).add(listFragment, TAG_LIST_FRAGMENT).commit();
             }
         }
     };
 
+    private Fragment listFragment;
     private View actionButton;
     private View actionButtonOverlay;
     private View containerSettings;
-    private boolean isSelected = false;
+    private boolean isMenuVisible = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EventBus.getDefault().register(this);
+
+        FragmentManager fm = getFragmentManager();
+        listFragment = fm.findFragmentByTag(TAG_LIST_FRAGMENT);
+        if (listFragment == null) {
+            listFragment = new ListFragment();
+            listFragment.setRetainInstance(true);
+            fm.beginTransaction().add(listFragment, TAG_LIST_FRAGMENT).commit();
+        }
+        fm.addOnBackStackChangedListener(onBackStackChangedListener);
     }
 
     @Override
@@ -69,31 +85,27 @@ public class ActionButtonFragment extends Fragment {
         });
         containerSettings.setClipToOutline(true);
 
-        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                setActionButtonRotated(isSelected = !isSelected);
-            }
-        });
-
         return view;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
+        getFragmentManager().removeOnBackStackChangedListener(onBackStackChangedListener);
     }
 
-    public void onEvent(SetSettingsFragmentEvent event) {
-        FragmentManager fm = getFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
-        Fragment settingsFragment = event.getFragment();
-        ft.setCustomAnimations(R.animator.fragment_settings_in, R.animator.fragment_settings_out);
-        ft.replace(R.id.container_settings, settingsFragment);
-        ft.addToBackStack(null);
-        ft.commit();
-        fm.executePendingTransactions();
+    private void setActionMenuVisible(boolean visible) {
+        if (visible) {
+            FragmentManager fm = getFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.setCustomAnimations(R.animator.fragment_settings_in, R.animator.fragment_settings_out);
+            ft.remove(listFragment);
+            ft.add(R.id.container_settings, listFragment, TAG_LIST_FRAGMENT);
+            ft.addToBackStack(null);
+            ft.commit();
+        } else {
+            getFragmentManager().popBackStack();
+        }
     }
 
     private void setActionButtonRotated(boolean rotated) {

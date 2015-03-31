@@ -2,10 +2,10 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
-        <ripple android:color="#486888">
+        <ripple android:color="#586878">
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="#284868" />
+                    <solid android:color="#405060" />
                 </shape>
             </item>
         </ripple>

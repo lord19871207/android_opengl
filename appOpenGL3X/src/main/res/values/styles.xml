@@ -4,7 +4,7 @@
     <color name="primary">#0288d1</color>
     <color name="primary_dark">#01579b</color>
 
-    <style name="AppTheme" parent="android:Theme.Material.NoActionBar.Fullscreen">
+    <style name="AppTheme" parent="android:Theme.Material.NoActionBar.TranslucentDecor">
         <item name="android:windowBackground">@color/window_bg</item>
         <item name="android:colorPrimary">@color/primary</item>
         <item name="android:colorPrimaryDark">@color/primary_dark</item>

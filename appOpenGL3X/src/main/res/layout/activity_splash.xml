@@ -28,6 +28,7 @@
 
         <fi.harism.app.opengl3x.view.FadeTextView
             android:id="@+id/textview_title"
+            android:transitionName="transition_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="24sp"
@@ -38,6 +39,5 @@
             android:padding="5dp" />
 
     </LinearLayout>
-
 
 </RelativeLayout>

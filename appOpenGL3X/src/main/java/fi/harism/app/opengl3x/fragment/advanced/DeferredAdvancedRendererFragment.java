@@ -1,20 +1,11 @@
 package fi.harism.app.opengl3x.fragment.advanced;
 
-import android.app.Fragment;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
-import android.os.Bundle;
 import android.util.Size;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
-import de.greenrobot.event.EventBus;
 import fi.harism.app.opengl3x.R;
 import fi.harism.lib.opengl.gl.GlFramebuffer;
 import fi.harism.lib.opengl.gl.GlProgram;
@@ -25,16 +16,10 @@ import fi.harism.lib.opengl.gl.GlUtils;
 public class DeferredAdvancedRendererFragment extends AdvancedRendererFragment {
 
     private static final String RENDERER_ID = "renderer.advanced.deferred";
-    private static final String PREFERENCE_LIGHT_SPECULAR = RENDERER_ID + ".light_specular";
-    private static final String PREFERENCE_LIGHT_DIFFUSE = RENDERER_ID + ".light_diffuse";
-    private static final String PREFERENCE_MATERIAL_ROUGHNESS = RENDERER_ID + ".material_roughness";
-    private static final int DEFAULT_LIGHT_SPECULAR = Color.argb(255, 192, 192, 192);
-    private static final int DEFAULT_LIGHT_DIFFUSE = Color.argb(255, 128, 128, 128);
-    private static final int DEFAULT_MATERIAL_ROUGHNESS = 80;
 
-    private int specularColor;
-    private int diffuseColor;
-    private float roughness;
+    private static final int specularColor = Color.argb(255, 192, 192, 192);
+    private static final int diffuseColor = Color.argb(255, 128, 128, 128);
+    private static final float roughness = 80;
 
     private GlSampler glSamplerNearest;
     private GlTexture glTextureGnormal;
@@ -74,21 +59,6 @@ public class DeferredAdvancedRendererFragment extends AdvancedRendererFragment {
         public int uModelViewProjMat;
         public int sLight;
         public int uSurfaceSizeInv;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        SharedPreferences prefs =
-                getActivity().getPreferences(Context.MODE_PRIVATE);
-        diffuseColor = prefs.getInt(PREFERENCE_LIGHT_DIFFUSE, DEFAULT_LIGHT_DIFFUSE);
-        specularColor = prefs.getInt(PREFERENCE_LIGHT_SPECULAR, DEFAULT_LIGHT_SPECULAR);
-        roughness = (prefs.getInt(PREFERENCE_MATERIAL_ROUGHNESS, DEFAULT_MATERIAL_ROUGHNESS) + 1) / 256f;
-    }
-
-    @Override
-    public Fragment getSettingsFragment() {
-        return new SettingsFragment();
     }
 
     @Override
@@ -234,105 +204,4 @@ public class DeferredAdvancedRendererFragment extends AdvancedRendererFragment {
     public void onSurfaceReleased() {
     }
 
-    public void onEvent(SettingsEvent event) {
-        diffuseColor = event.diffuseColor;
-        specularColor = event.specularColor;
-        roughness = (event.roughness + 1) / 256f;
-    }
-
-    public static class SettingsFragment extends Fragment {
-
-        private final SeekBar.OnSeekBarChangeListener
-                seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                SettingsEvent event = new SettingsEvent();
-                event.diffuseColor = Color.rgb(
-                        seekBarDiffuseR.getProgress(),
-                        seekBarDiffuseG.getProgress(),
-                        seekBarDiffuseB.getProgress());
-                event.specularColor = Color.rgb(
-                        seekBarSpecularR.getProgress(),
-                        seekBarSpecularG.getProgress(),
-                        seekBarSpecularB.getProgress());
-                event.roughness = seekBarRoughness.getProgress();
-                EventBus.getDefault().post(event);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int diffuseColor = Color.rgb(
-                        seekBarDiffuseR.getProgress(),
-                        seekBarDiffuseG.getProgress(),
-                        seekBarDiffuseB.getProgress());
-                int specularColor = Color.rgb(
-                        seekBarSpecularR.getProgress(),
-                        seekBarSpecularG.getProgress(),
-                        seekBarSpecularB.getProgress());
-                int roughness = seekBarRoughness.getProgress();
-                SharedPreferences.Editor editor =
-                        getActivity().getPreferences(Context.MODE_PRIVATE).edit();
-                editor.putInt(PREFERENCE_LIGHT_DIFFUSE, diffuseColor);
-                editor.putInt(PREFERENCE_LIGHT_SPECULAR, specularColor);
-                editor.putInt(PREFERENCE_MATERIAL_ROUGHNESS, roughness);
-                editor.apply();
-            }
-        };
-
-        private SeekBar seekBarDiffuseR;
-        private SeekBar seekBarDiffuseG;
-        private SeekBar seekBarDiffuseB;
-
-        private SeekBar seekBarSpecularR;
-        private SeekBar seekBarSpecularG;
-        private SeekBar seekBarSpecularB;
-
-        private SeekBar seekBarRoughness;
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.fragment_settings_advanced_deferred, container, false);
-
-            seekBarDiffuseR = (SeekBar) view.findViewById(R.id.seekbar_diffuse_r);
-            seekBarDiffuseG = (SeekBar) view.findViewById(R.id.seekbar_diffuse_g);
-            seekBarDiffuseB = (SeekBar) view.findViewById(R.id.seekbar_diffuse_b);
-            seekBarSpecularR = (SeekBar) view.findViewById(R.id.seekbar_specular_r);
-            seekBarSpecularG = (SeekBar) view.findViewById(R.id.seekbar_specular_g);
-            seekBarSpecularB = (SeekBar) view.findViewById(R.id.seekbar_specular_b);
-            seekBarRoughness = (SeekBar) view.findViewById(R.id.seekbar_roughness);
-
-            SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
-            int diffuseColor = prefs.getInt(PREFERENCE_LIGHT_DIFFUSE, DEFAULT_LIGHT_DIFFUSE);
-            int specularColor = prefs.getInt(PREFERENCE_LIGHT_SPECULAR, DEFAULT_LIGHT_SPECULAR);
-            int roughness = prefs.getInt(PREFERENCE_MATERIAL_ROUGHNESS, DEFAULT_MATERIAL_ROUGHNESS);
-
-            seekBarDiffuseR.setProgress(Color.red(diffuseColor));
-            seekBarDiffuseG.setProgress(Color.green(diffuseColor));
-            seekBarDiffuseB.setProgress(Color.blue(diffuseColor));
-            seekBarSpecularR.setProgress(Color.red(specularColor));
-            seekBarSpecularG.setProgress(Color.green(specularColor));
-            seekBarSpecularB.setProgress(Color.blue(specularColor));
-            seekBarRoughness.setProgress(roughness);
-
-            seekBarDiffuseR.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarDiffuseG.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarDiffuseB.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarSpecularR.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarSpecularG.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarSpecularB.setOnSeekBarChangeListener(seekBarChangeListener);
-            seekBarRoughness.setOnSeekBarChangeListener(seekBarChangeListener);
-
-            return view;
-        }
-    }
-
-    public static class SettingsEvent {
-        private int diffuseColor;
-        private int specularColor;
-        private int roughness;
-    }
 }

@@ -25,9 +25,12 @@ import fi.harism.app.opengl3x.fragment.basic.LightBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.basic.OcclusionBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.basic.ShadowBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2BasicRendererFragment;
-import fi.harism.app.opengl3x.fragment.camera2.Camera2FilterRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2RawRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2YuvRendererFragment;
+import fi.harism.app.opengl3x.fragment.camera2effect.Camera2EdgeDetectionEffectRendererFragment;
+import fi.harism.app.opengl3x.fragment.camera2effect.Camera2OilPaintingEffectRendererFragment;
+import fi.harism.app.opengl3x.fragment.camera2effect.Camera2RadialDotsEffectRendererFragment;
+import fi.harism.app.opengl3x.fragment.camera2effect.Camera2VoronoiRendererFragment;
 import fi.harism.app.opengl3x.fragment.test.ClearRendererFragment;
 
 public class ListFragment extends Fragment {
@@ -43,11 +46,6 @@ public class ListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EventBus.getDefault().register(this);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_list, null);
 
         rendererFragments = new ArrayList<>();
         ArrayList<SectionedAdapter.Section> sections = new ArrayList<>();
@@ -63,12 +61,15 @@ public class ListFragment extends Fragment {
         rendererFragments.add(new DofAdvancedRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_camera2));
         rendererFragments.add(new Camera2BasicRendererFragment());
-        rendererFragments.add(new Camera2FilterRendererFragment());
         rendererFragments.add(new Camera2YuvRendererFragment());
         rendererFragments.add(new Camera2RawRendererFragment());
+        sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_camera2effect));
+        rendererFragments.add(new Camera2RadialDotsEffectRendererFragment());
+        rendererFragments.add(new Camera2VoronoiRendererFragment());
+        rendererFragments.add(new Camera2EdgeDetectionEffectRendererFragment());
+        rendererFragments.add(new Camera2OilPaintingEffectRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_test));
         rendererFragments.add(new ClearRendererFragment());
-        sections.add(new SectionedAdapter.Section(rendererFragments.size(), -1));
 
         SharedPreferences prefs = getActivity().getPreferences(Activity.MODE_PRIVATE);
         String rendererId = prefs.getString(PREFERENCE_RENDERER, null);
@@ -85,13 +86,17 @@ public class ListFragment extends Fragment {
                 R.layout.container_recyclerview_section, R.id.textview, baseAdapter);
         recyclerViewAdapter.setSections(
                 sections.toArray(new SectionedAdapter.Section[sections.size()]));
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_list, null);
 
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.getLayoutManager().scrollToPosition(
-                recyclerViewAdapter.positionToSectionedPosition(selectedPosition)
-        );
+                recyclerViewAdapter.positionToSectionedPosition(selectedPosition));
 
         return view;
     }
