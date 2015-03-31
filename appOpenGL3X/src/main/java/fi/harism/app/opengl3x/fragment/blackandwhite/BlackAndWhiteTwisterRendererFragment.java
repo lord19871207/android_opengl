@@ -1,10 +1,9 @@
-package fi.harism.app.blackandwhite;
+package fi.harism.app.opengl3x.fragment.blackandwhite;
 
-import android.content.Context;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
+import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.util.Size;
 import android.widget.Toast;
 
@@ -12,16 +11,16 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import fi.harism.app.opengl3x.R;
+import fi.harism.app.opengl3x.fragment.RendererFragment;
 import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlUtils;
-import fi.harism.lib.opengl.util.GlRenderer;
 
-public class EffectRenderer2 implements GlRenderer {
+public class BlackAndWhiteTwisterRendererFragment extends RendererFragment {
 
-    private static final String TAG = EffectRenderer2.class.getSimpleName();
+    private static final String RENDERER_ID = "renderer.blackandwhite.twister";
 
     private Size size;
-    private Context context;
     private GlProgram glProgramTriangle;
     private FloatBuffer bufferTriangle;
 
@@ -35,8 +34,10 @@ public class EffectRenderer2 implements GlRenderer {
     private int uCount;
     private int uTime;
 
-    EffectRenderer2(Context context) {
-        this.context = context;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
         final float SQRT3_PER3 = (float) Math.sqrt(3.0) / 3f;
         final float[] TRIANGLE = {0f, 2 * SQRT3_PER3, -1f, -SQRT3_PER3, 1f, -SQRT3_PER3};
         bufferTriangle = ByteBuffer.allocateDirect(4 * 6)
@@ -47,10 +48,25 @@ public class EffectRenderer2 implements GlRenderer {
     }
 
     @Override
+    public String getRendererId() {
+        return RENDERER_ID;
+    }
+
+    @Override
+    public int getTitleStringId() {
+        return R.string.renderer_blackandwhite_twister_title;
+    }
+
+    @Override
+    public int getCaptionStringId() {
+        return R.string.renderer_blackandwhite_twister_caption;
+    }
+
+    @Override
     public void onSurfaceCreated() {
         try {
-            String vs = GlUtils.loadString(context, "shaders/effect2/triangle.vs");
-            String fs = GlUtils.loadString(context, "shaders/effect2/triangle.fs");
+            String vs = GlUtils.loadString(getActivity(), "shaders/blackandwhite/twister/triangle.vs");
+            String fs = GlUtils.loadString(getActivity(), "shaders/blackandwhite/twister/triangle.fs");
             glProgramTriangle = new GlProgram(vs, fs, null).useProgram();
             inPosition = glProgramTriangle.getAttribLocation("inPosition");
             uModelViewMat = glProgramTriangle.getUniformLocation("uModelViewMat");
@@ -58,9 +74,15 @@ public class EffectRenderer2 implements GlRenderer {
             uAngle = glProgramTriangle.getUniformLocation("uAngle");
             uCount = glProgramTriangle.getUniformLocation("uCount");
             uTime = glProgramTriangle.getUniformLocation("uTime");
-        } catch (Exception ex) {
-            Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
-            Log.d(TAG, ex.toString());
+
+            setContinuousRendering(true);
+        } catch (final Exception ex) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), ex.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 

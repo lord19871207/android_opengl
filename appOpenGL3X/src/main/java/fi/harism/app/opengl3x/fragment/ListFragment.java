@@ -24,6 +24,8 @@ import fi.harism.app.opengl3x.fragment.basic.CubemapBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.basic.LightBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.basic.OcclusionBasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.basic.ShadowBasicRendererFragment;
+import fi.harism.app.opengl3x.fragment.blackandwhite.BlackAndWhiteTunnelRendererFragment;
+import fi.harism.app.opengl3x.fragment.blackandwhite.BlackAndWhiteTwisterRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2BasicRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2RawRendererFragment;
 import fi.harism.app.opengl3x.fragment.camera2.Camera2YuvRendererFragment;
@@ -68,6 +70,9 @@ public class ListFragment extends Fragment {
         rendererFragments.add(new Camera2VoronoiRendererFragment());
         rendererFragments.add(new Camera2EdgeDetectionEffectRendererFragment());
         rendererFragments.add(new Camera2OilPaintingEffectRendererFragment());
+        sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_blackandwhite));
+        rendererFragments.add(new BlackAndWhiteTunnelRendererFragment());
+        rendererFragments.add(new BlackAndWhiteTwisterRendererFragment());
         sections.add(new SectionedAdapter.Section(rendererFragments.size(), R.string.section_test));
         rendererFragments.add(new ClearRendererFragment());
 

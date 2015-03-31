@@ -1,30 +1,32 @@
-package fi.harism.app.blackandwhite;
+package fi.harism.app.opengl3x.fragment.blackandwhite;
 
-import android.content.Context;
 import android.graphics.PointF;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
+import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.util.Size;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
+import fi.harism.app.opengl3x.R;
+import fi.harism.app.opengl3x.fragment.RendererFragment;
+import fi.harism.lib.opengl.egl.EglCore;
 import fi.harism.lib.opengl.gl.GlProgram;
 import fi.harism.lib.opengl.gl.GlUtils;
-import fi.harism.lib.opengl.util.GlRenderer;
 
-public class EffectRenderer1 implements GlRenderer {
+public class BlackAndWhiteTunnelRendererFragment extends RendererFragment {
 
-    private static final String TAG = EffectRenderer1.class.getSimpleName();
+    private static final String RENDERER_ID = "renderer.blackandwhite.tunnel";
+
     private static final int CIRCLE_COUNT = 16;
     private static final float CIRCLE_RADIUS = 0.20f;
 
     private Size size;
-    private Context context;
     private GlProgram glProgramCircle;
-    private ByteBuffer bufferQuad;
+    private ByteBuffer verticesQuad;
 
     private final float[] projMat = new float[16];
     private final float[] modelViewMat = new float[16];
@@ -37,28 +39,54 @@ public class EffectRenderer1 implements GlRenderer {
     private int uModelViewProjMat;
     private int uCircleColor;
 
-    EffectRenderer1(Context context) {
-        this.context = context;
-        final byte[] QUAD = {-1, 1, -1, -1, 1, 1, 1, -1};
-        bufferQuad = ByteBuffer.allocateDirect(8).put(QUAD);
-        bufferQuad.position(0);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setEglFlags(EglCore.FLAG_DEPTH_BUFFER);
+
+        final byte[] VERTICES = {-1, 1, -1, -1, 1, 1, 1, -1};
+        verticesQuad = ByteBuffer.allocateDirect(VERTICES.length).order(ByteOrder.nativeOrder());
+        verticesQuad.put(VERTICES).position(0);
+
         for (int ii = 0; ii < circleArr.length; ++ii) {
             circleArr[ii] = new PointF();
         }
     }
 
     @Override
+    public String getRendererId() {
+        return RENDERER_ID;
+    }
+
+    @Override
+    public int getTitleStringId() {
+        return R.string.renderer_blackandwhite_tunnel_title;
+    }
+
+    @Override
+    public int getCaptionStringId() {
+        return R.string.renderer_blackandwhite_tunnel_caption;
+    }
+
+    @Override
     public void onSurfaceCreated() {
         try {
-            String vs = GlUtils.loadString(context, "shaders/effect1/circle.vs");
-            String fs = GlUtils.loadString(context, "shaders/effect1/circle.fs");
+            String vs = GlUtils.loadString(getActivity(), "shaders/blackandwhite/tunnel/circle.vs");
+            String fs = GlUtils.loadString(getActivity(), "shaders/blackandwhite/tunnel/circle.fs");
             glProgramCircle = new GlProgram(vs, fs, null).useProgram();
             inPosition = glProgramCircle.getAttribLocation("inPosition");
             uModelViewProjMat = glProgramCircle.getUniformLocation("uModelViewProjMat");
             uCircleColor = glProgramCircle.getUniformLocation("uCircleColor");
-        } catch (Exception ex) {
-            Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
-            Log.d(TAG, ex.toString());
+
+            setContinuousRendering(true);
+        } catch (final Exception ex) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), ex.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 
@@ -78,7 +106,7 @@ public class EffectRenderer1 implements GlRenderer {
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
 
         glProgramCircle.useProgram();
-        GLES30.glVertexAttribPointer(inPosition, 2, GLES30.GL_BYTE, false, 0, bufferQuad);
+        GLES30.glVertexAttribPointer(inPosition, 2, GLES30.GL_BYTE, false, 0, verticesQuad);
         GLES30.glEnableVertexAttribArray(inPosition);
 
         float t1 = SystemClock.uptimeMillis() % 8323 / 8323f;

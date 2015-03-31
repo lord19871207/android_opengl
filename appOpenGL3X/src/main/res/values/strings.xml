@@ -69,6 +69,12 @@
     <string name="renderer_camera2effect_oil_painting_title">Oil Painting</string>
     <string name="renderer_camera2effect_oil_painting_caption">Renders oil painting effect using Camera2 API and OpenGL ES 3.0.</string>
 
+    <string name="section_blackandwhite">Black and White</string>
+    <string name="renderer_blackandwhite_tunnel_title">Tunnel</string>
+    <string name="renderer_blackandwhite_tunnel_caption">Renders a moving tunnel using black and white circles.</string>
+    <string name="renderer_blackandwhite_twister_title">Twister</string>
+    <string name="renderer_blackandwhite_twister_caption">Renders rotating twister using black triangles.</string>
+
     <string name="section_test">Test Renderers</string>
     <string name="renderer_test_clear_title">Random Clear</string>
     <string name="renderer_test_clear_caption">Clears framebuffer with random color.</string>
