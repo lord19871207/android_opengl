@@ -9,6 +9,14 @@ public class GlProgram {
 
     private int program;
 
+    public GlProgram(String compSource) throws Exception {
+        this(null, null, compSource);
+    }
+
+    public GlProgram(String vertSource, String fragSource) throws Exception {
+        this(vertSource, fragSource, null);
+    }
+
     public GlProgram(String vertSource, String fragSource, String compSource) throws Exception {
         int vertShader = 0, fragShader = 0, compShader = 0;
         try {
